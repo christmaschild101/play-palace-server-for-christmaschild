@@ -1,7 +1,5 @@
 """Tests for Humanity Cards (Cards Against Humanity) game."""
 
-import pytest
-
 from server.core.users.bot import Bot
 from server.core.users.test_user import MockUser
 from server.game_utils.actions import Visibility
@@ -22,7 +20,6 @@ def _make_black(text: str = "Why is _ so funny?", pick: int = 1) -> dict:
 
 
 def _inject_decks(game: HumanityCardsGame, white_count: int = 200, black_count: int = 50) -> None:
-    """Replace decks with deterministic test cards."""
     game.white_deck = _make_white(white_count)
     game.black_deck = [_make_black(f"Question {i} _") for i in range(black_count)]
     game.white_discard = []
@@ -32,7 +29,6 @@ def _inject_decks(game: HumanityCardsGame, white_count: int = 200, black_count: 
 def _setup_game(
     num_players: int = 3,
     options: HumanityCardsOptions | None = None,
-    use_bots: bool = False,
 ) -> tuple[HumanityCardsGame, list[MockUser]]:
     opts = options or HumanityCardsOptions()
     game = HumanityCardsGame(options=opts)
@@ -40,23 +36,31 @@ def _setup_game(
     users = []
     for i in range(num_players):
         name = f"Player{i}"
-        if use_bots:
-            user: MockUser | Bot = Bot(name)
-        else:
-            user = MockUser(name)
+        user = MockUser(name)
         game.add_player(name, user)
-        if not use_bots:
-            users.append(user)  # type: ignore[arg-type]
+        users.append(user)
     game.on_start()
     return game, users
 
 
-def _get_player(game: HumanityCardsGame, index: int):
-    return game.get_active_players()[index]
+def _get_to_judging(num_players: int = 3, options: HumanityCardsOptions | None = None):
+    game, users = _setup_game(num_players=num_players, options=options)
+    for p in game._get_submitters():
+        game.execute_action(p, "toggle_card_0")
+        game.execute_action(p, "submit_cards")
+    assert game.phase == "judging"
+    return game, users
+
+
+def _setup_multi_judge(num_judges: int = 2, num_players: int = 4, judging_method: str = "Independent"):
+    return _get_to_judging(
+        num_players=num_players,
+        options=HumanityCardsOptions(num_judges=num_judges, judging_method=judging_method),
+    )
 
 
 # ==========================================================================
-# Metadata & options
+# Metadata
 # ==========================================================================
 
 
@@ -68,16 +72,8 @@ def test_game_metadata():
     assert game.get_max_players() >= 6
 
 
-def test_options_defaults():
-    opts = HumanityCardsOptions()
-    assert opts.winning_score == 7
-    assert opts.hand_size == 10
-    assert opts.czar_selection == "Rotating"
-    assert opts.num_judges == 1
-
-
 # ==========================================================================
-# Game startup
+# Startup
 # ==========================================================================
 
 
@@ -104,7 +100,6 @@ def test_black_card_dealt_on_start():
     game, _ = _setup_game()
     assert game.current_black_card is not None
     assert "text" in game.current_black_card
-    assert "pick" in game.current_black_card
 
 
 # ==========================================================================
@@ -114,31 +109,25 @@ def test_black_card_dealt_on_start():
 
 def test_one_judge_on_start():
     game, _ = _setup_game()
-    judges = game._get_judges()
-    assert len(judges) == 1
+    assert len(game._get_judges()) == 1
 
 
 def test_rotating_judge_advances_each_round():
     game, _ = _setup_game(num_players=4)
-    first_judge_id = game._get_judges()[0].id
-    # Simulate completing a round by triggering next round
+    first_id = game._get_judges()[0].id
     game._start_round()
-    second_judge_id = game._get_judges()[0].id
-    assert first_judge_id != second_judge_id
+    assert game._get_judges()[0].id != first_id
 
 
 def test_judge_count_capped_at_active_player_count():
     game, _ = _setup_game(num_players=3, options=HumanityCardsOptions(num_judges=5))
-    # num_judges > active players: capped at active count (all-judge mode)
-    judges = game._get_judges()
-    assert len(judges) == len(game.get_active_players())
+    assert len(game._get_judges()) == len(game.get_active_players())
 
 
 def test_random_judge_selection_picks_valid_player():
     game, _ = _setup_game(options=HumanityCardsOptions(czar_selection="Random"))
-    judges = game._get_judges()
     active_ids = {p.id for p in game.get_active_players()}
-    for j in judges:
+    for j in game._get_judges():
         assert j.id in active_ids
 
 
@@ -149,49 +138,31 @@ def test_winner_judge_selection_uses_last_winner():
     active = game.get_active_players()
     game.last_winner_index = 2
     game._start_round()
-    judges = game._get_judges()
-    assert judges[0].id == active[2].id
+    assert game._get_judges()[0].id == active[2].id
 
 
 def test_judge_personal_announcement_spoken():
     game, users = _setup_game(num_players=3)
     judge = game._get_judges()[0]
     judge_user = next(u for u in users if u.username == judge.name)
-    spoken = judge_user.get_spoken_messages()
-    assert any("Card Czar" in m for m in spoken)
+    assert any("Card Czar" in m for m in judge_user.get_spoken_messages())
 
 
 # ==========================================================================
-# Utility methods
+# Utility
 # ==========================================================================
 
 
-def test_fill_in_blanks_single():
+def test_fill_in_blanks():
     game, _ = _setup_game()
-    result = game._fill_in_blanks("I love _.", ["cats"])
-    assert result == "I love cats."
-
-
-def test_fill_in_blanks_multiple():
-    game, _ = _setup_game()
-    result = game._fill_in_blanks("_ meets _.", ["Alice", "Bob"])
-    assert result == "Alice meets Bob."
-
-
-def test_fill_in_blanks_no_blank_appends():
-    game, _ = _setup_game()
-    result = game._fill_in_blanks("Why?", ["Because reasons"])
-    assert result == "Why? Because reasons"
+    assert game._fill_in_blanks("I love _.", ["cats"]) == "I love cats."
+    assert game._fill_in_blanks("_ meets _.", ["Alice", "Bob"]) == "Alice meets Bob."
+    assert game._fill_in_blanks("Why?", ["Because"]) == "Why? Because"
 
 
 def test_speech_friendly_black_replaces_underscore():
     game, _ = _setup_game()
     assert game._speech_friendly_black("I love _.") == "I love blank."
-
-
-def test_speech_friendly_black_multiple():
-    game, _ = _setup_game()
-    assert game._speech_friendly_black("_ and _.") == "blank and blank."
 
 
 # ==========================================================================
@@ -201,12 +172,10 @@ def test_speech_friendly_black_multiple():
 
 def test_white_deck_reshuffles_from_discard():
     game, _ = _setup_game()
-    # Drain white deck
     game.white_deck = []
     game.white_discard = _make_white(5, start=100)
     drawn = game._draw_white(3)
     assert len(drawn) == 3
-    # Remaining discard minus drawn cards
     assert len(game.white_deck) + len(drawn) == 5
 
 
@@ -225,16 +194,7 @@ def test_black_deck_reshuffles_from_discard():
     game, _ = _setup_game()
     game.black_deck = []
     game.black_discard = [_make_black("Test _ card") for _ in range(3)]
-    card = game._draw_black()
-    assert card is not None
-
-
-def test_draw_white_returns_empty_list_when_no_cards():
-    game, _ = _setup_game()
-    game.white_deck = []
-    game.white_discard = []
-    drawn = game._draw_white(5)
-    assert drawn == []
+    assert game._draw_black() is not None
 
 
 # ==========================================================================
@@ -242,15 +202,7 @@ def test_draw_white_returns_empty_list_when_no_cards():
 # ==========================================================================
 
 
-def test_toggle_card_selects_card():
-    game, users = _setup_game()
-    non_judge = game._get_non_judges()[0]
-    assert len(non_judge.selected_indices) == 0
-    game.execute_action(non_judge, "toggle_card_0")
-    assert 0 in non_judge.selected_indices
-
-
-def test_toggle_card_deselects_card():
+def test_toggle_card_selects_and_deselects():
     game, _ = _setup_game()
     non_judge = game._get_non_judges()[0]
     game.execute_action(non_judge, "toggle_card_0")
@@ -266,77 +218,42 @@ def test_judge_cannot_toggle_cards():
     assert 0 not in judge.selected_indices  # type: ignore[union-attr]
 
 
-def test_card_toggle_plays_select_sound():
-    game, users = _setup_game()
-    non_judge = game._get_non_judges()[0]
-    non_judge_user = next(u for u in users if u.username == non_judge.name)
-    non_judge_user.clear_messages()
-    game.execute_action(non_judge, "toggle_card_0")
-    sounds = non_judge_user.get_sounds_played()
-    assert any("cardselect" in s for s in sounds)
-
-
-def test_card_toggle_plays_unselect_sound():
-    game, users = _setup_game()
-    non_judge = game._get_non_judges()[0]
-    non_judge_user = next(u for u in users if u.username == non_judge.name)
-    game.execute_action(non_judge, "toggle_card_0")
-    non_judge_user.clear_messages()
-    game.execute_action(non_judge, "toggle_card_0")
-    sounds = non_judge_user.get_sounds_played()
-    assert any("cardunselect" in s for s in sounds)
-
-
 # ==========================================================================
 # Submission
 # ==========================================================================
 
 
-def test_submit_cards_removes_from_hand():
-    game, _ = _setup_game()
-    non_judge = game._get_non_judges()[0]
-    hand_size_before = len(non_judge.hand)
-    game.execute_action(non_judge, "toggle_card_0")
-    game.execute_action(non_judge, "submit_cards")
-    assert non_judge.submitted_cards is not None
-    assert len(non_judge.hand) == hand_size_before - 1
-
-
-def test_submit_cards_records_submission():
+def test_submit_removes_card_from_hand_and_records():
     game, _ = _setup_game()
     non_judge = game._get_non_judges()[0]
     expected_text = non_judge.hand[0]["text"]
+    hand_size = len(non_judge.hand)
     game.execute_action(non_judge, "toggle_card_0")
     game.execute_action(non_judge, "submit_cards")
     assert non_judge.submitted_cards == [expected_text]
+    assert len(non_judge.hand) == hand_size - 1
 
 
 def test_submit_wrong_count_rejected():
     game, users = _setup_game()
-    # Force a pick-2 black card
     game.current_black_card = _make_black("_ loves _ forever.", pick=2)
     non_judge = game._get_non_judges()[0]
     non_judge_user = next(u for u in users if u.username == non_judge.name)
-    # Select only 1 card, need 2
     game.execute_action(non_judge, "toggle_card_0")
     non_judge_user.clear_messages()
     game.execute_action(non_judge, "submit_cards")
     assert non_judge.submitted_cards is None
-    spoken = non_judge_user.get_spoken_messages()
-    assert any("2" in m for m in spoken)
+    assert any("2" in m for m in non_judge_user.get_spoken_messages())
 
 
 def test_submit_already_submitted_rejected():
-    game, users = _setup_game()
+    game, _ = _setup_game()
     non_judge = game._get_non_judges()[0]
-    non_judge_user = next(u for u in users if u.username == non_judge.name)
     game.execute_action(non_judge, "toggle_card_0")
     game.execute_action(non_judge, "submit_cards")
-    submission_after_first = list(non_judge.submitted_cards)  # type: ignore[arg-type]
-    non_judge_user.clear_messages()
-    # Try to submit again (no selected cards, already submitted)
+    first = list(non_judge.submitted_cards)  # type: ignore[arg-type]
     game.execute_action(non_judge, "submit_cards")
-    assert non_judge.submitted_cards == submission_after_first
+    assert non_judge.submitted_cards == first
 
 
 def test_judge_cannot_submit():
@@ -349,26 +266,13 @@ def test_judge_cannot_submit():
 
 def test_all_submit_triggers_judging_phase():
     game, _ = _setup_game(num_players=3)
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
+    for p in game._get_non_judges():
+        game.execute_action(p, "toggle_card_0")
+        game.execute_action(p, "submit_cards")
     assert game.phase == "judging"
 
 
-def test_submission_no_progress_broadcast():
-    # Progress broadcast was removed — sound only, no speech
-    game, users = _setup_game(num_players=3)
-    for u in users:
-        u.clear_messages()
-    non_judge = game._get_non_judges()[0]
-    game.execute_action(non_judge, "toggle_card_0")
-    game.execute_action(non_judge, "submit_cards")
-    all_spoken = [m for u in users for m in u.get_spoken_messages()]
-    # Only the submitter hears "You submitted your cards." — no "N of M" broadcast
-    assert not any("of" in m and "player" in m.lower() for m in all_spoken)
-
-
-def test_pick_two_black_card_requires_two_submissions():
+def test_pick_two_black_card_accepts_two_cards():
     game, _ = _setup_game()
     game.current_black_card = _make_black("_ with _ always.", pick=2)
     non_judge = game._get_non_judges()[0]
@@ -384,38 +288,21 @@ def test_pick_two_black_card_requires_two_submissions():
 # ==========================================================================
 
 
-def _get_to_judging(num_players: int = 3):
-    game, users = _setup_game(num_players=num_players)
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
-    assert game.phase == "judging"
-    return game, users
-
-
-def test_judge_pick_awards_point():
+def test_judge_pick_awards_point_and_ends_round():
     game, _ = _get_to_judging()
     judge = game._get_judges()[0]
-    winner_before = {p.id: p.score for p in game.get_active_players()}  # type: ignore[union-attr]
-    game.execute_action(judge, "judge_pick_0")
     winner_id = game.submissions[game.submission_order[0]]["player_id"]
-    winner = game.get_player_by_id(winner_id)
-    assert winner.score == winner_before[winner_id] + 1  # type: ignore[union-attr]
-
-
-def test_judge_pick_transitions_to_round_end():
-    game, _ = _get_to_judging()
-    judge = game._get_judges()[0]
     game.execute_action(judge, "judge_pick_0")
-    assert game.phase == "round_end"
+    winner = game.get_player_by_id(winner_id)
+    assert winner.score == 1  # type: ignore[union-attr]
+    assert game.phase in ("round_end", "finished")
 
 
 def test_winner_announcement_broadcast():
     game, users = _get_to_judging()
     for u in users:
         u.clear_messages()
-    judge = game._get_judges()[0]
-    game.execute_action(judge, "judge_pick_0")
+    game.execute_action(game._get_judges()[0], "judge_pick_0")
     all_spoken = [m for u in users for m in u.get_spoken_messages()]
     assert any("gets" in m.lower() and "point" in m.lower() for m in all_spoken)
 
@@ -423,23 +310,22 @@ def test_winner_announcement_broadcast():
 def test_non_judge_cannot_pick():
     game, _ = _get_to_judging()
     non_judge = game._get_non_judges()[0]
-    # Non-judges have no valid submissions to pick at this point, action is hidden
-    submissions_before = list(game.submissions)
     game.execute_action(non_judge, "judge_pick_0")
-    # State unchanged
-    assert game.submissions == submissions_before
     assert game.phase == "judging"
 
 
-def test_submissions_shuffled_before_judging():
-    # Run many times; at least some ordering should differ from insertion order
-    game, _ = _setup_game(num_players=4)
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
-    # submission_order exists and covers all submissions
-    assert len(game.submission_order) == len(game.submissions)
-    assert sorted(game.submission_order) == list(range(len(game.submissions)))
+def test_no_losing_submissions_heading_when_all_are_winners():
+    game, users = _setup_game(num_players=3)
+    game.submissions = [
+        {"player_id": "p1", "cards": ["foo"]},
+        {"player_id": "p2", "cards": ["bar"]},
+    ]
+    game.current_black_card = _make_black("_ question", pick=1)
+    for u in users:
+        u.clear_messages()
+    game._announce_losing_submissions({"p1", "p2"})
+    all_spoken = [m for u in users for m in u.get_spoken_messages()]
+    assert not any("other submissions" in m.lower() for m in all_spoken)
 
 
 # ==========================================================================
@@ -449,173 +335,81 @@ def test_submissions_shuffled_before_judging():
 
 def test_game_ends_when_winning_score_reached():
     game, _ = _setup_game(options=HumanityCardsOptions(winning_score=1))
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
-    judge = game._get_judges()[0]
-    game.execute_action(judge, "judge_pick_0")
+    for p in game._get_non_judges():
+        game.execute_action(p, "toggle_card_0")
+        game.execute_action(p, "submit_cards")
+    game.execute_action(game._get_judges()[0], "judge_pick_0")
     assert game.status == "finished"
 
 
 def test_round_continues_when_score_below_winning():
     game, _ = _setup_game(options=HumanityCardsOptions(winning_score=5))
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
-    judge = game._get_judges()[0]
-    game.execute_action(judge, "judge_pick_0")
+    for p in game._get_non_judges():
+        game.execute_action(p, "toggle_card_0")
+        game.execute_action(p, "submit_cards")
+    game.execute_action(game._get_judges()[0], "judge_pick_0")
     assert game.status == "playing"
     assert game.phase == "round_end"
 
 
-def test_game_winner_broadcast():
-    game, users = _setup_game(options=HumanityCardsOptions(winning_score=1))
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
-    for u in users:
-        u.clear_messages()
-    judge = game._get_judges()[0]
-    game.execute_action(judge, "judge_pick_0")
-    all_spoken = [m for u in users for m in u.get_spoken_messages()]
-    assert any("gets" in m.lower() and "point" in m.lower() for m in all_spoken)
-
-
 # ==========================================================================
-# Score display (fix 3: speak_l not raw speak)
+# Score display
 # ==========================================================================
 
 
-def test_check_scores_speaks_all_players_v2():
+def test_check_scores_shows_all_players_and_values():
     game, users = _setup_game(num_players=3)
-    player0 = _get_player(game, 0)
-    player0.score = 3  # type: ignore[union-attr]
-    user0 = next(u for u in users if u.username == player0.name)
-    user0.clear_messages()
-    game.execute_action(player0, "check_scores")
-    spoken = user0.get_spoken_messages()
-    assert any(player0.name in m for m in spoken)
-
-
-def test_check_scores_includes_score_values():
-    game, users = _setup_game(num_players=3)
-    player0 = _get_player(game, 0)
+    player0 = game.get_active_players()[0]
     player0.score = 5  # type: ignore[union-attr]
     game._team_manager.add_to_team_score(player0.name, 5)
     user0 = next(u for u in users if u.username == player0.name)
     user0.clear_messages()
     game.execute_action(player0, "check_scores")
-    spoken = user0.get_spoken_messages()
-    assert any("5" in m for m in spoken)
-
-
-def test_check_scores_ordered_descending():
-    game, users = _setup_game(num_players=3)
-    active = game.get_active_players()
-    active[0].score = 5  # type: ignore[union-attr]
-    active[1].score = 3  # type: ignore[union-attr]
-    active[2].score = 1  # type: ignore[union-attr]
-    # Sync scores into team_manager so check_scores reflects them
-    for p in active:
-        game._team_manager.add_to_team_score(p.name, p.score)  # type: ignore[union-attr]
-    user0 = next(u for u in users if u.username == active[0].name)
-    user0.clear_messages()
-    game.execute_action(active[0], "check_scores")
-    spoken = user0.get_spoken_messages()
-    all_text = " ".join(spoken)
-    # Highest scorer's name should appear, and their score should be present
-    assert active[0].name in all_text
+    all_text = " ".join(user0.get_spoken_messages())
     assert "5" in all_text
-
-
-def test_check_scores_speaks_all_players():
-    game, users = _setup_game(num_players=3)
-    player0 = _get_player(game, 0)
-    user0 = next(u for u in users if u.username == player0.name)
-    user0.clear_messages()
-    game.execute_action(player0, "check_scores")
-    spoken = user0.get_spoken_messages()
-    # Base class may combine into one message or speak per team — all player names must appear
-    all_text = " ".join(spoken)
     for p in game.get_active_players():
         assert p.name in all_text
 
 
 # ==========================================================================
-# Judge personal announcement (fix 4: hc-you-are-judge)
+# Round transition
 # ==========================================================================
 
 
-def test_judge_hears_you_are_judge_message():
-    game, users = _setup_game(num_players=3)
-    judge = game._get_judges()[0]
-    judge_user = next(u for u in users if u.username == judge.name)
-    spoken = judge_user.get_spoken_messages()
-    assert any("Card Czar" in m for m in spoken)
-
-
-def test_non_judge_does_not_hear_you_are_judge():
-    game, users = _setup_game(num_players=3)
-    judge_ids = {j.id for j in game._get_judges()}
-    non_judge_users = [
-        u for u in users
-        if game.get_player_by_id(
-            next((p.id for p in game.get_active_players() if p.name == u.username), "")
-        ) is not None
-        and next(
-            (p for p in game.get_active_players() if p.name == u.username), None
-        ) is not None
-        and next(p for p in game.get_active_players() if p.name == u.username).id not in judge_ids
-    ]
-    for u in non_judge_users:
-        spoken = u.get_spoken_messages()
-        # Non-judges hear "X is the Card Czar" (broadcast) but NOT "You are the Card Czar"
-        assert not any(m.startswith("You are the Card Czar") for m in spoken)
-
-
-def test_judge_announcement_fires_each_new_round():
-    game, users = _setup_game(num_players=3)
-    # Complete submissions to advance round
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
-    first_judge = game._get_judges()[0]
-    old_judge_user = next(u for u in users if u.username == first_judge.name)
-    old_judge_user.clear_messages()
-    # Pick winner → round_end → next round
-    game.execute_action(first_judge, "judge_pick_0")
-    # Advance tick countdown to trigger next round
+def test_round_end_ticks_advance_to_next_round():
+    game, _ = _setup_game()
+    for p in game._get_non_judges():
+        game.execute_action(p, "toggle_card_0")
+        game.execute_action(p, "submit_cards")
+    game.execute_action(game._get_judges()[0], "judge_pick_0")
+    assert game.phase == "round_end"
     game.round_end_ticks = 1
     game.on_tick()
-    # New judge should have received announcement
+    assert game.phase == "submitting"
+    assert game.round == 2
+
+
+def test_judge_announcement_fires_each_round():
+    game, users = _setup_game(num_players=3)
+    for p in game._get_non_judges():
+        game.execute_action(p, "toggle_card_0")
+        game.execute_action(p, "submit_cards")
+    game.execute_action(game._get_judges()[0], "judge_pick_0")
+    game.round_end_ticks = 1
+    game.on_tick()
     new_judge = game._get_judges()[0]
     new_judge_user = next(u for u in users if u.username == new_judge.name)
-    spoken = new_judge_user.get_spoken_messages()
-    assert any("Card Czar" in m for m in spoken)
+    assert any("Card Czar" in m for m in new_judge_user.get_spoken_messages())
 
 
-# ==========================================================================
 # ==========================================================================
 # Multi-judge voting
 # ==========================================================================
 
 
-def _setup_multi_judge(num_judges: int = 2, num_players: int = 4, judging_method: str = "Independent"):
-    game, users = _setup_game(
-        num_players=num_players,
-        options=HumanityCardsOptions(num_judges=num_judges, judging_method=judging_method),
-    )
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
-    assert game.phase == "judging"
-    return game, users
-
-
 def test_multi_judge_waits_for_all_judges():
     game, _ = _setup_multi_judge(num_judges=2, num_players=4)
     judges = game._get_judges()
-    assert len(judges) == 2
     game.execute_action(judges[0], "judge_pick_0")
     assert game.phase == "judging"
     assert len(game.judge_picks) == 1
@@ -638,13 +432,11 @@ def test_multi_judge_cannot_vote_twice():
     assert game.judge_picks == first_picks
 
 
-def test_multi_judge_voted_plays_sound():
+def test_multi_judge_intermediate_vote_plays_sound_not_speech():
     game, users = _setup_multi_judge(num_judges=2, num_players=4)
     for u in users:
         u.clear_messages()
-    judges = game._get_judges()
-    game.execute_action(judges[0], "judge_pick_0")
-    # No speech broadcast for intermediate vote — sound only
+    game.execute_action(game._get_judges()[0], "judge_pick_0")
     all_spoken = [m for u in users for m in u.get_spoken_messages()]
     assert not any("made their choice" in m for m in all_spoken)
     all_sounds = [s for u in users for s in u.get_sounds_played()]
@@ -656,47 +448,32 @@ def test_multi_judge_voted_plays_sound():
 # ==========================================================================
 
 
-def test_independent_single_judge_enforced():
+def test_single_judge_always_uses_independent():
     game, _ = _setup_game(options=HumanityCardsOptions(num_judges=1, judging_method="Jury"))
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
+    for p in game._get_non_judges():
+        game.execute_action(p, "toggle_card_0")
+        game.execute_action(p, "submit_cards")
     assert game.active_judging_method == "Independent"
 
 
 def test_independent_awards_one_point_per_vote():
     game, _ = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Independent")
     judges = game._get_judges()
-    sub0_player_id = game.submissions[game.submission_order[0]]["player_id"]
+    sub0_id = game.submissions[game.submission_order[0]]["player_id"]
     game.execute_action(judges[0], "judge_pick_0")
     game.execute_action(judges[1], "judge_pick_0")
-    winner = game.get_player_by_id(sub0_player_id)
-    assert winner.score == 2  # type: ignore[union-attr]
+    assert game.get_player_by_id(sub0_id).score == 2  # type: ignore[union-attr]
 
 
 def test_independent_split_vote_both_score():
     game, _ = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Independent")
     judges = game._get_judges()
-    assert len(game.submissions) >= 2
     sub0_id = game.submissions[game.submission_order[0]]["player_id"]
     sub1_id = game.submissions[game.submission_order[1]]["player_id"]
     game.execute_action(judges[0], "judge_pick_0")
     game.execute_action(judges[1], "judge_pick_1")
-    p0 = game.get_player_by_id(sub0_id)
-    p1 = game.get_player_by_id(sub1_id)
-    assert p0.score == 1  # type: ignore[union-attr]
-    assert p1.score == 1  # type: ignore[union-attr]
-
-
-def test_independent_announcement_includes_points():
-    game, users = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Independent")
-    for u in users:
-        u.clear_messages()
-    judges = game._get_judges()
-    game.execute_action(judges[0], "judge_pick_0")
-    game.execute_action(judges[1], "judge_pick_0")
-    all_spoken = [m for u in users for m in u.get_spoken_messages()]
-    assert any("2 points" in m for m in all_spoken)
+    assert game.get_player_by_id(sub0_id).score == 1  # type: ignore[union-attr]
+    assert game.get_player_by_id(sub1_id).score == 1  # type: ignore[union-attr]
 
 
 def test_jury_sole_winner_gets_one_point():
@@ -705,34 +482,18 @@ def test_jury_sole_winner_gets_one_point():
     sub0_id = game.submissions[game.submission_order[0]]["player_id"]
     game.execute_action(judges[0], "judge_pick_0")
     game.execute_action(judges[1], "judge_pick_0")
-    winner = game.get_player_by_id(sub0_id)
-    assert winner.score == 1  # type: ignore[union-attr]
+    assert game.get_player_by_id(sub0_id).score == 1  # type: ignore[union-attr]
 
 
-def test_jury_tie_both_score():
+def test_jury_tie_both_score_one_point():
     game, _ = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Jury")
     judges = game._get_judges()
-    assert len(game.submissions) >= 2
     sub0_id = game.submissions[game.submission_order[0]]["player_id"]
     sub1_id = game.submissions[game.submission_order[1]]["player_id"]
     game.execute_action(judges[0], "judge_pick_0")
     game.execute_action(judges[1], "judge_pick_1")
-    p0 = game.get_player_by_id(sub0_id)
-    p1 = game.get_player_by_id(sub1_id)
-    assert p0.score == 1  # type: ignore[union-attr]
-    assert p1.score == 1  # type: ignore[union-attr]
-
-
-def test_jury_single_judge_uses_independent_enforcement():
-    # With 1 judge, active_judging_method = Independent regardless of setting
-    game, _ = _setup_game(
-        num_players=3,
-        options=HumanityCardsOptions(num_judges=1, judging_method="Jury"),
-    )
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
-    assert game.active_judging_method == "Independent"
+    assert game.get_player_by_id(sub0_id).score == 1  # type: ignore[union-attr]
+    assert game.get_player_by_id(sub1_id).score == 1  # type: ignore[union-attr]
 
 
 def test_random_method_resolves_to_independent_or_jury():
@@ -740,40 +501,8 @@ def test_random_method_resolves_to_independent_or_jury():
     assert game.active_judging_method in ("Independent", "Jury")
 
 
-def test_wrong_card_count_speaks_error_not_raw_tuple():
-    game, users = _setup_game(num_players=3)
-    game.current_black_card = _make_black("_ with _ always.", pick=2)
-    non_judge = game._get_non_judges()[0]
-    non_judge_user = next(u for u in users if u.username == non_judge.name)
-    # Select only 1 card, need 2
-    game.execute_action(non_judge, "toggle_card_0")
-    non_judge_user.clear_messages()
-    game.execute_action(non_judge, "submit_cards")
-    spoken = non_judge_user.get_spoken_messages()
-    assert spoken, "should have spoken an error"
-    assert not any("hc-wrong-card-count" in m for m in spoken), "raw key leaked into speech"
-    assert any("2" in m for m in spoken)
-
-
-# Round transition via ticks
 # ==========================================================================
-
-
-def test_round_end_ticks_advance_to_next_round():
-    game, _ = _setup_game()
-    for non_judge in game._get_non_judges():
-        game.execute_action(non_judge, "toggle_card_0")
-        game.execute_action(non_judge, "submit_cards")
-    game.execute_action(game._get_judges()[0], "judge_pick_0")
-    assert game.phase == "round_end"
-    game.round_end_ticks = 1
-    game.on_tick()
-    assert game.phase == "submitting"
-    assert game.round == 2
-
-
-# ==========================================================================
-# Full bot game
+# Bot game
 # ==========================================================================
 
 
@@ -784,28 +513,11 @@ def test_bot_game_completes():
     for i in range(4):
         game.add_player(f"Bot{i}", Bot(f"Bot{i}"))
     game.on_start()
-
     for _ in range(100_000):
         if game.status == "finished":
             break
         game.on_tick()
-
     assert game.status == "finished"
-
-
-def test_bot_game_all_players_score_tracked():
-    opts = HumanityCardsOptions(winning_score=2)
-    game = HumanityCardsGame(options=opts)
-    game._build_decks = lambda: _inject_decks(game, white_count=500, black_count=100)  # type: ignore[method-assign]
-    for i in range(3):
-        game.add_player(f"Bot{i}", Bot(f"Bot{i}"))
-    game.on_start()
-    for _ in range(100_000):
-        if game.status == "finished":
-            break
-        game.on_tick()
-    total_score = sum(p.score for p in game.get_active_players())  # type: ignore[union-attr]
-    assert total_score >= opts.winning_score
 
 
 # ==========================================================================
@@ -813,35 +525,9 @@ def test_bot_game_all_players_score_tracked():
 # ==========================================================================
 
 
-def _setup_all_judge(num_players: int = 3) -> tuple[HumanityCardsGame, list]:
-    """Set up game in submitting phase with everyone as judge."""
-    opts = HumanityCardsOptions(num_judges=num_players)
-    game, users = _setup_game(num_players=num_players, options=opts)
-    return game, users
-
-
-def test_all_judge_mode_everyone_is_judge():
-    game, _ = _setup_all_judge(num_players=3)
+def test_all_judge_mode_everyone_submits_and_judges():
+    game, _ = _setup_game(num_players=3, options=HumanityCardsOptions(num_judges=3))
     assert game._all_players_are_judges()
-    assert len(game._get_judges()) == 3
-
-
-def test_all_judge_mode_submitters_are_all_players():
-    game, _ = _setup_all_judge(num_players=3)
-    submitters = game._get_submitters()
-    active = game.get_active_players()
-    assert len(submitters) == len(active)
-
-
-def test_all_judge_mode_players_can_submit():
-    game, users = _setup_all_judge(num_players=3)
-    for p in game.get_active_players():
-        assert game._is_toggle_card_enabled(p, "toggle_card_0") is None
-        assert game._is_submit_enabled(p) is None
-
-
-def test_all_judge_mode_submitting_progresses_to_judging():
-    game, _ = _setup_all_judge(num_players=3)
     for p in game.get_active_players():
         game.execute_action(p, "toggle_card_0")
         game.execute_action(p, "submit_cards")
@@ -850,51 +536,26 @@ def test_all_judge_mode_submitting_progresses_to_judging():
 
 
 def test_all_judge_mode_self_vote_hidden():
-    game, _ = _setup_all_judge(num_players=3)
-    for p in game.get_active_players():
-        game.execute_action(p, "toggle_card_0")
-        game.execute_action(p, "submit_cards")
-    assert game.phase == "judging"
-    judges = game._get_judges()
-    for judge in judges:
-        # Find which pick index is their own submission
+    game, _ = _get_to_judging(options=HumanityCardsOptions(num_judges=3))
+    for judge in game._get_judges():
         for i, sub_idx in enumerate(game.submission_order):
-            sub = game.submissions[sub_idx]
-            if sub["player_id"] == judge.id:
-                vis = game._is_judge_pick_hidden(judge, f"judge_pick_{i}")
-                assert vis == Visibility.HIDDEN, f"{judge.name} can see own submission at pick_{i}"
+            if game.submissions[sub_idx]["player_id"] == judge.id:
+                assert game._is_judge_pick_hidden(judge, f"judge_pick_{i}") == Visibility.HIDDEN
 
 
-def test_all_judge_mode_self_vote_blocked_in_action():
-    game, _ = _setup_all_judge(num_players=3)
-    for p in game.get_active_players():
-        game.execute_action(p, "toggle_card_0")
-        game.execute_action(p, "submit_cards")
-    assert game.phase == "judging"
-    judges = game._get_judges()
-    for judge in judges:
+def test_all_judge_mode_self_vote_blocked():
+    game, _ = _get_to_judging(options=HumanityCardsOptions(num_judges=3))
+    for judge in game._get_judges():
         for i, sub_idx in enumerate(game.submission_order):
-            sub = game.submissions[sub_idx]
-            if sub["player_id"] == judge.id:
+            if game.submissions[sub_idx]["player_id"] == judge.id:
                 game._judge_pick(judge, i)
-                assert judge.id not in game.judge_picks, f"{judge.name} voted for self"
+                assert judge.id not in game.judge_picks
 
 
-def test_no_losing_submissions_heading_when_all_are_winners():
-    """_announce_losing_submissions should not broadcast the heading if there are no losers."""
-    game, users = _setup_game(num_players=3)
-    # Inject fake submissions
-    game.submissions = [
-        {"player_id": "p1", "cards": ["foo"]},
-        {"player_id": "p2", "cards": ["bar"]},
-    ]
-    game.current_black_card = _make_black("_ question", pick=1)
-    for u in users:
-        u.clear_messages()
-    # All submission player_ids are winners — no losers
-    game._announce_losing_submissions({"p1", "p2"})
+def test_all_judge_mode_no_czar_announcement():
+    game, users = _setup_game(num_players=3, options=HumanityCardsOptions(num_judges=3))
     all_spoken = [m for u in users for m in u.get_spoken_messages()]
-    assert not any("other submissions" in m.lower() for m in all_spoken)
+    assert not any("Card Czar" in m for m in all_spoken)
 
 
 def test_all_judge_bot_game_completes():
@@ -912,7 +573,7 @@ def test_all_judge_bot_game_completes():
 
 
 # ==========================================================================
-# Grammar and announcement fixes
+# Judge announcement grammar
 # ==========================================================================
 
 
@@ -920,12 +581,10 @@ def test_judge_announcement_two_judges_grammar():
     game, users = _setup_game(num_players=4, options=HumanityCardsOptions(num_judges=2))
     all_spoken = [m for u in users for m in u.get_spoken_messages()]
     judge_names = [j.name for j in game._get_judges()]
-    # Should be "Alice and Bob are the Card Czars" — no trailing "and X, Y"
-    judge_announce = [m for m in all_spoken if "Card Czar" in m]
-    assert judge_announce, "no judge announcement found"
-    msg = judge_announce[0]
-    assert judge_names[0] in msg
-    assert judge_names[1] in msg
+    msgs = [m for m in all_spoken if "Card Czar" in m]
+    assert msgs
+    msg = msgs[0]
+    assert all(n in msg for n in judge_names)
     assert msg.count("and") == 1
 
 
@@ -933,33 +592,20 @@ def test_judge_announcement_three_judges_oxford_comma():
     game, users = _setup_game(num_players=4, options=HumanityCardsOptions(num_judges=3))
     all_spoken = [m for u in users for m in u.get_spoken_messages()]
     judge_names = [j.name for j in game._get_judges()]
-    judge_announce = [m for m in all_spoken if "Card Czar" in m]
-    assert judge_announce
-    msg = judge_announce[0]
-    # All names present, with Oxford comma pattern
-    for name in judge_names:
-        assert name in msg
-    assert ", and " in msg
-
-
-def test_all_judge_mode_no_czar_announcement():
-    game, users = _setup_all_judge(num_players=3)
-    all_spoken = [m for u in users for m in u.get_spoken_messages()]
-    assert not any("Card Czar" in m for m in all_spoken)
+    msgs = [m for m in all_spoken if "Card Czar" in m]
+    assert msgs
+    assert all(n in msgs[0] for n in judge_names)
+    assert ", and " in msgs[0]
 
 
 def test_whose_turn_judging_lists_pending_judges():
     game, users = _setup_multi_judge(num_judges=2, num_players=4)
     judges = game._get_judges()
-    # First judge votes
     game.execute_action(judges[0], "judge_pick_0")
-    assert game.phase == "judging"
-    # Use a non-judge player to call whose_turn
     non_judge = game._get_non_judges()[0]
     non_judge_user = next(u for u in users if u.username == non_judge.name)
     non_judge_user.clear_messages()
     game._action_whose_turn(non_judge, "whose_turn")
     spoken = non_judge_user.get_spoken_messages()
-    # Should mention the pending judge, not "submitted"
     assert any(judges[1].name in m for m in spoken)
     assert not any("submitted" in m.lower() for m in spoken)

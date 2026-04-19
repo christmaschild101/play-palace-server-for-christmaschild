@@ -416,7 +416,7 @@ def test_winner_announcement_broadcast():
     judge = game._get_judges()[0]
     game.execute_action(judge, "judge_pick_0")
     all_spoken = [m for u in users for m in u.get_spoken_messages()]
-    assert any("wins" in m.lower() for m in all_spoken)
+    assert any("gets" in m.lower() and "point" in m.lower() for m in all_spoken)
 
 
 def test_non_judge_cannot_pick():
@@ -477,7 +477,7 @@ def test_game_winner_broadcast():
     judge = game._get_judges()[0]
     game.execute_action(judge, "judge_pick_0")
     all_spoken = [m for u in users for m in u.get_spoken_messages()]
-    assert any("wins" in m.lower() for m in all_spoken)
+    assert any("gets" in m.lower() and "point" in m.lower() for m in all_spoken)
 
 
 # ==========================================================================
@@ -591,10 +591,10 @@ def test_judge_announcement_fires_each_new_round():
 # ==========================================================================
 
 
-def _setup_multi_judge(num_judges: int = 2, num_players: int = 4):
+def _setup_multi_judge(num_judges: int = 2, num_players: int = 4, judging_method: str = "Independent"):
     game, users = _setup_game(
         num_players=num_players,
-        options=HumanityCardsOptions(num_judges=num_judges),
+        options=HumanityCardsOptions(num_judges=num_judges, judging_method=judging_method),
     )
     for non_judge in game._get_non_judges():
         game.execute_action(non_judge, "toggle_card_0")
@@ -607,7 +607,6 @@ def test_multi_judge_waits_for_all_judges():
     game, _ = _setup_multi_judge(num_judges=2, num_players=4)
     judges = game._get_judges()
     assert len(judges) == 2
-    # First judge picks — should NOT end round yet
     game.execute_action(judges[0], "judge_pick_0")
     assert game.phase == "judging"
     assert len(game.judge_picks) == 1
@@ -626,31 +625,8 @@ def test_multi_judge_cannot_vote_twice():
     judges = game._get_judges()
     game.execute_action(judges[0], "judge_pick_0")
     first_picks = dict(game.judge_picks)
-    game.execute_action(judges[0], "judge_pick_1")  # attempt second vote
+    game.execute_action(judges[0], "judge_pick_1")
     assert game.judge_picks == first_picks
-
-
-def test_multi_judge_majority_wins():
-    game, _ = _setup_multi_judge(num_judges=2, num_players=4)
-    judges = game._get_judges()
-    # Both judges pick submission 0 → that player wins
-    sub0_player_id = game.submissions[game.submission_order[0]]["player_id"]
-    game.execute_action(judges[0], "judge_pick_0")
-    game.execute_action(judges[1], "judge_pick_0")
-    winner = game.get_player_by_id(sub0_player_id)
-    assert winner.score == 1  # type: ignore[union-attr]
-
-
-def test_multi_judge_split_vote_tiebreak_by_order():
-    game, _ = _setup_multi_judge(num_judges=2, num_players=4)
-    judges = game._get_judges()
-    assert len(game.submissions) >= 2
-    # Judges split — submission_order[0] should win tiebreak
-    sub0_player_id = game.submissions[game.submission_order[0]]["player_id"]
-    game.execute_action(judges[0], "judge_pick_0")
-    game.execute_action(judges[1], "judge_pick_1")
-    winner = game.get_player_by_id(sub0_player_id)
-    assert winner.score == 1  # type: ignore[union-attr]
 
 
 def test_multi_judge_voted_broadcast():
@@ -670,8 +646,96 @@ def test_single_judge_no_waiting_broadcast():
     judge = game._get_judges()[0]
     game.execute_action(judge, "judge_pick_0")
     all_spoken = [m for u in users for m in u.get_spoken_messages()]
-    # No "made their choice" intermediate broadcast — single judge goes straight to result
     assert not any("made their choice" in m for m in all_spoken)
+
+
+# ==========================================================================
+# Judging methods
+# ==========================================================================
+
+
+def test_independent_single_judge_enforced():
+    game, _ = _setup_game(options=HumanityCardsOptions(num_judges=1, judging_method="Jury"))
+    for non_judge in game._get_non_judges():
+        game.execute_action(non_judge, "toggle_card_0")
+        game.execute_action(non_judge, "submit_cards")
+    assert game.active_judging_method == "Independent"
+
+
+def test_independent_awards_one_point_per_vote():
+    game, _ = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Independent")
+    judges = game._get_judges()
+    sub0_player_id = game.submissions[game.submission_order[0]]["player_id"]
+    game.execute_action(judges[0], "judge_pick_0")
+    game.execute_action(judges[1], "judge_pick_0")
+    winner = game.get_player_by_id(sub0_player_id)
+    assert winner.score == 2  # type: ignore[union-attr]
+
+
+def test_independent_split_vote_both_score():
+    game, _ = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Independent")
+    judges = game._get_judges()
+    assert len(game.submissions) >= 2
+    sub0_id = game.submissions[game.submission_order[0]]["player_id"]
+    sub1_id = game.submissions[game.submission_order[1]]["player_id"]
+    game.execute_action(judges[0], "judge_pick_0")
+    game.execute_action(judges[1], "judge_pick_1")
+    p0 = game.get_player_by_id(sub0_id)
+    p1 = game.get_player_by_id(sub1_id)
+    assert p0.score == 1  # type: ignore[union-attr]
+    assert p1.score == 1  # type: ignore[union-attr]
+
+
+def test_independent_announcement_includes_points():
+    game, users = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Independent")
+    for u in users:
+        u.clear_messages()
+    judges = game._get_judges()
+    game.execute_action(judges[0], "judge_pick_0")
+    game.execute_action(judges[1], "judge_pick_0")
+    all_spoken = [m for u in users for m in u.get_spoken_messages()]
+    assert any("2 points" in m for m in all_spoken)
+
+
+def test_jury_sole_winner_gets_one_point():
+    game, _ = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Jury")
+    judges = game._get_judges()
+    sub0_id = game.submissions[game.submission_order[0]]["player_id"]
+    game.execute_action(judges[0], "judge_pick_0")
+    game.execute_action(judges[1], "judge_pick_0")
+    winner = game.get_player_by_id(sub0_id)
+    assert winner.score == 1  # type: ignore[union-attr]
+
+
+def test_jury_tie_both_score():
+    game, _ = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Jury")
+    judges = game._get_judges()
+    assert len(game.submissions) >= 2
+    sub0_id = game.submissions[game.submission_order[0]]["player_id"]
+    sub1_id = game.submissions[game.submission_order[1]]["player_id"]
+    game.execute_action(judges[0], "judge_pick_0")
+    game.execute_action(judges[1], "judge_pick_1")
+    p0 = game.get_player_by_id(sub0_id)
+    p1 = game.get_player_by_id(sub1_id)
+    assert p0.score == 1  # type: ignore[union-attr]
+    assert p1.score == 1  # type: ignore[union-attr]
+
+
+def test_jury_single_judge_uses_independent_enforcement():
+    # With 1 judge, active_judging_method = Independent regardless of setting
+    game, _ = _setup_game(
+        num_players=3,
+        options=HumanityCardsOptions(num_judges=1, judging_method="Jury"),
+    )
+    for non_judge in game._get_non_judges():
+        game.execute_action(non_judge, "toggle_card_0")
+        game.execute_action(non_judge, "submit_cards")
+    assert game.active_judging_method == "Independent"
+
+
+def test_random_method_resolves_to_independent_or_jury():
+    game, _ = _setup_multi_judge(num_judges=2, num_players=4, judging_method="Random")
+    assert game.active_judging_method in ("Independent", "Jury")
 
 
 def test_wrong_card_count_speaks_error_not_raw_tuple():

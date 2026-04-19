@@ -15,6 +15,14 @@ hc-set-card-packs = Card packs ({ $count } of { $total } selected)
 hc-desc-card-packs = Which card packs to use
 hc-option-changed-card-packs = Card pack selection changed.
 
+hc-set-judging-method = Judging method: { $mode }
+hc-select-judging-method = Select judging method
+hc-desc-judging-method = How winning submissions are chosen. Independent: each judge picks a winner, one point per vote. Jury: majority wins; ties award all tied players one point. Random: method chosen randomly each round.
+hc-option-changed-judging-method = Judging method set to { $mode }.
+hc-judging-method-independent = Independent
+hc-judging-method-jury = Jury
+hc-judging-method-random = Random
+
 hc-set-czar-selection = Card Czar selection: { $mode }
 hc-select-czar-selection = Select Card Czar selection mode
 hc-option-changed-czar-selection = Card Czar selection set to { $mode }.
@@ -69,8 +77,10 @@ hc-select-winner-prompt = Select the winning submission
 hc-submission-option = { $text }
 
 # Results
-hc-winner-announcement = { $player } wins the round! Score: { $score }.
-hc-winner-card = Winning answer: { $text }
+hc-winner-announcement = { $player } gets { $points } { $points ->
+    [one] point
+   *[other] points
+} for { $text }. Score: { $score }.
 hc-round-scores = Scores after round { $round }:
 hc-score-line = { $player }: { $score } { $score ->
     [one] point

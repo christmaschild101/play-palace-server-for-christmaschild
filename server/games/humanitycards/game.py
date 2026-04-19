@@ -203,6 +203,22 @@ class HumanityCardsOptions(GameOptions):
             change_msg="hc-option-changed-num-judges",
         )
     )
+    judging_method: str = option_field(
+        MenuOption(
+            default="Independent",
+            choices=["Independent", "Jury", "Random"],
+            value_key="mode",
+            label="hc-set-judging-method",
+            prompt="hc-select-judging-method",
+            change_msg="hc-option-changed-judging-method",
+            choice_labels={
+                "Independent": "hc-judging-method-independent",
+                "Jury": "hc-judging-method-jury",
+                "Random": "hc-judging-method-random",
+            },
+            description="hc-desc-judging-method",
+        )
+    )
 
 
 # ==========================================================================
@@ -236,6 +252,7 @@ class HumanityCardsGame(Game):
     submissions: list[dict] = field(default_factory=list)  # [{"player_id": str, "cards": [str]}]
     submission_order: list[int] = field(default_factory=list)  # Shuffled indices into submissions
     judge_picks: dict[str, str] = field(default_factory=dict)  # judge_id → picked player_id
+    active_judging_method: str = ""  # resolved method this round (handles Random)
     round_end_ticks: int = 0  # Countdown ticks before next round starts
 
     @classmethod
@@ -1064,47 +1081,35 @@ class HumanityCardsGame(Game):
             self.rebuild_all_menus()
             return
 
-        # All judges have voted — tally
-        vote_counts: dict[str, int] = {}
-        for voted_id in self.judge_picks.values():
-            vote_counts[voted_id] = vote_counts.get(voted_id, 0) + 1
+        # All judges have voted — resolve
+        self._resolve_judging()
 
-        max_votes = max(vote_counts.values())
-        candidates = [pid for pid, v in vote_counts.items() if v == max_votes]
+    def _submission_order_pos(self, player_id: str) -> int:
+        for pos, sub_idx in enumerate(self.submission_order):
+            if sub_idx < len(self.submissions) and self.submissions[sub_idx]["player_id"] == player_id:
+                return pos
+        return len(self.submission_order)
 
-        if len(candidates) == 1:
-            winning_player_id = candidates[0]
-        else:
-            # Tiebreak: earliest position in shuffled submission_order
-            def _order_pos(pid: str) -> int:
-                for pos, sub_idx in enumerate(self.submission_order):
-                    if sub_idx < len(self.submissions) and self.submissions[sub_idx]["player_id"] == pid:
-                        return pos
-                return len(self.submission_order)
-            winning_player_id = min(candidates, key=_order_pos)
-
-        winning_sub = next(s for s in self.submissions if s["player_id"] == winning_player_id)
-        winner = self.get_player_by_id(winning_player_id)
-        if not winner:
-            return
-        hc_winner: HumanityCardsPlayer = winner  # type: ignore
-
-        hc_winner.score += 1
-        active = self.get_active_players()
-        self.last_winner_index = next((i for i, p in enumerate(active) if p.id == winner.id), -1)
-
-        winning_text = self._fill_in_blanks(
-            self.current_black_card["text"] if self.current_black_card else "",
-            winning_sub["cards"],
-        )
-
+    def _announce_and_score_winners(self, scored: list[tuple[str, int]]) -> None:
+        """Announce each winner in order (highest points first), award scores."""
         self.play_sound(f"game_humanitycards/judgechoice{random.randint(1, 3)}.ogg")  # nosec B311
-        self.broadcast_l("hc-winner-announcement", player=winner.name, score=hc_winner.score)
-        self.broadcast_l("hc-submission-reveal", player=winner.name, text=winning_text)
+        for player_id, points in scored:
+            player = self.get_player_by_id(player_id)
+            if not player:
+                continue
+            hcp: HumanityCardsPlayer = player  # type: ignore
+            hcp.score += points
+            sub = next((s for s in self.submissions if s["player_id"] == player_id), None)
+            text = self._fill_in_blanks(
+                self.current_black_card["text"] if self.current_black_card else "",
+                sub["cards"] if sub else [],
+            )
+            self.broadcast_l("hc-winner-announcement", player=player.name, points=points, text=text, score=hcp.score)
 
+    def _announce_losing_submissions(self, winner_ids: set[str]) -> None:
         self.broadcast_l("hc-all-submissions")
         for sub in self.submissions:
-            if sub["player_id"] == winner.id:
+            if sub["player_id"] in winner_ids:
                 continue
             sub_player = self.get_player_by_id(sub["player_id"])
             if sub_player:
@@ -1114,17 +1119,66 @@ class HumanityCardsGame(Game):
                 )
                 self.broadcast_l("hc-submission-reveal", player=sub_player.name, text=filled)
 
+    def _finish_round(self, primary_winner_id: str) -> None:
+        active = self.get_active_players()
+        self.last_winner_index = next(
+            (i for i, p in enumerate(active) if p.id == primary_winner_id), -1
+        )
         self.play_sound(f"game_cards/draw{random.randint(1, 4)}.ogg")  # nosec B311
+        # Primary winner checked first; with independent multiple scorers, pick highest
+        game_winner = self.get_player_by_id(primary_winner_id)
+        if not game_winner or game_winner.score < self.options.winning_score:  # type: ignore
+            game_winner = next(
+                (p for p in active if p.score >= self.options.winning_score),  # type: ignore
+                None,
+            )
+        if game_winner and game_winner.score >= self.options.winning_score:  # type: ignore
+            self._end_game(game_winner)  # type: ignore
+            return
+        self.phase = "round_end"
+        self.round_end_ticks = 100
+        if self.current_black_card:
+            self.black_discard.append(self.current_black_card)
+            self.current_black_card = None
+        self.rebuild_all_menus()
 
-        if hc_winner.score >= self.options.winning_score:
-            self._end_game(hc_winner)
+    def _resolve_judging(self) -> None:
+        if self.active_judging_method == "Independent":
+            self._resolve_independent()
         else:
-            self.phase = "round_end"
-            self.round_end_ticks = 100
-            if self.current_black_card:
-                self.black_discard.append(self.current_black_card)
-                self.current_black_card = None
-            self.rebuild_all_menus()
+            self._resolve_jury()
+
+    def _resolve_independent(self) -> None:
+        """Each judge's vote awards 1 point. All vote-getters score."""
+        vote_counts: dict[str, int] = {}
+        for voted_id in self.judge_picks.values():
+            vote_counts[voted_id] = vote_counts.get(voted_id, 0) + 1
+        if not vote_counts:
+            return
+        # Sort: most votes first, tiebreak by submission_order position
+        scored = sorted(
+            vote_counts.items(),
+            key=lambda x: (-x[1], self._submission_order_pos(x[0])),
+        )
+        self._announce_and_score_winners(scored)
+        self._announce_losing_submissions({pid for pid, _ in scored})
+        self._finish_round(scored[0][0])
+
+    def _resolve_jury(self) -> None:
+        """Majority wins. Tied winners each get 1 point."""
+        vote_counts: dict[str, int] = {}
+        for voted_id in self.judge_picks.values():
+            vote_counts[voted_id] = vote_counts.get(voted_id, 0) + 1
+        if not vote_counts:
+            return
+        max_votes = max(vote_counts.values())
+        tied = [pid for pid, v in vote_counts.items() if v == max_votes]
+        # Sort tied winners by submission_order for consistent announcement order
+        tied.sort(key=self._submission_order_pos)
+        scored = [(pid, 1) for pid in tied]
+        self._announce_and_score_winners(scored)
+        self._announce_losing_submissions(set(tied))
+        self._finish_round(tied[0])
 
     def _action_view_black_card(self, player: Player, action_id: str) -> None:
         """View the current black card prompt."""
@@ -1312,6 +1366,12 @@ class HumanityCardsGame(Game):
         random.shuffle(self.submission_order)  # nosec B311
 
         self.judge_picks = {}
+        method = self.options.judging_method
+        if len(self._get_judges()) <= 1:
+            method = "Independent"  # enforce per spec
+        elif method == "Random":
+            method = random.choice(["Independent", "Jury"])  # nosec B311
+        self.active_judging_method = method
         self.play_sound("game_humanitycards/judging.ogg")
         self.broadcast_l("hc-judging-start")
 

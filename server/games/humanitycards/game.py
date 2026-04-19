@@ -801,8 +801,8 @@ class HumanityCardsGame(Game):
             key=lambda p: p.score,  # type: ignore
             reverse=True,
         )
-        parts = [f"{p.name}: {p.score}" for p in sorted_players]  # type: ignore
-        user.speak(". ".join(parts) + ".")
+        for p in sorted_players:
+            user.speak_l("hc-score-line", player=p.name, score=p.score)  # type: ignore
 
     # ==========================================================================
     # Whose judge / whose turn overrides
@@ -1220,8 +1220,8 @@ class HumanityCardsGame(Game):
             key=lambda p: p.score,  # type: ignore
             reverse=True,
         )
-        parts = [f"{p.name}: {p.score}" for p in sorted_players]  # type: ignore
-        user.speak(". ".join(parts) + ".")
+        for p in sorted_players:
+            user.speak_l("hc-score-line", player=p.name, score=p.score)  # type: ignore
 
     def _action_check_scores_detailed(self, player: Player, action_id: str) -> None:
         user = self.get_user(player)
@@ -1323,6 +1323,10 @@ class HumanityCardsGame(Game):
         else:
             others = ", ".join(j.name for j in judges[1:])
             self.broadcast_l("hc-judge-is", player=judges[0].name, count=len(judges), others=others)
+        for judge in judges:
+            user = self.get_user(judge)
+            if user:
+                user.speak_l("hc-you-are-judge")
 
         # Announce black card
         black_text = self._speech_friendly_black(self.current_black_card["text"])

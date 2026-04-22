@@ -409,13 +409,9 @@ class HumanityCardsGame(Game):
         return len(self._get_judges()) >= len(self.get_active_players())
 
     @staticmethod
-    def _format_names(names: list[str]) -> str:
-        """Format a list of names as a grammatically correct series."""
-        if len(names) == 1:
-            return names[0]
-        if len(names) == 2:
-            return f"{names[0]} and {names[1]}"
-        return ", ".join(names[:-1]) + f", and {names[-1]}"
+    def _format_names(locale: str, names: list[str]) -> str:
+        """Format a list of names using the recipient's locale rules."""
+        return Localization.format_list_and(locale, names)
 
     def _get_submitters(self) -> list[HumanityCardsPlayer]:
         """Players expected to submit this round (everyone when all are judges)."""
@@ -816,7 +812,7 @@ class HumanityCardsGame(Game):
             return
         judges = self._get_judges()
         if judges:
-            names = self._format_names([j.name for j in judges])
+            names = self._format_names(user.locale, [j.name for j in judges])
             user.speak_l("hc-judge-is", names=names, count=len(judges))
 
     def _action_whose_turn(self, player: Player, action_id: str) -> None:
@@ -828,17 +824,20 @@ class HumanityCardsGame(Game):
         if self.phase == "submitting":
             waiting = [p.name for p in self._get_submitters() if p.submitted_cards is None]
             if waiting:
-                user.speak_l("hc-waiting-for", names=self._format_names(waiting))
+                user.speak_l("hc-waiting-for", names=self._format_names(user.locale, waiting))
             else:
                 judges = self._get_judges()
                 user.speak_l(
                     "hc-all-submitted-waiting-judge",
-                    judge=self._format_names([j.name for j in judges]),
+                    judge=self._format_names(user.locale, [j.name for j in judges]),
                 )
         elif self.phase == "judging":
             pending = [j for j in self._get_judges() if j.id not in self.judge_picks]
             if pending:
-                user.speak_l("hc-waiting-for-judges", names=self._format_names([j.name for j in pending]))
+                user.speak_l(
+                    "hc-waiting-for-judges",
+                    names=self._format_names(user.locale, [j.name for j in pending]),
+                )
             else:
                 user.speak_l("game-no-turn")
         else:
@@ -1319,8 +1318,25 @@ class HumanityCardsGame(Game):
         # Announce judge(s) — skip in all-judge mode (everyone knows)
         judges = self._get_judges()
         if not self._all_players_are_judges():
-            names = self._format_names([j.name for j in judges])
-            self.broadcast_l("hc-judge-is", names=names, count=len(judges))
+            judge_names = [j.name for j in judges]
+            for player in self.players:
+                user = self.get_user(player)
+                locale = user.locale if user else "en"
+                localized = Localization.get(
+                    locale,
+                    "hc-judge-is",
+                    names=self._format_names(locale, judge_names),
+                    count=len(judges),
+                )
+                if hasattr(self, "record_transcript_event"):
+                    self.record_transcript_event(player, localized, "table")
+                if user:
+                    user.speak_l(
+                        "hc-judge-is",
+                        "table",
+                        names=self._format_names(locale, judge_names),
+                        count=len(judges),
+                    )
             for judge in judges:
                 user = self.get_user(judge)
                 if user:

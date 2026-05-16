@@ -28,6 +28,7 @@ from ...game_utils.options import IntOption, option_field
 from ...messages.localization import Localization
 from ...game_utils.game_status import GameStatus
 from server.core.ui.keybinds import KeybindState
+from server.core.users.base import MenuItem
 
 
 # Scoring categories
@@ -299,6 +300,15 @@ class YahtzeeGame(ActionGuardMixin, Game, DiceGameMixin):
                 is_hidden="_is_view_scoresheet_hidden",
             )
         )
+        action_set.add(
+            Action(
+                id="view_all_scoresheets",
+                label=Localization.get(locale, "yahtzee-check-scoresheet"),
+                handler="_action_view_all_scoresheets",
+                is_enabled="_is_view_scoresheet_enabled",
+                is_hidden="_is_view_scoresheet_hidden",
+            )
+        )
 
         return action_set
 
@@ -312,9 +322,9 @@ class YahtzeeGame(ActionGuardMixin, Game, DiceGameMixin):
         # Toggle dice (1-5 keys) - from DiceGameMixin
         self.setup_dice_keybinds()
 
-        # View actions
-        self.define_keybind("d", "View dice", ["view_dice"], state=KeybindState.ACTIVE)
-        self.define_keybind("c", "View scoresheet", ["view_scoresheet"], state=KeybindState.ACTIVE)
+        self.define_keybind("d", "View dice", ["view_dice"], state=KeybindState.ACTIVE, include_spectators=True)
+        self.define_keybind("c", "View scoresheet", ["view_scoresheet"], state=KeybindState.ACTIVE, include_spectators=True)
+        self.define_keybind("shift+c", "View all scoresheets", ["view_all_scoresheets"], state=KeybindState.ACTIVE, include_spectators=True)
 
     # ==========================================================================
     # Declarative Action Callbacks
@@ -543,32 +553,54 @@ class YahtzeeGame(ActionGuardMixin, Game, DiceGameMixin):
             user.speak_l("yahtzee-your-dice", dice=dice_str)
 
     def _action_view_scoresheet(self, player: Player, action_id: str) -> None:
-        """View scoresheet."""
+        """View your own scoresheet."""
+        if player.is_spectator:
+            return self._action_view_all_scoresheets(player, action_id)
+        self._show_player_scoresheet(player, player)
+
+    def _action_view_all_scoresheets(self, player: Player, action_id: str) -> None:
+        """View scoresheet menu for all players."""
         user = self.get_user(player)
         if not user:
             return
 
-        # Show current player's scoresheet
-        current = self.current_player
-        if not current:
+        active_players = [p for p in self.players if not p.is_spectator]
+        if not active_players:
+            user.speak_l("action-player-not-found")
             return
 
-        ytz_current: YahtzeePlayer = current  # type: ignore
+        items = [MenuItem(text=p.name, id=p.id) for p in active_players]
+        back_label = Localization.get(user.locale, "back")
+        items.append(MenuItem(text=back_label, id="transient_display_back"))
+        self._show_transient_display(
+            player,
+            kind="scoresheet_player_select",
+            items=items,
+            multiletter=True,
+        )
+
+    def _show_player_scoresheet(self, viewer: Player, target: Player) -> None:
+        """Show a specific player's scoresheet to the viewer."""
+        user = self.get_user(viewer)
+        if not user:
+            return
+
+        ytz_target: YahtzeePlayer = target  # type: ignore
         locale = user.locale
 
-        lines = [Localization.get(locale, "yahtzee-scoresheet-header", player=current.name)]
+        lines = [Localization.get(locale, "yahtzee-scoresheet-header", player=target.name)]
         lines.append(Localization.get(locale, "yahtzee-scoresheet-upper"))
 
         for cat in UPPER_CATEGORIES:
             cat_name = Localization.get(locale, CATEGORY_NAMES[cat])
-            score = ytz_current.scores.get(cat)
+            score = ytz_target.scores.get(cat)
             if score is not None:
                 lines.append(f"  {cat_name}: {score}")
             else:
                 lines.append(f"  {cat_name}: -")
 
-        upper_total = ytz_current.get_upper_total()
-        if ytz_current.upper_bonus_awarded:
+        upper_total = ytz_target.get_upper_total()
+        if ytz_target.upper_bonus_awarded:
             lines.append(
                 Localization.get(locale, "yahtzee-scoresheet-upper-total-bonus", total=upper_total)
             )
@@ -587,18 +619,18 @@ class YahtzeeGame(ActionGuardMixin, Game, DiceGameMixin):
 
         for cat in LOWER_CATEGORIES:
             cat_name = Localization.get(locale, CATEGORY_NAMES[cat])
-            score = ytz_current.scores.get(cat)
+            score = ytz_target.scores.get(cat)
             if score is not None:
                 lines.append(f"  {cat_name}: {score}")
             else:
                 lines.append(f"  {cat_name}: -")
 
-        yahtzee_bonus = ytz_current.yahtzee_bonus_count * 100
+        yahtzee_bonus = ytz_target.yahtzee_bonus_count * 100
         lines.append(
             Localization.get(
                 locale,
                 "yahtzee-scoresheet-yahtzee-bonus",
-                count=ytz_current.yahtzee_bonus_count,
+                count=ytz_target.yahtzee_bonus_count,
                 total=yahtzee_bonus,
             )
         )
@@ -607,11 +639,30 @@ class YahtzeeGame(ActionGuardMixin, Game, DiceGameMixin):
             Localization.get(
                 locale,
                 "yahtzee-scoresheet-grand-total",
-                total=ytz_current.get_total_score(),
+                total=ytz_target.get_total_score(),
             )
         )
 
-        self.status_box(player, lines)
+        self.status_box(viewer, lines)
+
+    def _handle_transient_display_selection(self, player: Player, selection_id: str) -> None:
+        """Handle a selection from the shared transient display menu."""
+        state = self._get_transient_display_state(player)
+        if state and state.kind == "scoresheet_player_select":
+            if selection_id == "transient_display_back":
+                self._close_transient_display(player)
+                return
+            self._close_transient_display(player)
+            target = self.get_player_by_id(selection_id)
+            if target:
+                self._show_player_scoresheet(player, target)
+            else:
+                user = self.get_user(player)
+                if user:
+                    user.speak_l("action-player-not-found")
+            return
+
+        super()._handle_transient_display_selection(player, selection_id)
 
     def on_start(self) -> None:
         """Called when the game starts."""

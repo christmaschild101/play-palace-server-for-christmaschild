@@ -147,9 +147,9 @@ def test_revoke_user_refresh_tokens_revokes_only_target(db):
 
     db.revoke_user_refresh_tokens("alice", 50)
 
-    assert db.get_refresh_token("tok-a1")["revoked_at"] == 50
-    assert db.get_refresh_token("tok-a2")["revoked_at"] == 50
-    assert db.get_refresh_token("tok-b1")["revoked_at"] is None
+    assert db.get_refresh_token("tok-a1").revoked_at == 50
+    assert db.get_refresh_token("tok-a2").revoked_at == 50
+    assert db.get_refresh_token("tok-b1").revoked_at is None
 
 
 def test_fluent_languages_default_empty(db):

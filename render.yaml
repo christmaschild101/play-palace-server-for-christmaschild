@@ -15,7 +15,6 @@ services:
         sync: false
       - key: INITIAL_OWNER_PASSWORD
         sync: false
-    healthCheckPath: /
 
 databases:
   - name: playpalace-db

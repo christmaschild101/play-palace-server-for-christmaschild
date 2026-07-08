@@ -111,6 +111,13 @@ class WebSocketServer:
         """Get all connected clients keyed by address."""
         return self._clients
 
+    @staticmethod
+    async def _health_check(path: str, request_headers) -> tuple | None:
+        """Respond to HTTP health checks (Render TCP/HTTP probes)."""
+        if path == "/" and request_headers.get("Upgrade", "").lower() != "websocket":
+            return (200, [("Content-Type", "text/plain")], b"OK")
+        return None
+
     async def start(self) -> None:
         """Start the WebSocket server."""
         self._running = True
@@ -122,6 +129,7 @@ class WebSocketServer:
                 self.port,
                 ssl=self._ssl_context,
                 max_size=self._max_message_size,
+                process_request=self._health_check,
             ).__aenter__()
         except OSError as exc:
             print(

@@ -115,4 +115,5 @@ async def test_websocket_server_passes_max_size(monkeypatch):
     ws_server = WebSocketServer(max_message_size=2048)
     await ws_server.start()
     assert recorded_kwargs.get("max_size") == 2048
+    assert recorded_kwargs.get("process_request") is WebSocketServer._health_check
     await ws_server.stop()

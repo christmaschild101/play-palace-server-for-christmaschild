@@ -15,6 +15,50 @@ from websockets.asyncio.server import serve, ServerConnection
 
 from .packet_models import SERVER_TO_CLIENT_PACKET_ADAPTER
 
+# --- Monkey-patch websockets HTTP parser to accept HEAD for health checks ---
+import websockets.http11 as _ws_http
+
+_original_parse = _ws_http.Request.parse
+
+@classmethod  # type: ignore[misc]
+async def _patched_parse(cls, read_line):
+    request_line = await read_line()
+    try:
+        method, raw_path, protocol = request_line.rstrip(b"\r\n").split(b" ", 2)
+    except ValueError:
+        raise ValueError("Malformed HTTP request line")
+
+    if method not in (b"GET", b"HEAD"):
+        raise ValueError(
+            f"unsupported HTTP method; expected GET; got {method.decode()}"
+        )
+
+    if protocol not in (b"HTTP/1.1", b"HTTP/1.0"):
+        raise ValueError(
+            "unsupported HTTP protocol; expected HTTP/1.1; got "
+            + protocol.decode()
+        )
+
+    path = raw_path.decode("ascii", "surrogateescape")
+
+    headers = _ws_http.Headers()
+    while True:
+        header_line = await read_line()
+        if header_line == b"\r\n":
+            break
+        try:
+            key, value = header_line.rstrip(b"\r\n").split(b":", 1)
+        except ValueError:
+            raise ValueError("Malformed HTTP header line")
+        key_str = key.decode("ascii", "surrogateescape").strip()
+        value_str = value.decode("ascii", "surrogateescape").strip()
+        headers[key_str] = value_str
+
+    return path, headers
+
+_ws_http.Request.parse = _patched_parse
+# --- End monkey-patch ---
+
 PACKET_LOGGER = logging.getLogger("playpalace.packets")
 
 

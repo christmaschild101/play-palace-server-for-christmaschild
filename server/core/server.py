@@ -4440,8 +4440,9 @@ async def run_server(
         )
         raise SystemExit(1)
 
-    if _ensure_config_file(config_path, example_path):
-        return
+    if not os.environ.get("RENDER"):
+        if _ensure_config_file(config_path, example_path):
+            return
 
     # Bootstrap initial owner via env vars if no users exist yet
     _ensure_server_owner_env(db_url)

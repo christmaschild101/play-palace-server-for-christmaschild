@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: playpalace-server
+    runtime: docker
+    repo: https://github.com/christmaschild101/play-palace-server-for-christmaschild
+    dockerfilePath: ./server/Containerfile
+    envVars:
+      - key: SUPABASE_URL
+        fromDatabase:
+          name: playpalace-db
+          property: connectionString
+      - key: RENDER
+        value: "true"
+      - key: INITIAL_OWNER_USERNAME
+        sync: false
+      - key: INITIAL_OWNER_PASSWORD
+        sync: false
+    healthCheckPath: /
+
+databases:
+  - name: playpalace-db
+    plan: free
+    databaseName: playpalace
+    postgresMajorVersion: 15
+    connectionPooler: true

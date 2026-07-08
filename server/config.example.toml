@@ -24,6 +24,8 @@ refresh_window_seconds = 60
 max_message_bytes = 1048576
 # Allow ws:// without TLS (only for trusted local development)
 allow_insecure_ws = false
+# When deploying on Render, set allow_insecure_ws = true
+# Render's proxy handles TLS termination, so the backend can use ws:// internally.
 # Paths to TLS certificate and key files (enables WSS). Both must be set together.
 # For Let's Encrypt, use fullchain.pem and privkey.pem respectively.
 # Leave commented out (or omit) to run without TLS (ws://).
@@ -139,6 +141,18 @@ max_bots_per_table = 0
 # Mixers look for partially-filled tables to round out (1-4 seated)
 min_bots_per_table = 1
 max_bots_per_table = 4
+
+[database]
+# Supabase PostgreSQL connection (used when SUPABASE_URL env var is set).
+# The URL is read from the SUPABASE_URL environment variable at runtime.
+# When running locally, you can set it in your shell or .env file:
+#   export SUPABASE_URL="postgresql://user:password@host:5432/db"
+# If SUPABASE_URL is not set, the server will refuse to start.
+#
+# Connection pool settings (optional):
+# pool_min = 2
+# pool_max = 10
+# sslmode = "require"
 
 [virtual_bots.bot_groups.hosts]
 # Tag specific bots and optionally pin them to a profile

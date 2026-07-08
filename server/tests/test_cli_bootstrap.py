@@ -13,10 +13,10 @@ LOCALES_DIR = Path(__file__).resolve().parents[1] / "locales"
 
 
 def test_bootstrap_owner_creates_new_owner(tmp_path):
-    db_path = tmp_path / "playpalace.db"
+    db_url = str(tmp_path / "playpalace.db")
 
     bootstrap_owner(
-        db_path=str(db_path),
+        db_url=db_url,
         username="admin",
         password="secret-pass",
         locale="en",
@@ -24,7 +24,7 @@ def test_bootstrap_owner_creates_new_owner(tmp_path):
         quiet=True,
     )
 
-    database = Database(db_path)
+    database = Database(db_url)
     database.connect()
     try:
         user = database.get_user("admin")
@@ -39,8 +39,8 @@ def test_bootstrap_owner_creates_new_owner(tmp_path):
 
 
 def test_bootstrap_owner_requires_force_when_users_exist(tmp_path):
-    db_path = tmp_path / "existing.db"
-    database = Database(db_path)
+    db_url = str(tmp_path / "existing.db")
+    database = Database(db_url)
     database.connect()
     try:
         auth = AuthManager(database)
@@ -55,7 +55,7 @@ def test_bootstrap_owner_requires_force_when_users_exist(tmp_path):
 
     with pytest.raises(RuntimeError):
         bootstrap_owner(
-            db_path=str(db_path),
+            db_url=db_url,
             username="admin",
             password="secret",
             force=False,
@@ -64,8 +64,8 @@ def test_bootstrap_owner_requires_force_when_users_exist(tmp_path):
 
 
 def test_bootstrap_owner_force_updates_existing_user(tmp_path):
-    db_path = tmp_path / "override.db"
-    database = Database(db_path)
+    db_url = str(tmp_path / "override.db")
+    database = Database(db_url)
     database.connect()
     try:
         auth = AuthManager(database)
@@ -79,14 +79,14 @@ def test_bootstrap_owner_force_updates_existing_user(tmp_path):
         database.close()
 
     bootstrap_owner(
-        db_path=str(db_path),
+        db_url=db_url,
         username="admin",
         password="new-secret",
         force=True,
         quiet=True,
     )
 
-    database = Database(db_path)
+    database = Database(db_url)
     database.connect()
     try:
         user = database.get_user("admin")
@@ -99,7 +99,7 @@ def test_bootstrap_owner_force_updates_existing_user(tmp_path):
 
 
 def test_warn_if_no_users_prints_message(capsys, tmp_path):
-    server = Server(db_path=str(tmp_path / "db.sqlite"), locales_dir=LOCALES_DIR)
+    server = Server(db_url=str(tmp_path / "db.sqlite"), locales_dir=LOCALES_DIR)
     server._db = SimpleNamespace(get_user_count=lambda: 0)
     server._warn_if_no_users()
     out = capsys.readouterr().out
@@ -107,7 +107,7 @@ def test_warn_if_no_users_prints_message(capsys, tmp_path):
 
 
 def test_warn_if_no_users_respects_env(monkeypatch, capsys, tmp_path):
-    server = Server(db_path=str(tmp_path / "db.sqlite"), locales_dir=LOCALES_DIR)
+    server = Server(db_url=str(tmp_path / "db.sqlite"), locales_dir=LOCALES_DIR)
     server._db = SimpleNamespace(get_user_count=lambda: 0)
     monkeypatch.setenv(BOOTSTRAP_WARNING_ENV, "1")
     server._warn_if_no_users()

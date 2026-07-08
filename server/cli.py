@@ -28,6 +28,7 @@ Usage examples:
 
 import argparse
 import json
+import os
 import sys
 from dataclasses import dataclass, field
 from getpass import getpass
@@ -741,7 +742,7 @@ def _resolve_bootstrap_password(args: argparse.Namespace) -> str:
 
 def bootstrap_owner(
     *,
-    db_path: str,
+    db_url: str,
     username: str,
     password: str,
     locale: str = "en",
@@ -757,7 +758,7 @@ def bootstrap_owner(
     if not password:
         raise RuntimeError("Password cannot be empty.")
 
-    database = Database(db_path)
+    database = Database(db_url)
     database.connect()
 
     try:
@@ -790,7 +791,7 @@ def bootstrap_owner(
             action = "Created"
 
         if not quiet:
-            print(f"{action} server owner '{username}' in {db_path}.")
+            print(f"{action} server owner '{username}'.")
         return action
     finally:
         database.close()
@@ -798,6 +799,14 @@ def bootstrap_owner(
 
 def cmd_bootstrap_owner(args: argparse.Namespace) -> None:
     """Handle the bootstrap-owner CLI command."""
+    db_url = args.db_url or os.environ.get("SUPABASE_URL")
+    if not db_url:
+        print(
+            "Error: --db-url is required or set SUPABASE_URL environment variable.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     try:
         password = _resolve_bootstrap_password(args)
     except Exception as exc:  # pragma: no cover - defensive
@@ -806,7 +815,7 @@ def cmd_bootstrap_owner(args: argparse.Namespace) -> None:
 
     try:
         bootstrap_owner(
-            db_path=args.db_path,
+            db_url=db_url,
             username=args.username,
             password=password,
             locale=args.locale,
@@ -907,9 +916,8 @@ def main():
         help="Read password from stdin (useful for automation)",
     )
     bootstrap_parser.add_argument(
-        "--db-path",
-        default="playpalace.db",
-        help="Path to the server database (default resolves to var/server/playpalace.db)",
+        "--db-url",
+        help="PostgreSQL connection string (SUPABASE_URL). Falls back to SUPABASE_URL env var.",
     )
     bootstrap_parser.add_argument(
         "--locale",

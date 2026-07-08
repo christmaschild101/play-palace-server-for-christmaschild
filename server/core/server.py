@@ -11,7 +11,6 @@ import threading
 import time
 from collections import deque
 from datetime import datetime, timezone
-from getpass import getpass
 from pathlib import Path
 
 import json
@@ -120,24 +119,26 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         self,
         host: str = "::",
         port: int = 8000,
-        db_path: str = "playpalace.db",
+        db_url: str | None = None,
         locales_dir: str | Path | None = None,
         ssl_cert: str | Path | None = None,
         ssl_key: str | Path | None = None,
         config_path: str | Path | None = None,
         preload_locales: bool = False,
+        db_path: str | None = None,
     ):
         """Initialize the server and core managers.
 
         Args:
             host: Address to bind the server to.
             port: Port to bind the server to.
-            db_path: Path to the sqlite database file.
+            db_url: PostgreSQL connection string (SUPABASE_URL).
             locales_dir: Optional directory for locale files.
             ssl_cert: Optional SSL certificate path for TLS.
             ssl_key: Optional SSL private key path for TLS.
             config_path: Optional config.toml path override.
             preload_locales: Whether to block startup while compiling all locales.
+            db_path: Deprecated alias for db_url (for test compatibility).
         """
         self.host = host
         self.port = port
@@ -146,13 +147,17 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         self._default_locale = "en"
         self._enabled_locales: list[str] | None = None
 
-        if db_path == "playpalace.db":
-            db_path_obj = _ensure_var_server_dir() / "playpalace.db"
-        else:
-            db_path_obj = Path(db_path)
-            db_path_obj.parent.mkdir(parents=True, exist_ok=True)
+        if not db_url:
+            db_url = db_path or os.environ.get("SUPABASE_URL")
+        if not db_url:
+            print(
+                "ERROR: No database URL provided. Set SUPABASE_URL environment variable "
+                "or pass db_url to the Server constructor.",
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
 
-        self._db = Database(db_path_obj)
+        self._db = Database(db_url)
         self._auth: AuthManager | None = None
         self._tables = TableManager()
         self._tables._server = self
@@ -440,7 +445,15 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         self._documents.contribution_mode = self._contribution_mode
 
     def _validate_transport_security(self) -> None:
-        """Validate TLS/insecure configuration and exit on invalid combos."""
+        """Validate TLS/insecure configuration and exit on invalid combos.
+
+        When running on Render, TLS termination is handled by Render's proxy,
+        so this check is skipped and insecure mode is allowed internally.
+        """
+        if os.environ.get("RENDER"):
+            self._allow_insecure_ws = True
+            return
+
         if self._allow_insecure_ws and (self._ssl_cert or self._ssl_key):
             print(
                 "ERROR: allow_insecure_ws=true cannot be combined with SSL certificate or key. "
@@ -4417,14 +4430,21 @@ async def run_server(
 
     config_path = get_default_config_path()
     example_path = get_example_config_path()
-    db_path = _ensure_var_server_dir() / "playpalace.db"
+    db_url = os.environ.get("SUPABASE_URL")
+
+    if not db_url:
+        print(
+            "ERROR: SUPABASE_URL environment variable is not set. "
+            "Set it to your Supabase PostgreSQL connection string.",
+            file=sys.stderr,
+        )
+        raise SystemExit(1)
 
     if _ensure_config_file(config_path, example_path):
         return
 
-    db_created, needs_owner = _inspect_database(db_path)
-    if needs_owner:
-        _ensure_server_owner(db_path, config_path, db_created)
+    # Bootstrap initial owner via env vars if no users exist yet
+    _ensure_server_owner_env(db_url)
 
     host = _resolve_bind_host(host, config_path)
     port = _resolve_port(port, config_path)
@@ -4436,7 +4456,7 @@ async def run_server(
         port=port,
         ssl_cert=ssl_cert,
         ssl_key=ssl_key,
-        db_path=str(db_path),
+        db_url=db_url,
         preload_locales=preload_locales,
     )
     await server.start()
@@ -4525,107 +4545,29 @@ def _ensure_config_file(config_path: Path, example_path: Path) -> bool:
     return True
 
 
-def _inspect_database(db_path: Path) -> tuple[bool, bool]:
-    """Check if the database exists and whether an owner is required."""
-    if not db_path.exists():
-        return True, True
+def _ensure_server_owner_env(db_url: str) -> None:
+    """Create the initial server owner using env vars (non-interactive).
 
-    try:
-        database = Database(str(db_path))
-        database.connect()
-        user_count = database.get_user_count()
-        owner = database.get_server_owner()
-        database.close()
-        return False, user_count == 0 or owner is None
-    except Exception as exc:
-        print(f"ERROR: Failed to open database '{db_path}': {exc}", file=sys.stderr)
-        raise SystemExit(1) from exc
+    Reads INITIAL_OWNER_USERNAME and INITIAL_OWNER_PASSWORD from the
+    environment.  Only runs when the database has no users yet.
+    """
+    username = os.environ.get("INITIAL_OWNER_USERNAME")
+    password = os.environ.get("INITIAL_OWNER_PASSWORD")
+    if not username or not password:
+        return
 
-
-def _ensure_server_owner(db_path: Path, config_path: Path, db_created: bool) -> None:
-    """Create the initial server owner if required."""
     from server.cli import bootstrap_owner
-
-    if db_created:
-        print(f"Creating database at '{db_path}'.")
-    else:
-        print("No server owner found in the database. Creating one now.")
-
-    if not sys.stdin.isatty():
-        print(
-            "ERROR: Cannot prompt for a server owner in a non-interactive session. "
-            "Run `uv run python -m server.cli bootstrap-owner --username <name>` "
-            "to create the initial owner.",
-            file=sys.stderr,
-        )
-        raise SystemExit(1)
-
-    min_user_len, max_user_len, min_pass_len, max_pass_len = _load_auth_limits(config_path)
-
-    username = _prompt_username(min_user_len, max_user_len)
-    password = _prompt_password(min_pass_len, max_pass_len)
 
     try:
         bootstrap_owner(
-            db_path=str(db_path),
+            db_url=db_url,
             username=username,
             password=password,
             quiet=True,
         )
-        print(f"Created server owner '{username}'.")
+        print(f"Created server owner '{username}' from environment variables.")
     except RuntimeError as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
-        raise SystemExit(1) from exc
-
-
-def _load_auth_limits(config_path: Path) -> tuple[int, int, int, int]:
-    """Load auth length limits from config, falling back to defaults."""
-    min_user_len = DEFAULT_USERNAME_MIN_LENGTH
-    max_user_len = DEFAULT_USERNAME_MAX_LENGTH
-    min_pass_len = DEFAULT_PASSWORD_MIN_LENGTH
-    max_pass_len = DEFAULT_PASSWORD_MAX_LENGTH
-    try:
-        with open(config_path, "rb") as f:
-            data = tomllib.load(f)
-        auth_cfg = data.get("auth")
-        if isinstance(auth_cfg, dict):
-            min_user_len = int(auth_cfg.get("username_min_length", min_user_len))
-            max_user_len = int(auth_cfg.get("username_max_length", max_user_len))
-            min_pass_len = int(auth_cfg.get("password_min_length", min_pass_len))
-            max_pass_len = int(auth_cfg.get("password_max_length", max_pass_len))
-    except (OSError, tomllib.TOMLDecodeError, TypeError, ValueError) as exc:
-        LOG.debug("Failed to load auth limits from config: %s", exc)
-    return min_user_len, max_user_len, min_pass_len, max_pass_len
-
-
-def _prompt_username(min_len: int, max_len: int) -> str:
-    """Prompt for a valid server owner username."""
-    while True:
-        username = input(f"Server owner username ({min_len}-{max_len} chars): ").strip()
-        if not username:
-            print("Username cannot be empty.")
-            continue
-        if not (min_len <= len(username) <= max_len):
-            print(f"Username must be between {min_len} and {max_len} characters.")
-            continue
-        return username
-
-
-def _prompt_password(min_len: int, max_len: int) -> str:
-    """Prompt for a valid server owner password."""
-    while True:
-        password = getpass(f"Server owner password ({min_len}-{max_len} chars): ")
-        if not password:
-            print("Password cannot be empty.")
-            continue
-        if not (min_len <= len(password) <= max_len):
-            print(f"Password must be between {min_len} and {max_len} characters.")
-            continue
-        confirm = getpass("Confirm password: ")
-        if password != confirm:
-            print("Passwords do not match. Try again.")
-            continue
-        return password
+        print(f"WARNING: Could not create initial owner from env vars: {exc}", file=sys.stderr)
 
 
 def _resolve_bind_host(host: str | None, config_path: Path) -> str:

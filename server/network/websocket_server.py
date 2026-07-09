@@ -21,40 +21,43 @@ import websockets.http11 as _ws_http
 _original_parse = _ws_http.Request.parse
 
 @classmethod  # type: ignore[misc]
-async def _patched_parse(cls, read_line):
-    request_line = await read_line()
+def _patched_parse(cls, read_line):
     try:
-        method, raw_path, protocol = request_line.rstrip(b"\r\n").split(b" ", 2)
+        request_line = yield from _ws_http.parse_line(read_line)
+    except EOFError as exc:
+        raise EOFError(
+            "connection closed while reading HTTP request line"
+        ) from exc
+
+    try:
+        method, raw_path, protocol = request_line.split(b" ", 2)
     except ValueError:
-        raise ValueError("Malformed HTTP request line")
+        raise ValueError(
+            f"invalid HTTP request line: {_ws_http.d(request_line)}"
+        ) from None
 
     if method not in (b"GET", b"HEAD"):
         raise ValueError(
-            f"unsupported HTTP method; expected GET; got {method.decode()}"
+            f"unsupported HTTP method; expected GET; got {_ws_http.d(method)}"
         )
 
     if protocol not in (b"HTTP/1.1", b"HTTP/1.0"):
         raise ValueError(
-            "unsupported HTTP protocol; expected HTTP/1.1; got "
-            + protocol.decode()
+            f"unsupported protocol; expected HTTP/1.1: "
+            f"{_ws_http.d(request_line)}"
         )
 
     path = raw_path.decode("ascii", "surrogateescape")
 
-    headers = _ws_http.Headers()
-    while True:
-        header_line = await read_line()
-        if header_line == b"\r\n":
-            break
-        try:
-            key, value = header_line.rstrip(b"\r\n").split(b":", 1)
-        except ValueError:
-            raise ValueError("Malformed HTTP header line")
-        key_str = key.decode("ascii", "surrogateescape").strip()
-        value_str = value.decode("ascii", "surrogateescape").strip()
-        headers[key_str] = value_str
+    headers = yield from _ws_http.parse_headers(read_line)
 
-    return _ws_http.Request(path, headers)
+    if "Transfer-Encoding" in headers:
+        raise NotImplementedError("transfer codings aren't supported")
+
+    if "Content-Length" in headers:
+        raise ValueError("unsupported request body")
+
+    return cls(path, headers)
 
 _ws_http.Request.parse = _patched_parse
 # --- End monkey-patch ---

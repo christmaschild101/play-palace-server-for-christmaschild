@@ -54,7 +54,7 @@ async def _patched_parse(cls, read_line):
         value_str = value.decode("ascii", "surrogateescape").strip()
         headers[key_str] = value_str
 
-    return path, headers
+    return _ws_http.Request(path, headers)
 
 _ws_http.Request.parse = _patched_parse
 # --- End monkey-patch ---
@@ -156,10 +156,15 @@ class WebSocketServer:
         return self._clients
 
     @staticmethod
-    async def _health_check(path: str, request_headers) -> tuple | None:
+    async def _health_check(connection, request: _ws_http.Request) -> _ws_http.Response | None:
         """Respond to HTTP health checks (Render TCP/HTTP probes)."""
-        if path == "/" and request_headers.get("Upgrade", "").lower() != "websocket":
-            return (200, [("Content-Type", "text/plain")], b"OK")
+        if request.path == "/" and request.headers.get("Upgrade", "").lower() != "websocket":
+            return _ws_http.Response(
+                200,
+                "OK",
+                _ws_http.Headers([("Content-Type", "text/plain")]),
+                b"OK",
+            )
         return None
 
     async def start(self) -> None:

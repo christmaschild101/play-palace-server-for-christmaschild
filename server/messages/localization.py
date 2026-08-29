@@ -251,6 +251,16 @@ class Localization:
                 cached.unlink()
             except OSError:
                 pass
+        # Clean up stale temp files left by an interrupted compile (atomic
+        # replace already guarantees the .json is never corrupt, but sweeps
+        # orphaned temps so they don't accumulate).
+        for stale in entry_dir.glob("*.tmp"):
+            if stale == tmp_path:
+                continue
+            try:
+                stale.unlink()
+            except OSError:
+                pass
 
     # Unicode bidi isolation characters that Fluent adds around variables
     _BIDI_CHARS = "\u2068\u2069"  # FIRST STRONG ISOLATE, POP DIRECTIONAL ISOLATE

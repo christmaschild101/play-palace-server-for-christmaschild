@@ -50,6 +50,16 @@ This repo uses Python 3.13+ and `uv` for dependency management.
 - Recent commit messages are short, sentence-case descriptions (e.g., “Modernize server networking…”). Follow that style; keep it one line and descriptive.
 - PRs should include: a clear summary, testing notes (commands + results), and links to relevant issues/threads if applicable.
 
+## Deployment & Updates
+- **Agents run the dev loop only up to `git push`.** Make your changes, keep locales and the packet schema in sync, run the server tests (`cd server && uv run pytest`) and `ruff`, then push to the fork. That is where an agent's work ends.
+- **Do not deploy to the VPS from an agent session.** Never run `git pull`, `systemctl --user restart`, or any deploy/restart command against the live server unless you are explicitly asked to.
+- **An admin triggers deployment** after pulling in your pushed code. Preferred: the in-game **"Reboot server"** admin action (gives players a 10-second warning and auto-reconnects them). Manual equivalent:
+  ```bash
+  cd /home/christmaschild/playpalace && git pull --ff-only && systemctl --user restart playpalace
+  ```
+- If your change is missing from the live server right after a reboot, the most likely cause is that it was never pushed (agents push, admins reboot — the two must not be conflated).
+- Track the executable bit of new scripts (e.g. `scripts/restart-server.sh`): use `git update-index --chmod=+x <file>` so a pull-based deploy preserves the mode.
+
 ## Security & Configuration Tips
 - Use `wss://` in production by passing `--ssl-cert` and `--ssl-key`. Self-signed certs are OK for local testing.
 - If you change networking or auth flows, update both server and client paths and add tests when possible.

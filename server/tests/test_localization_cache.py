@@ -38,6 +38,35 @@ def test_localization_cache_refreshes_on_file_change(tmp_path, monkeypatch):
     assert cache_files[0].name != first_cache
 
 
+def test_localization_cache_preserves_stale_tmp_on_interrupt(tmp_path, monkeypatch):
+    """A compile interrupted before atomic replace leaves an old *.tmp file;
+    a subsequent write sweeps it while never serving a corrupt .json."""
+    locales_dir = tmp_path / "locales"
+    cache_dir = tmp_path / "cache"
+    monkeypatch.setenv("PLAYPALACE_LOCALE_CACHE_DIR", str(cache_dir))
+    monkeypatch.delenv("PLAYPALACE_DISABLE_LOCALE_CACHE", raising=False)
+
+    _write_locale(locales_dir, "Hi")
+    Localization.init(locales_dir)
+    assert Localization.get("en", "hello") == "Hi"
+    en_dir = cache_dir / "en"
+    json_files = list(en_dir.glob("*.json"))
+    assert len(json_files) == 1
+
+    # Simulate an earlier compile that was killed mid-write: orphan a .tmp file.
+    orphan = en_dir / "orphaned.tmp"
+    orphan.write_text("partial garbage", encoding="utf-8")
+    (en_dir / "corrupt.tmp").write_text("more garbage", encoding="utf-8")
+
+    # A fresh compile (new content -> new fingerprint) writes a cache entry and
+    # sweeps the stale temp files, while still serving only a valid .json.
+    _write_locale(locales_dir, "Hello again")
+    Localization.init(locales_dir)
+    assert Localization.get("en", "hello") == "Hello again"
+    assert list(en_dir.glob("*.tmp")) == []
+    assert len(list(en_dir.glob("*.json"))) == 1
+
+
 def test_localization_cache_can_be_disabled(tmp_path, monkeypatch):
     locales_dir = tmp_path / "locales"
     cache_dir = tmp_path / "cache"

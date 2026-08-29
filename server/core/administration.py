@@ -56,6 +56,22 @@ def require_server_owner(func):
     return wrapper
 
 
+def require_developer(func):
+    """Decorator that checks if the user has owner-level privileges (developer or
+    server owner) before executing the action."""
+
+    @functools.wraps(func)
+    async def wrapper(self, user, *args, **kwargs):
+        """Run the wrapped action if the user still has owner-level privileges."""
+        if user.trust_level.value < TrustLevel.DEVELOPER.value:
+            _speak_activity(user, "not-server-owner")
+            self._show_main_menu(user)
+            return
+        return await func(self, user, *args, **kwargs)
+
+    return wrapper
+
+
 class AdministrationMixin:
     """Provide administration menu actions and account moderation flows.
 
@@ -112,8 +128,8 @@ class AdministrationMixin:
                 id="reboot_server",
             ),
         ]
-        # Only server owners can promote/demote admins, manage virtual bots, and transfer ownership
-        if user.trust_level.value >= TrustLevel.SERVER_OWNER.value:
+        # Developers and server owners can promote/demote admins and manage virtual bots
+        if user.trust_level.value >= TrustLevel.DEVELOPER.value:
             items.append(
                 MenuItem(
                     text=Localization.get(user.locale, "promote-admin"),
@@ -130,6 +146,20 @@ class AdministrationMixin:
                 MenuItem(
                     text=Localization.get(user.locale, "virtual-bots"),
                     id="virtual_bots",
+                )
+            )
+        # Only the server owner can change the server owner or manage developers
+        if user.trust_level.value >= TrustLevel.SERVER_OWNER.value:
+            items.append(
+                MenuItem(
+                    text=Localization.get(user.locale, "promote-developer"),
+                    id="promote_developer",
+                )
+            )
+            items.append(
+                MenuItem(
+                    text=Localization.get(user.locale, "demote-developer"),
+                    id="demote_developer",
                 )
             )
             items.append(
@@ -277,6 +307,54 @@ class AdministrationMixin:
         show_yes_no_menu(user, "demote_confirm_menu", question)
         self._user_states[user.username] = {
             "menu": "demote_confirm_menu",
+            "target_username": target_username,
+        }
+
+    def _show_promote_developer_menu(self, user: NetworkUser) -> None:
+        """Show promote developer menu with list of admin users."""
+        admins = self._db.get_admin_users(include_server_owner=False)
+
+        if not admins:
+            user.speak_l("no-admins-to-promote-developer", buffer="misc")
+            self._show_admin_menu(user)
+            return
+
+        self._show_user_list_menu(user, "promote_developer_menu", admins, "promote_dev")
+
+    def _show_demote_developer_menu(self, user: NetworkUser) -> None:
+        """Show demote developer menu with list of developer users."""
+        developers = self._db.get_developers()
+
+        if not developers:
+            user.speak_l("no-developers-to-demote", buffer="misc")
+            self._show_admin_menu(user)
+            return
+
+        self._show_user_list_menu(user, "demote_developer_menu", developers, "demote_dev")
+
+    def _show_promote_developer_confirm_menu(
+        self, user: NetworkUser, target_username: str
+    ) -> None:
+        """Show confirmation menu for promoting an admin to developer."""
+        question = Localization.get(
+            user.locale, "confirm-promote-developer", player=target_username
+        )
+        show_yes_no_menu(user, "promote_developer_confirm_menu", question)
+        self._user_states[user.username] = {
+            "menu": "promote_developer_confirm_menu",
+            "target_username": target_username,
+        }
+
+    def _show_demote_developer_confirm_menu(
+        self, user: NetworkUser, target_username: str
+    ) -> None:
+        """Show confirmation menu for demoting a developer to admin."""
+        question = Localization.get(
+            user.locale, "confirm-demote-developer", player=target_username
+        )
+        show_yes_no_menu(user, "demote_developer_confirm_menu", question)
+        self._user_states[user.username] = {
+            "menu": "demote_developer_confirm_menu",
             "target_username": target_username,
         }
 
@@ -498,6 +576,10 @@ class AdministrationMixin:
             self._show_virtual_bots_menu(user)
         elif selection_id == "reboot_server":
             self._show_reboot_server_confirm_menu(user)
+        elif selection_id == "promote_developer":
+            self._show_promote_developer_menu(user)
+        elif selection_id == "demote_developer":
+            self._show_demote_developer_menu(user)
         elif selection_id == "back":
             self._show_main_menu(user)
 
@@ -570,6 +652,26 @@ class AdministrationMixin:
             target_username = selection_id[7:]  # Remove "demote_" prefix
             self._show_demote_confirm_menu(user, target_username)
 
+    async def _handle_promote_developer_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle promote developer menu selection."""
+        if selection_id == "back":
+            self._show_admin_menu(user)
+        elif selection_id.startswith("promote_dev_"):
+            target_username = selection_id[12:]  # Remove "promote_dev_" prefix
+            self._show_promote_developer_confirm_menu(user, target_username)
+
+    async def _handle_demote_developer_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle demote developer menu selection."""
+        if selection_id == "back":
+            self._show_admin_menu(user)
+        elif selection_id.startswith("demote_dev_"):
+            target_username = selection_id[11:]  # Remove "demote_dev_" prefix
+            self._show_demote_developer_confirm_menu(user, target_username)
+
     async def _handle_reset_password_user_selection(
         self, user: NetworkUser, selection_id: str
     ) -> None:
@@ -636,6 +738,38 @@ class AdministrationMixin:
             # No or back - return to demote admin menu
             self._show_demote_admin_menu(user)
 
+    async def _handle_promote_developer_confirm_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Handle promote developer confirmation menu selection."""
+        target_username = state.get("target_username")
+        if not target_username:
+            self._show_promote_developer_menu(user)
+            return
+
+        if selection_id == "yes":
+            # Show broadcast choice menu
+            self._show_broadcast_choice_menu(user, "promote_developer", target_username)
+        else:
+            # No or back - return to promote developer menu
+            self._show_promote_developer_menu(user)
+
+    async def _handle_demote_developer_confirm_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Handle demote developer confirmation menu selection."""
+        target_username = state.get("target_username")
+        if not target_username:
+            self._show_demote_developer_menu(user)
+            return
+
+        if selection_id == "yes":
+            # Show broadcast choice menu
+            self._show_broadcast_choice_menu(user, "demote_developer", target_username)
+        else:
+            # No or back - return to demote developer menu
+            self._show_demote_developer_menu(user)
+
     async def _handle_broadcast_choice_selection(
         self, user: NetworkUser, selection_id: str, state: dict
     ) -> None:
@@ -654,6 +788,10 @@ class AdministrationMixin:
             await self._promote_to_admin(user, target_username, broadcast_scope)
         elif action == "demote":
             await self._demote_from_admin(user, target_username, broadcast_scope)
+        elif action == "promote_developer":
+            await self._promote_to_developer(user, target_username, broadcast_scope)
+        elif action == "demote_developer":
+            await self._demote_from_developer(user, target_username, broadcast_scope)
         elif action == "ban":
             self._show_ban_reason_editbox(user, target_username, broadcast_scope)
         elif action == "unban":
@@ -914,11 +1052,11 @@ class AdministrationMixin:
 
         self._show_account_approval_menu(admin)
 
-    @require_server_owner
+    @require_developer
     async def _promote_to_admin(
         self, owner: NetworkUser, username: str, broadcast_scope: str
     ) -> None:
-        """Promote a user to admin. Only server owner can do this."""
+        """Promote a user to admin. Developers and server owners can do this."""
         # Update trust level in database
         self._db.update_user_trust_level(username, TrustLevel.ADMIN)
 
@@ -949,11 +1087,11 @@ class AdministrationMixin:
 
         self._show_admin_menu(owner)
 
-    @require_server_owner
+    @require_developer
     async def _demote_from_admin(
         self, owner: NetworkUser, username: str, broadcast_scope: str
     ) -> None:
-        """Demote an admin to regular user. Only server owner can do this."""
+        """Demote an admin to regular user. Developers and server owners can do this."""
         # Update trust level in database
         self._db.update_user_trust_level(username, TrustLevel.USER)
 
@@ -976,6 +1114,88 @@ class AdministrationMixin:
             # Broadcast to all or admins (excluding the target user who already got personalized message)
             self._broadcast_admin_change(
                 "demote-announcement",
+                "accountdemoteadmin.ogg",
+                username,
+                broadcast_scope,
+                exclude_username=username,
+            )
+
+        self._show_admin_menu(owner)
+
+    @require_server_owner
+    async def _promote_to_developer(
+        self, owner: NetworkUser, username: str, broadcast_scope: str
+    ) -> None:
+        """Promote an admin to developer. Only server owner can do this."""
+        target_record = self._db.get_user(username)
+        if not target_record or target_record.trust_level.value != TrustLevel.ADMIN.value:
+            _speak_activity(owner, "promote-developer-unavailable", player=username)
+            self._show_admin_menu(owner)
+            return
+
+        # Update trust level in database
+        self._db.update_user_trust_level(username, TrustLevel.DEVELOPER)
+
+        # Update the user's trust level if they are online
+        target_user = self._users.get(username)
+        if target_user:
+            target_user.set_trust_level(TrustLevel.DEVELOPER)
+
+        # Always notify the target user with personalized message
+        if target_user:
+            _speak_activity(target_user, "promote-developer-announcement-you")
+            target_user.play_sound("accountpromoteadmin.ogg")
+
+        # Broadcast the announcement to others based on scope
+        if broadcast_scope == "nobody":
+            # Silent mode - only notify the server owner who performed the action
+            _speak_activity(owner, "promote-developer-announcement", player=username)
+            owner.play_sound("accountpromoteadmin.ogg")
+        else:
+            # Broadcast to all or admins (excluding the target user who already got personalized message)
+            self._broadcast_admin_change(
+                "promote-developer-announcement",
+                "accountpromoteadmin.ogg",
+                username,
+                broadcast_scope,
+                exclude_username=username,
+            )
+
+        self._show_admin_menu(owner)
+
+    @require_server_owner
+    async def _demote_from_developer(
+        self, owner: NetworkUser, username: str, broadcast_scope: str
+    ) -> None:
+        """Demote a developer to admin. Only server owner can do this."""
+        target_record = self._db.get_user(username)
+        if not target_record or target_record.trust_level.value != TrustLevel.DEVELOPER.value:
+            _speak_activity(owner, "demote-developer-unavailable", player=username)
+            self._show_admin_menu(owner)
+            return
+
+        # Update trust level in database
+        self._db.update_user_trust_level(username, TrustLevel.ADMIN)
+
+        # Update the user's trust level if they are online
+        target_user = self._users.get(username)
+        if target_user:
+            target_user.set_trust_level(TrustLevel.ADMIN)
+
+        # Always notify the target user with personalized message
+        if target_user:
+            _speak_activity(target_user, "demote-developer-announcement-you")
+            target_user.play_sound("accountdemoteadmin.ogg")
+
+        # Broadcast the announcement to others based on scope
+        if broadcast_scope == "nobody":
+            # Silent mode - only notify the server owner who performed the action
+            _speak_activity(owner, "demote-developer-announcement", player=username)
+            owner.play_sound("accountdemoteadmin.ogg")
+        else:
+            # Broadcast to all or admins (excluding the target user who already got personalized message)
+            self._broadcast_admin_change(
+                "demote-developer-announcement",
                 "accountdemoteadmin.ogg",
                 username,
                 broadcast_scope,
@@ -1187,7 +1407,7 @@ class AdministrationMixin:
 
     # ==================== Virtual Bot Actions ====================
 
-    @require_server_owner
+    @require_developer
     async def _fill_virtual_bots(self, owner: NetworkUser) -> None:
         """Fill the server with virtual bots from config."""
         if not hasattr(self, "_virtual_bots") or not self._virtual_bots:
@@ -1205,7 +1425,7 @@ class AdministrationMixin:
 
         self._show_virtual_bots_menu(owner)
 
-    @require_server_owner
+    @require_developer
     async def _clear_virtual_bots(self, owner: NetworkUser) -> None:
         """Clear all virtual bots from the server."""
         if not hasattr(self, "_virtual_bots") or not self._virtual_bots:
@@ -1226,7 +1446,7 @@ class AdministrationMixin:
 
         self._show_virtual_bots_menu(owner)
 
-    @require_server_owner
+    @require_developer
     async def _show_virtual_bots_status(self, owner: NetworkUser) -> None:
         """Show virtual bots status."""
         if not hasattr(self, "_virtual_bots") or not self._virtual_bots:
@@ -1245,7 +1465,7 @@ class AdministrationMixin:
         )
         self._show_virtual_bots_menu(owner)
 
-    @require_server_owner
+    @require_developer
     async def _show_virtual_bots_guided_overview(self, owner: NetworkUser) -> None:
         """Show guided table overview."""
         manager = getattr(self, "_virtual_bots", None)
@@ -1339,7 +1559,7 @@ class AdministrationMixin:
         owner.speak("\n".join(lines), buffer="misc")
         self._show_virtual_bots_menu(owner)
 
-    @require_server_owner
+    @require_developer
     async def _show_virtual_bots_groups_overview(self, owner: NetworkUser) -> None:
         """Show bot group inventory."""
         manager = getattr(self, "_virtual_bots", None)
@@ -1392,7 +1612,7 @@ class AdministrationMixin:
         owner.speak("\n".join(lines), buffer="misc")
         self._show_virtual_bots_menu(owner)
 
-    @require_server_owner
+    @require_developer
     async def _show_virtual_bots_profiles_overview(self, owner: NetworkUser) -> None:
         """Show profile override summary."""
         manager = getattr(self, "_virtual_bots", None)

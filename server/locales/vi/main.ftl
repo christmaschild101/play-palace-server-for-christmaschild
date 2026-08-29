@@ -387,3 +387,18 @@ confirm-reboot-server = Bạn có chắc muốn khởi động lại máy chủ?
 server-reboot-warning = Máy chủ sẽ khởi động lại sau { $seconds } giây nữa.
 server-restarting = Máy chủ đang khởi động lại. Bạn sẽ được kết nối lại tự động.
 server-reboot-failed = Không thể khởi động lại máy chủ. Vui lòng thử lại.
+
+# Developer role
+user-is-developer = { $player } là nhà phát triển của PlayPalace.
+promote-developer = Thăng chức nhà phát triển
+demote-developer = Giáng chức nhà phát triển
+confirm-promote-developer = Bạn có chắc muốn thăng chức { $player } thành nhà phát triển?
+confirm-demote-developer = Bạn có chắc muốn giáng chức { $player } khỏi nhà phát triển?
+promote-developer-announcement = { $player } đã được thăng chức thành nhà phát triển!
+promote-developer-announcement-you = Bạn đã được thăng chức thành nhà phát triển!
+demote-developer-announcement = { $player } đã bị giáng chức khỏi nhà phát triển.
+demote-developer-announcement-you = Bạn đã bị giáng chức khỏi nhà phát triển.
+no-admins-to-promote-developer = Không có quản trị viên để thăng chức thành nhà phát triển.
+no-developers-to-demote = Không có nhà phát triển để giáng chức.
+promote-developer-unavailable = { $player } không thể được thăng chức thành nhà phát triển.
+demote-developer-unavailable = { $player } không thể bị giáng chức khỏi nhà phát triển.

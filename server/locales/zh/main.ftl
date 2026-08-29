@@ -318,3 +318,18 @@ confirm-reboot-server = 您确定要重新启动服务器吗？ 所有玩家将�
 server-reboot-warning = 服务器将在 { $seconds } 秒后重新启动。
 server-restarting = 服务器正在重新启动。 您将自动重新连接。
 server-reboot-failed = 无法重新启动服务器。 请重试。
+
+# Developer role
+user-is-developer = { $player } 是 PlayPalace 的开发者。
+promote-developer = 升级为开发者
+demote-developer = 降级开发者
+confirm-promote-developer = 确定要将 { $player } 升级为开发者吗？
+confirm-demote-developer = 确定要将 { $player } 从开发者降级吗？
+promote-developer-announcement = { $player } 已被升级为开发者！
+promote-developer-announcement-you = 您已被升级为开发者！
+demote-developer-announcement = { $player } 已从开发者降级。
+demote-developer-announcement-you = 您已从开发者降级。
+no-admins-to-promote-developer = 没有可升级为开发者的管理员。
+no-developers-to-demote = 没有可降级的开发者。
+promote-developer-unavailable = 无法将 { $player } 升级为开发者。
+demote-developer-unavailable = 无法将 { $player } 从开发者降级。

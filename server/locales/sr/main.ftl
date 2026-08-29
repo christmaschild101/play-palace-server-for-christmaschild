@@ -391,3 +391,18 @@ confirm-reboot-server = Да ли сте сигурни да желите пон
 server-reboot-warning = Сервер ће се поново покренути за { $seconds } секунди.
 server-restarting = Сервер се поново покреће. Бићете аутоматски поново повезани.
 server-reboot-failed = Поновно покретање сервера није успело. Покушајте поново.
+
+# Developer role
+user-is-developer = { $player } је програмер PlayPalace-а.
+promote-developer = Унапреди у програмера
+demote-developer = Смањи из програмера
+confirm-promote-developer = Да ли сте сигурни да желите да унапредите { $player } у програмера?
+confirm-demote-developer = Да ли сте сигурни да желите да смањите { $player } из програмера?
+promote-developer-announcement = { $player } је унапређен у програмера!
+promote-developer-announcement-you = Унапређени сте у програмера!
+demote-developer-announcement = { $player } је смањен из програмера.
+demote-developer-announcement-you = Смањени сте из програмера.
+no-admins-to-promote-developer = Нема администратора за унапређење у програмера.
+no-developers-to-demote = Нема програмера за смањење.
+promote-developer-unavailable = { $player } се не може унапредити у програмера.
+demote-developer-unavailable = { $player } се не може смањити из програмера.

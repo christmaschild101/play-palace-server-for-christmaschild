@@ -387,3 +387,18 @@ confirm-reboot-server = Серверийг дахин эхлүүлэхдээ и�
 server-reboot-warning = Сервер { $seconds } секундын дараа дахин эхлэх болно.
 server-restarting = Сервер дахин эхэлж байна. Та автоматаар дахин холбогдох болно.
 server-reboot-failed = Серверийг дахин эхлүүлж чадсангүй. Дахин оролдоно уу.
+
+# Developer role
+user-is-developer = { $player } бол PlayPalace-ийн хөгжүүлэгч.
+promote-developer = Хөгжүүлэгч болгох
+demote-developer = Хөгжүүлэгчээс буцаах
+confirm-promote-developer = { $player }-г хөгжүүлэгч болгох уу?
+confirm-demote-developer = { $player }-г хөгжүүлэгчээс буцаах уу?
+promote-developer-announcement = { $player } хөгжүүлэгч боллоо!
+promote-developer-announcement-you = Та хөгжүүлэгч боллоо!
+demote-developer-announcement = { $player } хөгжүүлэгчээс буцлаа.
+demote-developer-announcement-you = Та хөгжүүлэгчээс буцлаа.
+no-admins-to-promote-developer = Хөгжүүлэгч болгох админ байхгүй.
+no-developers-to-demote = Буцаах хөгжүүлэгч байхгүй.
+promote-developer-unavailable = { $player }-г хөгжүүлэгч болгох боломжгүй.
+demote-developer-unavailable = { $player }-г хөгжүүлэгчээс буцаах боломжгүй.

@@ -391,3 +391,18 @@ confirm-reboot-server = Voulez-vous vraiment redémarrer le serveur ? Tous les j
 server-reboot-warning = Le serveur redémarre dans { $seconds } secondes.
 server-restarting = Le serveur redémarre. Vous serez reconnecté automatiquement.
 server-reboot-failed = Impossible de redémarrer le serveur. Veuillez réessayer.
+
+# Developer role
+user-is-developer = { $player } est un développeur de PlayPalace.
+promote-developer = Promouvoir développeur
+demote-developer = Rétrograder développeur
+confirm-promote-developer = Voulez-vous vraiment promouvoir { $player } comme développeur ?
+confirm-demote-developer = Voulez-vous vraiment rétrograder { $player } de développeur ?
+promote-developer-announcement = { $player } a été promu développeur !
+promote-developer-announcement-you = Vous avez été promu développeur !
+demote-developer-announcement = { $player } a été rétrogradé de développeur.
+demote-developer-announcement-you = Vous avez été rétrogradé de développeur.
+no-admins-to-promote-developer = Aucun administrateur disponible à promouvoir développeur.
+no-developers-to-demote = Aucun développeur disponible à rétrograder.
+promote-developer-unavailable = { $player } ne peut pas être promu développeur.
+demote-developer-unavailable = { $player } ne peut pas être rétrogradé de développeur.

@@ -28,6 +28,59 @@ def _insert_user(db: Database, username: str, trust=None, approved=1):
     db._conn.commit()
 
 
+def test_migration_upgrades_legacy_owner_and_leaves_developer(tmp_path):
+    """v1 migration: owners stored as 3 must become SERVER_OWNER (4), and the
+    user_version guard must prevent a re-run from converting developers (3)
+    into owners on later restarts."""
+    path = tmp_path / "migrate.db"
+
+    # Phase 1: simulate a pre-developer database where the owner was stored as 3.
+    db = Database(db_path=path)
+    db.connect()
+    db._get_conn().execute("PRAGMA user_version = 0")
+    db._get_conn().execute(
+        "INSERT INTO users (username, password_hash, uuid, trust_level, approved)"
+        " VALUES (?, ?, ?, ?, ?)",
+        ("oldowner", "hash", "uuid-oldowner", 3, 1),
+    )
+    db._get_conn().commit()
+    db.close()
+
+    # Phase 2: reopen with the new code - migration bumps 3 -> 4 (owner).
+    db = Database(db_path=path)
+    db.connect()
+    assert db.get_user("oldowner").trust_level == TrustLevel.SERVER_OWNER
+    db.close()
+
+    # Phase 3: a later restart where a developer (stored as 3) exists. Because
+    # user_version is now 1, the migration must NOT run again.
+    db = Database(db_path=path)
+    db.connect()
+    db._get_conn().execute(
+        "INSERT INTO users (username, password_hash, uuid, trust_level, approved)"
+        " VALUES (?, ?, ?, ?, ?)",
+        ("dev", "hash", "uuid-dev", TrustLevel.DEVELOPER.value, 1),
+    )
+    db._get_conn().commit()
+    db.close()
+
+    db = Database(db_path=path)
+    db.connect()
+    assert db.get_user("dev").trust_level == TrustLevel.DEVELOPER
+    assert db.get_user("oldowner").trust_level == TrustLevel.SERVER_OWNER
+    db.close()
+
+
+def test_get_developers_returns_only_developers(db):
+    _insert_user(db, "owner", trust=TrustLevel.SERVER_OWNER.value)
+    _insert_user(db, "admin", trust=TrustLevel.ADMIN.value)
+    _insert_user(db, "dev", trust=TrustLevel.DEVELOPER.value)
+    _insert_user(db, "user", trust=TrustLevel.USER.value)
+
+    devs = db.get_developers()
+    assert [u.username for u in devs] == ["dev"]
+
+
 def test_initialize_trust_levels_promotes_first_user(db):
     _insert_user(db, "owner", trust=None)
 

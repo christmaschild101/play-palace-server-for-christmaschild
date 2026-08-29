@@ -391,3 +391,18 @@ confirm-reboot-server = Sigur doriți să reporniți serverul? Toți jucătorii 
 server-reboot-warning = Serverul se repornește în { $seconds } secunde.
 server-restarting = Serverul se repornește. Veți fi reconectat automat.
 server-reboot-failed = Serverul nu a putut fi repornit. Încercați din nou.
+
+# Developer role
+user-is-developer = { $player } este un dezvoltator PlayPalace.
+promote-developer = Promovează la dezvoltator
+demote-developer = Retrogradează din dezvoltator
+confirm-promote-developer = Sigur doriți să îl promovați pe { $player } la dezvoltator?
+confirm-demote-developer = Sigur doriți să îl retrogradați pe { $player } din dezvoltator?
+promote-developer-announcement = { $player } a fost promovat la dezvoltator!
+promote-developer-announcement-you = Ați fost promovat la dezvoltator!
+demote-developer-announcement = { $player } a fost retrogradat din dezvoltator.
+demote-developer-announcement-you = Ați fost retrogradat din dezvoltator.
+no-admins-to-promote-developer = Niciun administrator disponibil pentru promovare la dezvoltator.
+no-developers-to-demote = Niciun dezvoltator disponibil pentru retrogradare.
+promote-developer-unavailable = { $player } nu poate fi promovat la dezvoltator.
+demote-developer-unavailable = { $player } nu poate fi retrogradat din dezvoltator.

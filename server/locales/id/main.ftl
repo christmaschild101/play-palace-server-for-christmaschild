@@ -387,3 +387,18 @@ confirm-reboot-server = Apakah Anda yakin ingin memulai ulang server? Semua pema
 server-reboot-warning = Server akan dimulai ulang dalam { $seconds } detik.
 server-restarting = Server sedang dimulai ulang. Anda akan tersambung kembali secara otomatis.
 server-reboot-failed = Server gagal dimulai ulang. Silakan coba lagi.
+
+# Developer role
+user-is-developer = { $player } adalah pengembang PlayPalace.
+promote-developer = Naikkan ke Pengembang
+demote-developer = Turunkan dari Pengembang
+confirm-promote-developer = Yakin ingin menaikkan { $player } menjadi pengembang?
+confirm-demote-developer = Yakin ingin menurunkan { $player } dari pengembang?
+promote-developer-announcement = { $player } telah dinaikkan menjadi pengembang!
+promote-developer-announcement-you = Anda telah dinaikkan menjadi pengembang!
+demote-developer-announcement = { $player } telah diturunkan dari pengembang.
+demote-developer-announcement-you = Anda telah diturunkan dari pengembang.
+no-admins-to-promote-developer = Tidak ada admin untuk dinaikkan menjadi pengembang.
+no-developers-to-demote = Tidak ada pengembang untuk diturunkan.
+promote-developer-unavailable = { $player } tidak dapat dinaikkan menjadi pengembang.
+demote-developer-unavailable = { $player } tidak dapat diturunkan dari pengembang.

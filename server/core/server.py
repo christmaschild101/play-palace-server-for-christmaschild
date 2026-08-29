@@ -1005,6 +1005,11 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         for _username, user in self._iter_approved_users():
             user.speak_l("user-is-admin", buffer="activity", player=admin_name)
 
+    def _broadcast_developer_announcement(self, developer_name: str) -> None:
+        """Broadcast a developer announcement to all approved online users."""
+        for _username, user in self._iter_approved_users():
+            user.speak_l("user-is-developer", buffer="activity", player=developer_name)
+
     def _broadcast_server_owner_announcement(self, owner_name: str) -> None:
         """Broadcast a server owner announcement to all approved online users."""
         for _username, user in self._iter_approved_users():
@@ -1259,6 +1264,8 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
 
         if user.trust_level.value >= TrustLevel.SERVER_OWNER.value:
             self._broadcast_server_owner_announcement(user.username)
+        elif user.trust_level.value == TrustLevel.DEVELOPER.value:
+            self._broadcast_developer_announcement(user.username)
         elif user.trust_level.value >= TrustLevel.ADMIN.value:
             self._broadcast_admin_announcement(user.username)
 
@@ -2318,6 +2325,22 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             "reboot_server_confirm_menu": (
                 self._handle_reboot_server_confirm_selection,
                 (user, selection_id),
+            ),
+            "promote_developer_menu": (
+                self._handle_promote_developer_selection,
+                (user, selection_id),
+            ),
+            "demote_developer_menu": (
+                self._handle_demote_developer_selection,
+                (user, selection_id),
+            ),
+            "promote_developer_confirm_menu": (
+                self._handle_promote_developer_confirm_selection,
+                (user, selection_id, state),
+            ),
+            "demote_developer_confirm_menu": (
+                self._handle_demote_developer_confirm_selection,
+                (user, selection_id, state),
             ),
         }
         if not current_menu:

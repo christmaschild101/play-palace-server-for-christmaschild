@@ -375,3 +375,18 @@ confirm-reboot-server = คุณแน่ใจหรือไม่ว่า�
 server-reboot-warning = เซิร์ฟเวอร์จะรีสตาร์ตใน { $seconds } วินาที
 server-restarting = เซิร์ฟเวอร์กำลังรีสตาร์ต คุณจะถูกเชื่อมต่อใหม่อัตโนมัติ
 server-reboot-failed = ไม่สามารถรีสตาร์ตเซิร์ฟเวอร์ได้ โปรดลองอีกครั้ง
+
+# Developer role
+user-is-developer = { $player } เป็นนักพัฒนาของ PlayPalace
+promote-developer = เลื่อนเป็นนักพัฒนา
+demote-developer = ลดจากนักพัฒนา
+confirm-promote-developer = คุณแน่ใจหรือไม่ที่จะเลื่อน { $player } เป็นนักพัฒนา
+confirm-demote-developer = คุณแน่ใจหรือไม่ที่จะลด { $player } จากนักพัฒนา
+promote-developer-announcement = { $player } ถูกเลื่อนเป็นนักพัฒนา!
+promote-developer-announcement-you = คุณถูกเลื่อนเป็นนักพัฒนา!
+demote-developer-announcement = { $player } ถูกลดจากนักพัฒนา
+demote-developer-announcement-you = คุณถูกลดจากนักพัฒนา
+no-admins-to-promote-developer = ไม่มีผู้ดูแลที่เลื่อนเป็นนักพัฒนาได้
+no-developers-to-demote = ไม่มีนักพัฒนาที่จะลดได้
+promote-developer-unavailable = ไม่สามารถเลื่อน { $player } เป็นนักพัฒนาได้
+demote-developer-unavailable = ไม่สามารถลด { $player } จากนักพัฒนาได้

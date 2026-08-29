@@ -473,3 +473,18 @@ confirm-reboot-server = هل أنت متأكد من رغبتك في إعادة �
 server-reboot-warning = سيتم إعادة تشغيل الخادم خلال { $seconds } ثانية.
 server-restarting = الخادم قيد إعادة التشغيل. سوف يتم إعادة توصيلك تلقائياً.
 server-reboot-failed = تعذر إعادة تشغيل الخادم. يرجى المحاولة مرة أخرى.
+
+# Developer role
+user-is-developer = { $player } مطور في PlayPalace.
+promote-developer = ترقية إلى مطور
+demote-developer = خفض من مطور
+confirm-promote-developer = هل أنت متأكد من ترقية { $player } إلى مطور؟
+confirm-demote-developer = هل أنت متأكد من خفض { $player } من مطور؟
+promote-developer-announcement = تمت ترقية { $player } إلى مطور!
+promote-developer-announcement-you = لقد تمت ترقيتك إلى مطور!
+demote-developer-announcement = تم خفض { $player } من مطور.
+demote-developer-announcement-you = لقد تم خفضك من مطور.
+no-admins-to-promote-developer = لا يوجد مدراء متاحون للترقية إلى مطور.
+no-developers-to-demote = لا يوجد مطورون متاحون للخفض.
+promote-developer-unavailable = لا يمكن ترقية { $player } إلى مطور.
+demote-developer-unavailable = لا يمكن خفض { $player } من مطور.

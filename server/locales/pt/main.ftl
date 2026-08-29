@@ -328,3 +328,18 @@ confirm-reboot-server = Tem certeza de que deseja reiniciar o servidor? Todos os
 server-reboot-warning = O servidor reiniciará em { $seconds } segundos.
 server-restarting = O servidor está reiniciando. Você será reconectado automaticamente.
 server-reboot-failed = Não foi possível reiniciar o servidor. Tente novamente.
+
+# Developer role
+user-is-developer = { $player } é um desenvolvedor do PlayPalace.
+promote-developer = Promover a desenvolvedor
+demote-developer = Rebaixar de desenvolvedor
+confirm-promote-developer = Tem certeza de que deseja promover { $player } a desenvolvedor?
+confirm-demote-developer = Tem certeza de que deseja rebaixar { $player } de desenvolvedor?
+promote-developer-announcement = { $player } foi promovido a desenvolvedor!
+promote-developer-announcement-you = Você foi promovido a desenvolvedor!
+demote-developer-announcement = { $player } foi rebaixado de desenvolvedor.
+demote-developer-announcement-you = Você foi rebaixado de desenvolvedor.
+no-admins-to-promote-developer = Nenhum administrador disponível para promover a desenvolvedor.
+no-developers-to-demote = Nenhum desenvolvedor disponível para rebaixar.
+promote-developer-unavailable = { $player } não pode ser promovido a desenvolvedor.
+demote-developer-unavailable = { $player } não pode ser rebaixado de desenvolvedor.

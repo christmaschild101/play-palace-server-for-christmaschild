@@ -387,3 +387,18 @@ confirm-reboot-server = Sunucuyu yeniden başlatmak istediğinizden emin misiniz
 server-reboot-warning = Sunucu { $seconds } saniye içinde yeniden başlatılacak.
 server-restarting = Sunucu yeniden başlatılıyor. Otomatik olarak yeniden bağlanacaksınız.
 server-reboot-failed = Sunucu yeniden başlatılamadı. Lütfen tekrar deneyin.
+
+# Developer role
+user-is-developer = { $player }, PlayPalace'ın bir geliştiricisidir.
+promote-developer = Geliştiriciye Terfi Et
+demote-developer = Geliştiriciden Düşür
+confirm-promote-developer = { $player } kullanıcısını geliştiriciye terfi ettirmek istediğinize emin misiniz?
+confirm-demote-developer = { $player } kullanıcısını geliştiriciden düşürmek istediğinize emin misiniz?
+promote-developer-announcement = { $player } geliştiriciye terfi ettirildi!
+promote-developer-announcement-you = Geliştiriciye terfi ettirildiniz!
+demote-developer-announcement = { $player } geliştiriciden düşürüldü.
+demote-developer-announcement-you = Geliştiriciden düşürüldünüz.
+no-admins-to-promote-developer = Geliştiriciye terfi ettirilecek yönetici yok.
+no-developers-to-demote = Düşürülecek geliştirici yok.
+promote-developer-unavailable = { $player } geliştiriciye terfi ettirilemez.
+demote-developer-unavailable = { $player } geliştiriciden düşürülemez.

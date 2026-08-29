@@ -387,3 +387,18 @@ confirm-reboot-server = Weet u zeker dat u de server opnieuw wilt starten? Alle 
 server-reboot-warning = De server wordt over { $seconds } seconden opnieuw gestart.
 server-restarting = De server wordt opnieuw gestart. U wordt automatisch opnieuw verbonden.
 server-reboot-failed = De server kon niet opnieuw worden gestart. Probeer het opnieuw.
+
+# Developer role
+user-is-developer = { $player } is een ontwikkelaar van PlayPalace.
+promote-developer = Bevorderen tot ontwikkelaar
+demote-developer = Degraderen van ontwikkelaar
+confirm-promote-developer = Weet u zeker dat u { $player } wilt bevorderen tot ontwikkelaar?
+confirm-demote-developer = Weet u zeker dat u { $player } wilt degraderen van ontwikkelaar?
+promote-developer-announcement = { $player } is bevorderd tot ontwikkelaar!
+promote-developer-announcement-you = U bent bevorderd tot ontwikkelaar!
+demote-developer-announcement = { $player } is gedegradeerd van ontwikkelaar.
+demote-developer-announcement-you = U bent gedegradeerd van ontwikkelaar.
+no-admins-to-promote-developer = Geen beheerders beschikbaar om te bevorderen tot ontwikkelaar.
+no-developers-to-demote = Geen ontwikkelaars beschikbaar om te degraderen.
+promote-developer-unavailable = { $player } kan niet worden bevorderd tot ontwikkelaar.
+demote-developer-unavailable = { $player } kan niet worden gedegradeerd van ontwikkelaar.

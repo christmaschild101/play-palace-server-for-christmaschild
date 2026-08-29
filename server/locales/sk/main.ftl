@@ -395,3 +395,18 @@ confirm-reboot-server = Naozaj chcete reštartovať server? Všetci hráči bud�
 server-reboot-warning = Server sa reštartuje o { $seconds } sekúnd.
 server-restarting = Server sa reštartuje. Budete automaticky znova pripojení.
 server-reboot-failed = Server sa nepodarilo reštartovať. Skúste to znova.
+
+# Developer role
+user-is-developer = { $player } je vývojár hry PlayPalace.
+promote-developer = Povýšiť na vývojára
+demote-developer = Znížiť z vývojára
+confirm-promote-developer = Naozaj chcete povýšiť { $player } na vývojára?
+confirm-demote-developer = Naozaj chcete znížiť { $player } z vývojára?
+promote-developer-announcement = { $player } bol povýšený na vývojára!
+promote-developer-announcement-you = Boli ste povýšení na vývojára!
+demote-developer-announcement = { $player } bol znížený z vývojára.
+demote-developer-announcement-you = Boli ste znížení z vývojára.
+no-admins-to-promote-developer = Žiadni správcovia nie sú k dispozícii na povýšenie na vývojára.
+no-developers-to-demote = Žiadni vývojári nie sú k dispozícii na zníženie.
+promote-developer-unavailable = { $player } nie je možné povýšiť na vývojára.
+demote-developer-unavailable = { $player } nie je možné znížiť z vývojára.

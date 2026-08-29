@@ -6,7 +6,12 @@ from types import SimpleNamespace
 import pytest
 
 from server.core import administration
-from server.core.administration import AdministrationMixin, require_admin, require_server_owner
+from server.core.administration import (
+    AdministrationMixin,
+    require_admin,
+    require_developer,
+    require_server_owner,
+)
 from server.core.users.base import TrustLevel, MenuItem
 
 
@@ -31,6 +36,9 @@ class DummyUser:
     def speak_l(self, message_id: str, **kwargs):
         self.spoken.append((message_id, kwargs))
 
+    def speak(self, text: str):
+        self.spoken.append(("__raw__", {"text": text}))
+
     def play_sound(self, sound: str):
         self.sounds.append(sound)
 
@@ -43,6 +51,7 @@ class DummyDB:
         self.pending_users: list[str] = []
         self.non_admin_users: list[str] = []
         self.admin_users: list[str] = []
+        self.developers: list[str] = []
 
     def get_pending_users(self):
         return [SimpleNamespace(username=name) for name in self.pending_users]
@@ -56,12 +65,28 @@ class DummyDB:
             return users
         return users
 
+    def get_developers(self):
+        return [SimpleNamespace(username=name) for name in self.developers]
+
     def get_user(self, username):
         if username in self.non_admin_users:
             return SimpleNamespace(username=username, trust_level=TrustLevel.USER)
         if username in self.admin_users:
             return SimpleNamespace(username=username, trust_level=TrustLevel.ADMIN)
+        if username in self.developers:
+            return SimpleNamespace(username=username, trust_level=TrustLevel.DEVELOPER)
         return None
+
+    def update_user_trust_level(self, username: str, trust_level: TrustLevel) -> None:
+        for bucket in (self.non_admin_users, self.admin_users, self.developers):
+            if username in bucket:
+                bucket.remove(username)
+        if trust_level == TrustLevel.DEVELOPER:
+            self.developers.append(username)
+        elif trust_level == TrustLevel.ADMIN:
+            self.admin_users.append(username)
+        elif trust_level == TrustLevel.USER:
+            self.non_admin_users.append(username)
 
 
 class AdminHost(AdministrationMixin):
@@ -111,6 +136,36 @@ async def test_require_admin_and_server_owner_decorators():
 
     await handler.owner_action(owner)
     assert calls["owner"] == 1
+
+
+@pytest.mark.asyncio
+async def test_require_developer_decorator():
+    host = AdminHost()
+    calls = {"dev": 0, "owner": 0}
+
+    class Handler(AdminHost):
+        def __init__(self):
+            super().__init__()
+
+        @require_developer
+        async def dev_action(self, user):
+            calls["dev"] += 1
+
+    handler = Handler()
+    admin_user = DummyUser("admin", TrustLevel.ADMIN)
+    dev_user = DummyUser("dev", TrustLevel.DEVELOPER)
+    owner_user = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    # Admin is below developer: blocked
+    await handler.dev_action(admin_user)
+    assert calls["dev"] == 0
+    assert admin_user.spoken[0][0] == "not-server-owner"
+    assert handler.main_menu_calls == ["admin"]
+
+    # Developer and owner both pass
+    await handler.dev_action(dev_user)
+    await handler.dev_action(owner_user)
+    assert calls["dev"] == 2
 
 
 def test_notify_admins_and_exclusions():
@@ -164,6 +219,8 @@ def test_show_admin_menu_includes_owner_actions():
         "promote_admin",
         "demote_admin",
         "virtual_bots",
+        "promote_developer",
+        "demote_developer",
         "transfer_ownership",
         "back",
     ]
@@ -561,3 +618,171 @@ async def test_reboot_spawn_success_disconnects_and_shuts_down(monkeypatch):
     assert disconnect["retry_after"] >= 1
     assert bob.connection.sent == []
     assert shutdowns == ["shutdown"]
+
+
+def test_show_admin_menu_developer_sees_admin_management_but_not_owner_actions():
+    """Developers get promote/demote-admin and virtual bots, but never the
+    ownership-change or developer-management actions."""
+    host = AdminHost()
+    dev_user = DummyUser("dev", TrustLevel.DEVELOPER)
+
+    host._show_admin_menu(dev_user)
+    dev_ids = _get_menu_ids(dev_user)
+    assert dev_ids == [
+        "account_approval",
+        "reset_user_password",
+        "ban_user",
+        "unban_user",
+        "reboot_server",
+        "promote_admin",
+        "demote_admin",
+        "virtual_bots",
+        "back",
+    ]
+
+
+def test_show_promote_developer_menu_lists_admins():
+    db = DummyDB()
+    db.admin_users = ["alice", "bob"]
+    host = AdminHost(db=db)
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    host._show_promote_developer_menu(owner)
+    assert owner.menus[-1]["menu_id"] == "promote_developer_menu"
+    assert _get_menu_ids(owner) == ["promote_dev_alice", "promote_dev_bob", "back"]
+    assert host._user_states["owner"]["menu"] == "promote_developer_menu"
+
+
+def test_show_promote_developer_menu_empty_falls_back():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    host._show_promote_developer_menu(owner)
+    assert owner.spoken[0][0] == "no-admins-to-promote-developer"
+    assert owner.menus[-1]["menu_id"] == "admin_menu"
+
+
+def test_show_demote_developer_menu_lists_developers():
+    db = DummyDB()
+    db.developers = ["carol"]
+    host = AdminHost(db=db)
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    host._show_demote_developer_menu(owner)
+    assert owner.menus[-1]["menu_id"] == "demote_developer_menu"
+    assert _get_menu_ids(owner) == ["demote_dev_carol", "back"]
+
+
+def test_show_demote_developer_menu_empty_falls_back():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    host._show_demote_developer_menu(owner)
+    assert owner.spoken[0][0] == "no-developers-to-demote"
+    assert owner.menus[-1]["menu_id"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_handle_promote_developer_selection_routes():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_promote_developer_selection(owner, "promote_dev_alice")
+    assert owner.menus[-1]["menu_id"] == "promote_developer_confirm_menu"
+    assert host._user_states["owner"]["target_username"] == "alice"
+
+    await host._handle_promote_developer_selection(owner, "back")
+    assert owner.menus[-1]["menu_id"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_handle_demote_developer_selection_routes():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_demote_developer_selection(owner, "demote_dev_carol")
+    assert owner.menus[-1]["menu_id"] == "demote_developer_confirm_menu"
+    assert host._user_states["owner"]["target_username"] == "carol"
+
+    await host._handle_demote_developer_selection(owner, "back")
+    assert owner.menus[-1]["menu_id"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_promote_to_developer_sets_level_and_notifies(monkeypatch):
+    db = DummyDB()
+    db.admin_users = ["alice"]
+    db.developers = []
+    host = AdminHost(db=db)
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    updated = []
+    monkeypatch.setattr(db, "update_user_trust_level", lambda u, t: updated.append((u, t)))
+
+    await host._promote_to_developer(owner, "alice", "nobody")
+
+    assert updated == [("alice", TrustLevel.DEVELOPER)]
+    assert owner.spoken[-1][0] == "promote-developer-announcement"
+    assert owner.menus[-1]["menu_id"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_promote_to_developer_rejects_non_admin(monkeypatch):
+    db = DummyDB()
+    db.non_admin_users = ["bob"]
+    host = AdminHost(db=db)
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    updated = []
+    monkeypatch.setattr(db, "update_user_trust_level", lambda u, t: updated.append((u, t)))
+
+    await host._promote_to_developer(owner, "bob", "all")
+
+    assert updated == []
+    assert owner.spoken[-1][0] == "promote-developer-unavailable"
+    assert owner.menus[-1]["menu_id"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_demote_from_developer_sets_admin_and_notifies(monkeypatch):
+    db = DummyDB()
+    db.developers = ["carol"]
+    host = AdminHost(db=db)
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    updated = []
+    monkeypatch.setattr(db, "update_user_trust_level", lambda u, t: updated.append((u, t)))
+
+    await host._demote_from_developer(owner, "carol", "nobody")
+
+    assert updated == [("carol", TrustLevel.ADMIN)]
+    assert owner.spoken[-1][0] == "demote-developer-announcement"
+    assert owner.menus[-1]["menu_id"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_demote_from_developer_rejects_non_developer(monkeypatch):
+    db = DummyDB()
+    db.admin_users = ["alice"]
+    host = AdminHost(db=db)
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    updated = []
+    monkeypatch.setattr(db, "update_user_trust_level", lambda u, t: updated.append((u, t)))
+
+    await host._demote_from_developer(owner, "alice", "all")
+
+    assert updated == []
+    assert owner.spoken[-1][0] == "demote-developer-unavailable"
+    assert owner.menus[-1]["menu_id"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_developer_cannot_transfer_ownership(monkeypatch):
+    """The one action a developer cannot do: change the server owner."""
+    host = AdminHost()
+    dev_user = DummyUser("dev", TrustLevel.DEVELOPER)
+    db = host._db
+    monkeypatch.setattr(db, "update_user_trust_level", lambda *a, **k: None)
+
+    await host._transfer_ownership(dev_user, "alice", "all")
+
+    # require_server_owner blocks developers; they land back on the main menu.
+    assert host.main_menu_calls == ["dev"]
+    assert dev_user.spoken[0][0] == "not-server-owner"

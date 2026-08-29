@@ -387,3 +387,18 @@ confirm-reboot-server = क्या आप सचमुच सर्वर प�
 server-reboot-warning = सर्वर { $seconds } सेकंड में पुनरारंभ हो रहा है।
 server-restarting = सर्वर पुनरारंभ हो रहा है। आप स्वचालित रूप से फिर से कनेक्ट होंगे।
 server-reboot-failed = सर्वर पुनरारंभ नहीं हो सका। कृपया फिर से प्रयास करें।
+
+# Developer role
+user-is-developer = { $player } PlayPalace के डेवलपर हैं।
+promote-developer = डेवलपर बनाएँ
+demote-developer = डेवलपर से हटाएँ
+confirm-promote-developer = क्या आप { $player } को डेवलपर बनाना चाहते हैं?
+confirm-demote-developer = क्या आप { $player } को डेवलपर से हटाना चाहते हैं?
+promote-developer-announcement = { $player } को डेवलपर बना दिया गया!
+promote-developer-announcement-you = आपको डेवलपर बना दिया गया!
+demote-developer-announcement = { $player } को डेवलपर से हटा दिया गया।
+demote-developer-announcement-you = आपको डेवलपर से हटा दिया गया।
+no-admins-to-promote-developer = डेवलपर बनाने के लिए कोई व्यवस्थापक उपलब्ध नहीं है।
+no-developers-to-demote = हटाने के लिए कोई डेवलपर उपलब्ध नहीं है।
+promote-developer-unavailable = { $player } को डेवलपर नहीं बनाया जा सकता।
+demote-developer-unavailable = { $player } को डेवलपर से नहीं हटाया जा सकता।

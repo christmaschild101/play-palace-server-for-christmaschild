@@ -586,3 +586,18 @@ confirm-reboot-server = Are you sure you want to reboot the server? All players 
 server-reboot-warning = Server is restarting in { $seconds } seconds.
 server-restarting = The server is restarting. You will be reconnected automatically.
 server-reboot-failed = The server could not be rebooted. Please try again.
+
+# Developer role
+user-is-developer = { $player } is a developer of PlayPalace.
+promote-developer = Promote Developer
+demote-developer = Demote Developer
+confirm-promote-developer = Are you sure you want to promote { $player } to developer?
+confirm-demote-developer = Are you sure you want to demote { $player } from developer?
+promote-developer-announcement = { $player } has been promoted to developer!
+promote-developer-announcement-you = You have been promoted to developer!
+demote-developer-announcement = { $player } has been demoted from developer.
+demote-developer-announcement-you = You have been demoted from developer.
+no-admins-to-promote-developer = No admins available to promote to developer.
+no-developers-to-demote = No developers available to demote.
+promote-developer-unavailable = { $player } cannot be promoted to developer.
+demote-developer-unavailable = { $player } cannot be demoted from developer.

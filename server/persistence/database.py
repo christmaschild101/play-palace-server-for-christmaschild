@@ -261,6 +261,19 @@ class Database:
         """Run database migrations for existing databases."""
         cursor = self._get_conn().cursor()
 
+        # v1: TrustLevel renumbering (SERVER_OWNER 3 -> 4, DEVELOPER now 3).
+        # Guarded by PRAGMA user_version so it runs exactly once; without the
+        # guard a re-run would wrongly convert developers (stored as 3) into
+        # server owners once the developer role exists.
+        user_version = cursor.execute("PRAGMA user_version").fetchone()[0]
+        if user_version < 1:
+            cursor.execute(
+                "UPDATE users SET trust_level = ? WHERE trust_level = ?",
+                (TrustLevel.SERVER_OWNER.value, 3),
+            )
+            cursor.execute("PRAGMA user_version = 1")
+            self._get_conn().commit()
+
         # Check which columns exist in users table
         cursor.execute("PRAGMA table_info(users)")
         columns = [row[1] for row in cursor.fetchall()]
@@ -665,6 +678,15 @@ class Database:
                 f"SELECT {self._USER_COLUMNS} FROM users WHERE trust_level = ? ORDER BY username",
                 (TrustLevel.ADMIN.value,),
             )
+        return [self._user_from_row(row) for row in cursor.fetchall()]
+
+    def get_developers(self) -> list[UserRecord]:
+        """Get all users who are developers (trust_level == DEVELOPER)."""
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            f"SELECT {self._USER_COLUMNS} FROM users WHERE trust_level = ? ORDER BY username",
+            (TrustLevel.DEVELOPER.value,),
+        )
         return [self._user_from_row(row) for row in cursor.fetchall()]
 
     # Fluent languages operations

@@ -387,3 +387,18 @@ confirm-reboot-server = Uqinisekile ukuthi ufuna ukuqala kabusha iseva? Bonke ab
 server-reboot-warning = Iseva izoqala kabusha ngemva kwemizuzuwana { $seconds }.
 server-restarting = Iseva iyaqala kabusha. Uzoxhunywa kabusha ngokuzenzakalelayo.
 server-reboot-failed = Iseva ayikwazanga ukuqala kabusha. Sicela uzame futhi.
+
+# Developer role
+user-is-developer = { $player } ungumthuthukisi we-PlayPalace.
+promote-developer = Khuphula kube ngumthuthukisi
+demote-developer = Ehlela kusuka kumthuthukisi
+confirm-promote-developer = Uqinisekile ukuthi ufuna ukukhuphula { $player } abe ngumthuthukisi?
+confirm-demote-developer = Uqinisekile ukuthi ufuna ukwehlela { $player } kusuka kumthuthukisi?
+promote-developer-announcement = { $player } ukhushulwe waba ngumthuthukisi!
+promote-developer-announcement-you = Ukhushulwe waba ngumthuthukisi!
+demote-developer-announcement = { $player } wehlisiwe kusuka kumthuthukisi.
+demote-developer-announcement-you = Wehlisiwe kusuka kumthuthukisi.
+no-admins-to-promote-developer = Awekho okuphatha abatholakalayo ukuthi bakhuphulwe babe ngabathuthukisi.
+no-developers-to-demote = Awekho abathuthukisi abatholakalayo ukuze behliswe.
+promote-developer-unavailable = { $player } akakwazi ukukhuphuka abe ngumthuthukisi.
+demote-developer-unavailable = { $player } akakwazi ukwehla kusuka kumthuthukisi.

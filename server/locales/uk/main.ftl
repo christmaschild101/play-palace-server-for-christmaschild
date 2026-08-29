@@ -387,3 +387,18 @@ confirm-reboot-server = Ви впевнені, що хочете перезап�
 server-reboot-warning = Сервер перезапуститься через { $seconds } секунд.
 server-restarting = Сервер перезапускається. Вас буде автоматично перепідключено.
 server-reboot-failed = Не вдалося перезапустити сервер. Спробуйте ще раз.
+
+# Developer role
+user-is-developer = { $player } є розробником PlayPalace.
+promote-developer = Призначити розробником
+demote-developer = Зняти з розробника
+confirm-promote-developer = Ви впевнені, що хочете призначити { $player } розробником?
+confirm-demote-developer = Ви впевнені, що хочете зняти { $player } з розробника?
+promote-developer-announcement = { $player } призначається розробником!
+promote-developer-announcement-you = Вас призначено розробником!
+demote-developer-announcement = { $player } знято з розробника.
+demote-developer-announcement-you = Вас знято з розробника.
+no-admins-to-promote-developer = Немає доступних адміністраторів для призначення розробником.
+no-developers-to-demote = Немає доступних розробників для зняття.
+promote-developer-unavailable = { $player } не може бути призначений розробником.
+demote-developer-unavailable = { $player } не може бути знятий з розробника.

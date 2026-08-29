@@ -63,6 +63,17 @@ def test_broadcast_owner_announcement_only_hits_approved(server):
     assert unapproved.spoken == []
 
 
+def test_broadcast_developer_announcement_only_hits_approved(server):
+    dev_user = DummyUser(approved=True)
+    unapproved = DummyUser(approved=False)
+    server._users = {"dev": dev_user, "waiting": unapproved}
+
+    server._broadcast_developer_announcement("charlie")
+
+    assert dev_user.spoken == [("user-is-developer", "activity", {"player": "charlie"})]
+    assert unapproved.spoken == []
+
+
 def test_notify_pending_account_requests_speaks_and_sounds(server):
     user = DummyUser()
     server._db = FakeDBPending(["someone"])

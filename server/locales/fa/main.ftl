@@ -387,3 +387,18 @@ confirm-reboot-server = مطمئنید میخواهید سرور را راهان
 server-reboot-warning = سرور تا { $seconds } ثانیه دیگر راهاندازی مجدد میشود.
 server-restarting = سرور در حال راهاندازی مجدد است. بهطور خودکار دوباره متصل خواهید شد.
 server-reboot-failed = سرور راهاندازی مجدد نشد. لطفاً دوباره تلاش کنید.
+
+# Developer role
+user-is-developer = { $player } توسعه‌دهنده PlayPalace است.
+promote-developer = ارتقا به توسعه‌دهنده
+demote-developer = تنزل از توسعه‌دهنده
+confirm-promote-developer = آیا از ارتقای { $player } به توسعه‌دهنده مطمئن هستید؟
+confirm-demote-developer = آیا از تنزل { $player } از توسعه‌دهنده مطمئن هستید؟
+promote-developer-announcement = { $player } به توسعه‌دهنده ارتقا یافت!
+promote-developer-announcement-you = شما به توسعه‌دهنده ارتقا یافتید!
+demote-developer-announcement = { $player } از توسعه‌دهنده تنزل یافت.
+demote-developer-announcement-you = شما از توسعه‌دهنده تنزل یافتید.
+no-admins-to-promote-developer = مدیری برای ارتقا به توسعه‌دهنده موجود نیست.
+no-developers-to-demote = توسعه‌دهنده‌ای برای تنزل موجود نیست.
+promote-developer-unavailable = { $player } نمی‌تواند به توسعه‌دهنده ارتقا یابد.
+demote-developer-unavailable = { $player } نمی‌تواند از توسعه‌دهنده تنزل یابد.

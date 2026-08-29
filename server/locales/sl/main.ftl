@@ -387,3 +387,18 @@ confirm-reboot-server = Ali ste prepričani, da želite znova zagnati strežnik?
 server-reboot-warning = Strežnik se bo znova zagnal čez { $seconds } sekund.
 server-restarting = Strežnik se ponovno zaganja. Samodejno boste znova povezani.
 server-reboot-failed = Strežnika ni bilo mogoče znova zagnati. Poskusite znova.
+
+# Developer role
+user-is-developer = { $player } je razvijalec igre PlayPalace.
+promote-developer = Povišaj v razvijalca
+demote-developer = Znižaj iz razvijalca
+confirm-promote-developer = Ali res želite povikati { $player } v razvijalca?
+confirm-demote-developer = Ali res želite znižati { $player } iz razvijalca?
+promote-developer-announcement = { $player } je bil povišan v razvijalca!
+promote-developer-announcement-you = Bili ste povišani v razvijalca!
+demote-developer-announcement = { $player } je bil znižan iz razvijalca.
+demote-developer-announcement-you = Bili ste znižani iz razvijalca.
+no-admins-to-promote-developer = Ni administratorjev za povišanje v razvijalca.
+no-developers-to-demote = Ni razvijalcev za znižanje.
+promote-developer-unavailable = { $player } ni mogoče povikati v razvijalca.
+demote-developer-unavailable = { $player } ni mogoče znižati iz razvijalca.

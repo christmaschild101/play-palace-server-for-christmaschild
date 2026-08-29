@@ -375,3 +375,18 @@ confirm-reboot-server = サーバーを再起動しますか? すべてのプレ
 server-reboot-warning = サーバーは{ $seconds }秒後に再起動します。
 server-restarting = サーバーを再起動しています。自動的に再接続されます。
 server-reboot-failed = サーバーを再起動できませんでした。もう一度お試しください。
+
+# Developer role
+user-is-developer = { $player }はPlayPalaceの開発者です。
+promote-developer = 開発者に昇格
+demote-developer = 開発者から降格
+confirm-promote-developer = { $player } を開発者に昇格させますか？
+confirm-demote-developer = { $player } を開発者から降格させますか？
+promote-developer-announcement = { $player } が開発者に昇格されました!
+promote-developer-announcement-you = あなたは開発者に昇格されました!
+demote-developer-announcement = { $player } が開発者から降格されました。
+demote-developer-announcement-you = あなたは開発者から降格されました。
+no-admins-to-promote-developer = 開発者に昇格できる管理者がいません。
+no-developers-to-demote = 降格できる開発者がいません。
+promote-developer-unavailable = { $player } は開発者に昇格できません。
+demote-developer-unavailable = { $player } は開発者から降格できません。

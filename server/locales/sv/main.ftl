@@ -387,3 +387,18 @@ confirm-reboot-server = Är du säker på att du vill starta om servern? Alla sp
 server-reboot-warning = Servern startas om om { $seconds } sekunder.
 server-restarting = Servern startas om. Du återansluts automatiskt.
 server-reboot-failed = Servern kunde inte startas om. Försök igen.
+
+# Developer role
+user-is-developer = { $player } är en utvecklare av PlayPalace.
+promote-developer = Befordra till utvecklare
+demote-developer = Degradera från utvecklare
+confirm-promote-developer = Är du säker på att du vill befordra { $player } till utvecklare?
+confirm-demote-developer = Är du säker på att du vill degradera { $player } från utvecklare?
+promote-developer-announcement = { $player } har befordrats till utvecklare!
+promote-developer-announcement-you = Du har befordrats till utvecklare!
+demote-developer-announcement = { $player } har degraderats från utvecklare.
+demote-developer-announcement-you = Du har degraderats från utvecklare.
+no-admins-to-promote-developer = Inga administratörer finns att befordra till utvecklare.
+no-developers-to-demote = Inga utvecklare finns att degradera.
+promote-developer-unavailable = { $player } kan inte befordras till utvecklare.
+demote-developer-unavailable = { $player } kan inte degraderas från utvecklare.

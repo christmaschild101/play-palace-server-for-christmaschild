@@ -387,3 +387,18 @@ confirm-reboot-server = Sind Sie sicher, dass Sie den Server neu starten möchte
 server-reboot-warning = Der Server wird in { $seconds } Sekunden neu gestartet.
 server-restarting = Der Server wird neu gestartet. Sie werden automatisch wieder verbunden.
 server-reboot-failed = Der Server konnte nicht neu gestartet werden. Bitte versuchen Sie es erneut.
+
+# Developer role
+user-is-developer = { $player } ist ein Entwickler von PlayPalace.
+promote-developer = Zum Entwickler befördern
+demote-developer = Entwicklerstatus entziehen
+confirm-promote-developer = Möchten Sie { $player } wirklich zum Entwickler befördern?
+confirm-demote-developer = Möchten Sie { $player } wirklich den Entwicklerstatus entziehen?
+promote-developer-announcement = { $player } wurde zum Entwickler befördert!
+promote-developer-announcement-you = Sie wurden zum Entwickler befördert!
+demote-developer-announcement = { $player } wurde der Entwicklerstatus entzogen.
+demote-developer-announcement-you = Ihr Entwicklerstatus wurde entzogen.
+no-admins-to-promote-developer = Keine Administratoren für die Beförderung zum Entwickler verfügbar.
+no-developers-to-demote = Keine Entwickler für den Statusentzug verfügbar.
+promote-developer-unavailable = { $player } kann nicht zum Entwickler befördert werden.
+demote-developer-unavailable = { $player } kann der Entwicklerstatus nicht entzogen werden.

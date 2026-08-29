@@ -387,3 +387,18 @@ confirm-reboot-server = Biztosan újra szeretné indítani a szervert? Minden j�
 server-reboot-warning = A szerver { $seconds } másodperc múlva újraindul.
 server-restarting = A szerver újraindul. Automatikusan újra csatlakozik.
 server-reboot-failed = A szerver nem indítható újra. Kérjük, próbálja újra.
+
+# Developer role
+user-is-developer = { $player } a PlayPalace fejlesztője.
+promote-developer = Fejlesztővé léptetés
+demote-developer = Fejlesztői rang megvonása
+confirm-promote-developer = Biztosan fejlesztővé lépteti { $player }?
+confirm-demote-developer = Biztosan megvonja { $player } fejlesztői rangját?
+promote-developer-announcement = { $player } fejlesztővé lett léptetve!
+promote-developer-announcement-you = Fejlesztővé lett léptetve!
+demote-developer-announcement = { $player } fejlesztői rangja megvonásra került.
+demote-developer-announcement-you = A fejlesztői rangja megvonásra került.
+no-admins-to-promote-developer = Nincs adminisztrátor a fejlesztővé léptetéshez.
+no-developers-to-demote = Nincs fejlesztő a rang megvonáshoz.
+promote-developer-unavailable = { $player } nem léptethető fejlesztővé.
+demote-developer-unavailable = { $player } fejlesztői rangja nem vonható meg.

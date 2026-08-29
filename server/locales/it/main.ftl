@@ -387,3 +387,18 @@ confirm-reboot-server = Sei sicuro di voler riavviare il server? Tutti i giocato
 server-reboot-warning = Il server si riavvierà tra { $seconds } secondi.
 server-restarting = Il server si sta riavviando. Verrai riconnesso automaticamente.
 server-reboot-failed = Impossibile riavviare il server. Riprova.
+
+# Developer role
+user-is-developer = { $player } è uno sviluppatore di PlayPalace.
+promote-developer = Promuovi a sviluppatore
+demote-developer = Rimuovi da sviluppatore
+confirm-promote-developer = Vuoi davvero promuovere { $player } a sviluppatore?
+confirm-demote-developer = Vuoi davvero rimuovere { $player } da sviluppatore?
+promote-developer-announcement = { $player } è stato promosso a sviluppatore!
+promote-developer-announcement-you = Sei stato promosso a sviluppatore!
+demote-developer-announcement = { $player } è stato rimosso da sviluppatore.
+demote-developer-announcement-you = Sei stato rimosso da sviluppatore.
+no-admins-to-promote-developer = Nessun amministratore disponibile da promuovere a sviluppatore.
+no-developers-to-demote = Nessuno sviluppatore disponibile da rimuovere.
+promote-developer-unavailable = { $player } non può essere promosso a sviluppatore.
+demote-developer-unavailable = { $player } non può essere rimosso da sviluppatore.

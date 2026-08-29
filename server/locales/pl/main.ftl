@@ -366,3 +366,18 @@ confirm-reboot-server = Czy na pewno chcesz ponownie uruchomić serwer? Wszyscy 
 server-reboot-warning = Serwer uruchomi się ponownie za { $seconds } sekund.
 server-restarting = Serwer jest ponownie uruchamiany. Zostaniesz automatycznie połączony.
 server-reboot-failed = Nie udało się ponownie uruchomić serwera. Spróbuj ponownie.
+
+# Developer role
+user-is-developer = { $player } jest programistą PlayPalace.
+promote-developer = Awans na programistę
+demote-developer = Degradacja z programisty
+confirm-promote-developer = Czy na pewno chcesz awansować { $player } na programistę?
+confirm-demote-developer = Czy na pewno chcesz zdegradować { $player } z programisty?
+promote-developer-announcement = { $player } został awansowany na programistę!
+promote-developer-announcement-you = Zostałeś awansowany na programistę!
+demote-developer-announcement = { $player } został zdegradowany z programisty.
+demote-developer-announcement-you = Zostałeś zdegradowany z programisty.
+no-admins-to-promote-developer = Brak administratorów do awansu na programistę.
+no-developers-to-demote = Brak programistów do degradacji.
+promote-developer-unavailable = { $player } nie może zostać awansowany na programistę.
+demote-developer-unavailable = { $player } nie może zostać zdegradowany z programisty.

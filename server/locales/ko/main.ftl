@@ -375,3 +375,18 @@ confirm-reboot-server = 서버를 다시 시작하시겠습니까? 모든 플레
 server-reboot-warning = 서버가 { $seconds }초 후 다시 시작됩니다.
 server-restarting = 서버가 다시 시작되고 있습니다. 자동으로 다시 연결됩니다.
 server-reboot-failed = 서버를 다시 시작할 수 없습니다. 다시 시도해 주세요.
+
+# Developer role
+user-is-developer = { $player } 님은 PlayPalace의 개발자입니다.
+promote-developer = 개발자로 승급
+demote-developer = 개발자에서 강등
+confirm-promote-developer = { $player } 님을 개발자로 승급하시겠습니까?
+confirm-demote-developer = { $player } 님을 개발자에서 강등하시겠습니까?
+promote-developer-announcement = { $player } 님이 개발자로 승급되었습니다!
+promote-developer-announcement-you = 당신은 개발자로 승급되었습니다!
+demote-developer-announcement = { $player } 님이 개발자에서 강등되었습니다.
+demote-developer-announcement-you = 당신은 개발자에서 강등되었습니다.
+no-admins-to-promote-developer = 개발자로 승급할 관리자가 없습니다.
+no-developers-to-demote = 강등할 개발자가 없습니다.
+promote-developer-unavailable = { $player } 님은 개발자로 승급할 수 없습니다.
+demote-developer-unavailable = { $player } 님은 개발자에서 강등할 수 없습니다.

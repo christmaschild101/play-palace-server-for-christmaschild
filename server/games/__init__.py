@@ -42,6 +42,13 @@ from .coup.game import CoupGame
 from .dominos.game import DominosGame
 from .lastcard.game import LastCardGame
 from .pusoydos.game import PusoyDosGame
+from .battle.game import BattleGame
+from .bunko.game import BunkoGame
+from .citadels.game import CitadelsGame
+from .colorgame.game import ColorGameGame
+from .deadmansdeck.game import DeadMansDeckGame
+from .deadmanspoker.game import DeadMansPokerGame
+from .tienlen.game import TienLenGame
 
 __all__ = [
     "Game",
@@ -83,4 +90,11 @@ __all__ = [
     "DominosGame",
     "LastCardGame",
     "PusoyDosGame",
+    "BattleGame",
+    "BunkoGame",
+    "CitadelsGame",
+    "ColorGameGame",
+    "DeadMansDeckGame",
+    "DeadMansPokerGame",
+    "TienLenGame",
 ]

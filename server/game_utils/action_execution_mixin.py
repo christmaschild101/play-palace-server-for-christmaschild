@@ -177,9 +177,14 @@ class ActionExecutionMixin:
 
             # Build menu items with localized labels if available
             items = []
+            option_label_method = None
+            if req.option_label:
+                option_label_method = getattr(self, req.option_label, None)
             for opt in options:
                 if menu_option_meta:
                     display_text = menu_option_meta.get_localized_choice(opt, user.locale)
+                elif option_label_method:
+                    display_text = option_label_method(player, opt)
                 else:
                     display_text = opt
                 items.append(MenuItem(text=display_text, id=opt))

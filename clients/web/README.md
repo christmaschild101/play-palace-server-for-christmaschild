@@ -5,7 +5,7 @@ This is an early version of a web client for the PlayPalace. is designed to conn
 ## Public Setup
 
 1. Copy the `/clients/web` directory to a public website location.
-2. Copy the sounds folder from `/clients/desktop` to the same place, and put it in `./sounds`.
+2. The `sounds` folder is a junction/symlink to `/clients/desktop/sounds`. On Windows it is created with `mklink /J sounds ..\desktop\sounds`; on Linux/macOS use `ln -s ../desktop/sounds sounds`. If you copy the web folder elsewhere, copy the desktop sounds folder to `./sounds` instead.
 3. Copy the config sample to config.js and update any of the items if desired, such as server, port, or sounds folder.
 4. GO to your new URL. You should see a login screen.
 

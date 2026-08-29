@@ -33,6 +33,11 @@ from ..game_utils.action_set_creation_mixin import ActionSetCreationMixin
 from ..game_utils.action_execution_mixin import ActionExecutionMixin
 from ..game_utils.action_set_system_mixin import ActionSetSystemMixin
 from ..game_utils.game_status import GameStatus
+from ..game_utils.client_types import (
+    is_touch_client as user_is_touch_client,
+    is_touch_client_type,
+)
+from ..game_utils.sequence_runner_mixin import SequenceRunnerMixin, SequenceState
 from server.core.ui.keybinds import Keybind
 
 
@@ -141,6 +146,7 @@ class Game(
     ActionExecutionMixin,
     OptionsHandlerMixin,
     ActionSetSystemMixin,
+    SequenceRunnerMixin,
 ):
     """Abstract base class for all games.
 
@@ -192,6 +198,8 @@ class Game(
         default_factory=list
     )  # [(tick, event_type, data), ...]
     is_animating: bool = False  # True while event sequence is playing
+    # Cinematic sequence runner state (serialized for persistence)
+    active_sequences: list = field(default_factory=list)  # [SequenceState, ...]
     # Action sets (serialized - actions are pure data now)
     player_action_sets: dict[str, list[ActionSet]] = field(default_factory=dict)
     # Team manager (serialized for persistence)
@@ -310,6 +318,19 @@ class Game(
         - "leaderboard-{format}-entry" for each entry
         """
         return []
+
+    @staticmethod
+    def is_touch_client_type(client_type: str | None) -> bool:
+        """Return True for touch-oriented clients."""
+        return is_touch_client_type(client_type)
+
+    def is_touch_client(self, user: User | None) -> bool:
+        """Return True if the provided user is on a touch-oriented client."""
+        return bool(user and user_is_touch_client(user))
+
+    def is_touch_player(self, player: Player) -> bool:
+        """Return True if the player's attached user is on a touch-oriented client."""
+        return self.is_touch_client(self.get_user(player))
 
     def prestart_validate(self) -> list[str] | list[tuple[str, dict]]:
         """Validate game configuration before starting.

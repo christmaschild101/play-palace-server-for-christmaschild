@@ -34,6 +34,8 @@ class MenuInput(DataClassJSONMixin):
     options: str  # Method name that returns list[str]
     bot_select: str | None = None  # Method name for bot auto-selection
     include_cancel: bool = True
+    pre_input_check: str | None = None  # Method name returning disabled reason key, or None
+    option_label: str | None = None  # Optional method name for localized option labels
 
 
 @dataclass

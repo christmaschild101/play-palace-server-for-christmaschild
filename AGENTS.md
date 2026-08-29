@@ -49,6 +49,7 @@ This repo uses Python 3.13+ and `uv` for dependency management.
 ## Commit & Pull Request Guidelines
 - Recent commit messages are short, sentence-case descriptions (e.g., “Modernize server networking…”). Follow that style; keep it one line and descriptive.
 - PRs should include: a clear summary, testing notes (commands + results), and links to relevant issues/threads if applicable.
+- **Update the server changelog whenever you add a feature.** Every time a feature is added, add a dated entry at the top of `server/documents/shared/server_changelog/en.md` describing the change, and include that file in the same commit as the feature.
 
 ## Deployment & Updates
 - **Agents run the dev loop only up to `git push`.** Make your changes, keep locales and the packet schema in sync, run the server tests (`cd server && uv run pytest`) and `ruff`, then push to the fork. That is where an agent's work ends.

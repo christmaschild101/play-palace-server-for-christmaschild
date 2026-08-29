@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bot) felülírások: {
 virtual-bots-profiles-no-overrides = örökli az alap konfigurációt
 
 localization-in-progress-try-again = A lokalizáció folyamatban van. Kérjük, próbálja újra egy perc múlva.
+
+# Server reboot
+admin-reboot-server = Szerver újraindítása
+confirm-reboot-server = Biztosan újra szeretné indítani a szervert? Minden játékos le lesz csatlakoztatva, majd újra csatlakozik.
+server-reboot-warning = A szerver { $seconds } másodperc múlva újraindul.
+server-restarting = A szerver újraindul. Automatikusan újra csatlakozik.
+server-reboot-failed = A szerver nem indítható újra. Kérjük, próbálja újra.

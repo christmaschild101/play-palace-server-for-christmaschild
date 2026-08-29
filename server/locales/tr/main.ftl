@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bot) geçersiz kılmal
 virtual-bots-profiles-no-overrides = temel yapılandırmayı miras alır
 
 localization-in-progress-try-again = Yerelleştirme sürüyor. Lütfen bir dakika sonra tekrar deneyin.
+
+# Server reboot
+admin-reboot-server = Sunucuyu yeniden başlat
+confirm-reboot-server = Sunucuyu yeniden başlatmak istediğinizden emin misiniz? Tüm oyuncular bağlantısı kesilip yeniden bağlanacaktır.
+server-reboot-warning = Sunucu { $seconds } saniye içinde yeniden başlatılacak.
+server-restarting = Sunucu yeniden başlatılıyor. Otomatik olarak yeniden bağlanacaksınız.
+server-reboot-failed = Sunucu yeniden başlatılamadı. Lütfen tekrar deneyin.

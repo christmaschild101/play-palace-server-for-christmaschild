@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } (ama-bots angu-{ $bot_count }) kweqiwe
 virtual-bots-profiles-no-overrides = idla ifa ukucushwa okuyisisekelo
 
 localization-in-progress-try-again = Ukuhumusha kusaqhubeka. Sicela uzame futhi emzuzwini.
+
+# Server reboot
+admin-reboot-server = Qala kabusha iseva
+confirm-reboot-server = Uqinisekile ukuthi ufuna ukuqala kabusha iseva? Bonke abadlali bazoxhunyaniswa futhi baxhumane kabusha.
+server-reboot-warning = Iseva izoqala kabusha ngemva kwemizuzuwana { $seconds }.
+server-restarting = Iseva iyaqala kabusha. Uzoxhunywa kabusha ngokuzenzakalelayo.
+server-reboot-failed = Iseva ayikwazanga ukuqala kabusha. Sicela uzame futhi.

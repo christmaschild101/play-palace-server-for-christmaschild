@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } botova) nadjačava: { 
 virtual-bots-profiles-no-overrides = nasljeđuje osnovnu konfiguraciju
 
 localization-in-progress-try-again = Lokalizacija je u tijeku. Pokušajte ponovno za minutu.
+
+# Server reboot
+admin-reboot-server = Ponovno pokreni poslužitelj
+confirm-reboot-server = Jeste li sigurni da želite ponovno pokrenuti poslužitelj? Svi igrači bit će odspojeni i ponovno povezani.
+server-reboot-warning = Poslužitelj se ponovno pokreće za { $seconds } sekundi.
+server-restarting = Poslužitelj se ponovno pokreće. Bit ćete automatski ponovno povezani.
+server-reboot-failed = Ponovno pokretanje poslužitelja nije uspjelo. Pokušajte ponovno.

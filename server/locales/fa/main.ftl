@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } ربات) بازنوی
 virtual-bots-profiles-no-overrides = ارث‌بری پیکربندی پایه
 
 localization-in-progress-try-again = بومی‌سازی در حال انجام است. لطفاً یک دقیقه دیگر دوباره تلاش کنید.
+
+# Server reboot
+admin-reboot-server = راهاندازی مجدد سرور
+confirm-reboot-server = مطمئنید میخواهید سرور را راهاندازی مجدد کنید؟ همه بازیکنان قطع و دوباره متصل خواهند شد.
+server-reboot-warning = سرور تا { $seconds } ثانیه دیگر راهاندازی مجدد میشود.
+server-restarting = سرور در حال راهاندازی مجدد است. بهطور خودکار دوباره متصل خواهید شد.
+server-reboot-failed = سرور راهاندازی مجدد نشد. لطفاً دوباره تلاش کنید.

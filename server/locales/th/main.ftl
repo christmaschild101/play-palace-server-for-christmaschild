@@ -368,3 +368,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } บอต) แทน�
 virtual-bots-profiles-no-overrides = สืบทอดการกำหนดค่าพื้นฐาน
 
 localization-in-progress-try-again = กำลังโหลดการแปลภาษา โปรดลองอีกครั้งในอีกหนึ่งนาที
+
+# Server reboot
+admin-reboot-server = รีสตาร์ตเซิร์ฟเวอร์
+confirm-reboot-server = คุณแน่ใจหรือไม่ว่าต้องการรีสตาร์ตเซิร์ฟเวอร์? ผู้เล่นทุกคนจะถูกตัดการเชื่อมต่อและเชื่อมต่อใหม่
+server-reboot-warning = เซิร์ฟเวอร์จะรีสตาร์ตใน { $seconds } วินาที
+server-restarting = เซิร์ฟเวอร์กำลังรีสตาร์ต คุณจะถูกเชื่อมต่อใหม่อัตโนมัติ
+server-reboot-failed = ไม่สามารถรีสตาร์ตเซิร์ฟเวอร์ได้ โปรดลองอีกครั้ง

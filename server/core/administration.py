@@ -1,6 +1,9 @@
 """Administration functionality for the PlayPalace server."""
 
+import asyncio
 import functools
+import logging
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .users.network_user import NetworkUser
@@ -10,6 +13,11 @@ from .ui.common_flows import show_yes_no_menu
 
 if TYPE_CHECKING:
     from ..persistence.database import Database
+
+LOG = logging.getLogger("playpalace.admin")
+
+# Deploy helper invoked on in-game reboot (<repo>/scripts/restart-server.sh)
+_RESTART_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "restart-server.sh"
 
 
 # Activity buffer helper for admin/system announcements
@@ -98,6 +106,10 @@ class AdministrationMixin:
             MenuItem(
                 text=Localization.get(user.locale, "unban-user"),
                 id="unban_user",
+            ),
+            MenuItem(
+                text=Localization.get(user.locale, "admin-reboot-server"),
+                id="reboot_server",
             ),
         ]
         # Only server owners can promote/demote admins, manage virtual bots, and transfer ownership
@@ -373,6 +385,12 @@ class AdministrationMixin:
             "target_username": target_username,
         }
 
+    def _show_reboot_server_confirm_menu(self, user: NetworkUser) -> None:
+        """Show confirmation menu for rebooting the server."""
+        question = Localization.get(user.locale, "confirm-reboot-server")
+        show_yes_no_menu(user, "reboot_server_confirm_menu", question)
+        self._user_states[user.username] = {"menu": "reboot_server_confirm_menu"}
+
     def _show_ban_reason_editbox(
         self, user: NetworkUser, target_username: str, broadcast_scope: str
     ) -> None:
@@ -478,6 +496,8 @@ class AdministrationMixin:
             self._show_unban_user_menu(user)
         elif selection_id == "virtual_bots":
             self._show_virtual_bots_menu(user)
+        elif selection_id == "reboot_server":
+            self._show_reboot_server_confirm_menu(user)
         elif selection_id == "back":
             self._show_main_menu(user)
 
@@ -727,6 +747,15 @@ class AdministrationMixin:
         else:
             # No or back - return to unban user menu
             self._show_unban_user_menu(user)
+
+    async def _handle_reboot_server_confirm_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle reboot server confirmation menu selection."""
+        if selection_id == "yes":
+            await self._reboot_server(user)
+        else:
+            self._show_admin_menu(user)
 
     async def _handle_ban_reason_editbox(self, admin: NetworkUser, text: str, state: dict) -> None:
         """Handle ban reason editbox submission."""
@@ -1094,6 +1123,67 @@ class AdministrationMixin:
             )
 
         self._show_unban_user_menu(admin)
+
+    @require_admin
+    async def _reboot_server(self, admin: NetworkUser) -> None:
+        """Warn all players, then reboot the server (git pull + restart).
+
+        Players receive a countdown warning, then are disconnected with an
+        auto-reconnect request before the server shuts down gracefully. A
+        detached helper (spawned via ``systemd-run``) waits for the server
+        process to exit, pulls the latest code, and restarts the service.
+        Absolutely requires the helper to launch successfully; otherwise the
+        reboot is aborted and the server keeps running.
+        """
+        reboot_seconds = 10
+        retry_after = 15
+
+        # 1) Warn all online approved players
+        for username, user in self._users.items():
+            if not user.approved:
+                continue
+            _speak_activity(user, "server-reboot-warning", seconds=reboot_seconds)
+            user.play_sound("accountactionnotify.ogg")
+
+        await asyncio.sleep(reboot_seconds)
+
+        # 2) Launch the detached deploy helper; abort quietly if it cannot spawn
+        try:
+            proc = await asyncio.create_subprocess_exec(
+                "systemd-run",
+                "--user",
+                "--collect",
+                "--unit=playpalace-deploy",
+                str(_RESTART_SCRIPT),
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL,
+            )
+            rc = await asyncio.wait_for(proc.wait(), timeout=15)
+            if rc != 0:
+                raise RuntimeError(f"systemd-run exited with code {rc}")
+        except Exception as exc:  # noqa: BLE001
+            LOG.warning("Failed to launch server reboot helper: %s", exc)
+            _speak_activity(admin, "server-reboot-failed")
+            self._show_admin_menu(admin)
+            return
+
+        # 3) Disconnect all clients with an auto-reconnect request
+        for username, user in list(self._users.items()):
+            if not user.approved:
+                continue
+            for msg in user.get_queued_messages():
+                await user.connection.send(msg)
+            await user.connection.send(
+                {
+                    "type": "disconnect",
+                    "reconnect": True,
+                    "retry_after": retry_after,
+                    "message": Localization.get(user.locale, "server-restarting"),
+                }
+            )
+
+        # 4) Graceful shutdown; run_server loop breaks, server.stop() saves state
+        self.request_shutdown()
 
     # ==================== Virtual Bot Actions ====================
 

@@ -209,8 +209,15 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             resolved_locales = provided_locales
         Localization.init(resolved_locales, enabled_locales=self._enabled_locales)
 
+    def request_shutdown(self) -> None:
+        """Signal the server run loop to shut down gracefully (for in-game reboot)."""
+        if getattr(self, "_shutdown_event", None) is not None:
+            self._shutdown_event.set()
+
     async def start(self) -> None:
         """Start the server."""
+        # Shutdown flag for graceful in-game reboot
+        self._shutdown_event = asyncio.Event()
         # Load server configuration early to surface config errors before DB/network init
         server_config = load_server_config(self._config_path)
         tick_interval_ms = server_config.get("tick_interval_ms")
@@ -2306,6 +2313,10 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             "virtual_bots_menu": (self._handle_virtual_bots_selection, (user, selection_id)),
             "virtual_bots_clear_confirm_menu": (
                 self._handle_virtual_bots_clear_confirm_selection,
+                (user, selection_id),
+            ),
+            "reboot_server_confirm_menu": (
+                self._handle_reboot_server_confirm_selection,
                 (user, selection_id),
             ),
         }
@@ -4442,8 +4453,8 @@ async def run_server(
     await server.start()
 
     try:
-        # Run forever
-        while True:
+        # Run until a graceful shutdown is requested (e.g. in-game reboot)
+        while not server._shutdown_event.is_set():
             await asyncio.sleep(1)
     except KeyboardInterrupt:
         pass

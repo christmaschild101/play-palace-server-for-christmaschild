@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
@@ -55,9 +56,20 @@ async def test_client_allowed_when_running(server):
     assert client.sent == []
     assert client.closed is False
 
+def test_request_shutdown_is_noop_before_start(server):
+    """request_shutdown before start() must not error (guarded)."""
+    # _shutdown_event is None until start(); request_shutdown must be a no-op.
+    server.request_shutdown()
+
 
 @pytest.mark.asyncio
-async def test_maintenance_mode_disconnects_clients(server):
+async def test_request_shutdown_sets_event(server):
+    """request_shutdown sets the event that breaks the run_server loop."""
+    server._shutdown_event = asyncio.Event()
+    assert server._shutdown_event.is_set() is False
+    server.request_shutdown()
+    assert server._shutdown_event.is_set() is True
+
     server._lifecycle.resolve_gate("startup")
     client = StubClient()
     server._ws_server = SimpleNamespace(clients={"1": client})

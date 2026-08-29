@@ -359,3 +359,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) overrides: { $ov
 virtual-bots-profiles-no-overrides = inherits base configuration
 
 localization-in-progress-try-again = Lokalizacja jest w toku. Spróbuj ponownie za minutę.
+
+# Server reboot
+admin-reboot-server = Uruchom ponownie serwer
+confirm-reboot-server = Czy na pewno chcesz ponownie uruchomić serwer? Wszyscy gracze zostaną rozłączeni i ponownie połączeni.
+server-reboot-warning = Serwer uruchomi się ponownie za { $seconds } sekund.
+server-restarting = Serwer jest ponownie uruchamiany. Zostaniesz automatycznie połączony.
+server-reboot-failed = Nie udało się ponownie uruchomić serwera. Spróbuj ponownie.

@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } botar) åsidosätter: 
 virtual-bots-profiles-no-overrides = ärver baskonfiguration
 
 localization-in-progress-try-again = Lokalisering pågår. Försök igen om en minut.
+
+# Server reboot
+admin-reboot-server = Starta om servern
+confirm-reboot-server = Är du säker på att du vill starta om servern? Alla spelare kommer att kopplas från och återanslutas.
+server-reboot-warning = Servern startas om om { $seconds } sekunder.
+server-restarting = Servern startas om. Du återansluts automatiskt.
+server-reboot-failed = Servern kunde inte startas om. Försök igen.

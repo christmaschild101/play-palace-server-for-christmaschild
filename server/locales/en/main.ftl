@@ -579,3 +579,10 @@ localization-in-progress-try-again = Localization in progress. Please try again 
 
 # Errors
 internal-error = Something went wrong. Please try again.
+
+# Server reboot
+admin-reboot-server = Reboot server
+confirm-reboot-server = Are you sure you want to reboot the server? All players will be disconnected and reconnected.
+server-reboot-warning = Server is restarting in { $seconds } seconds.
+server-restarting = The server is restarting. You will be reconnected automatically.
+server-reboot-failed = The server could not be rebooted. Please try again.

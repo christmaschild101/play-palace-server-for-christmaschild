@@ -148,6 +148,7 @@ def test_show_admin_menu_includes_owner_actions():
         "reset_user_password",
         "ban_user",
         "unban_user",
+        "reboot_server",
         "back",
     ]
     assert host._user_states["admin"]["menu"] == "admin_menu"
@@ -159,6 +160,7 @@ def test_show_admin_menu_includes_owner_actions():
         "reset_user_password",
         "ban_user",
         "unban_user",
+        "reboot_server",
         "promote_admin",
         "demote_admin",
         "virtual_bots",
@@ -421,3 +423,141 @@ async def test_handle_admin_menu_selection_routes_correctly(monkeypatch):
 
     await host._handle_admin_menu_selection(admin_user, "virtual_bots")
     assert called == [("virtual", "admin")]
+
+
+@pytest.mark.asyncio
+async def test_admin_menu_reboot_server_routes_to_confirm(monkeypatch):
+    host = AdminHost()
+    admin_user = DummyUser("admin", TrustLevel.ADMIN)
+    shown = []
+    monkeypatch.setattr(
+        host,
+        "_show_reboot_server_confirm_menu",
+        types.MethodType(lambda self, user: shown.append(user.username), host),
+    )
+
+    await host._handle_admin_menu_selection(admin_user, "reboot_server")
+    assert shown == ["admin"]
+
+
+@pytest.mark.asyncio
+async def test_reboot_confirm_menu_yes_triggers_reboot(monkeypatch):
+    host = AdminHost()
+    admin_user = DummyUser("admin", TrustLevel.ADMIN)
+    rebooted = []
+
+    async def fake_reboot(self, user):
+        rebooted.append(user.username)
+
+    monkeypatch.setattr(host, "_reboot_server", types.MethodType(fake_reboot, host))
+
+    await host._handle_reboot_server_confirm_selection(admin_user, "yes")
+    assert rebooted == ["admin"]
+
+    # "no" returns the admin to the main menu instead of rebooting
+    await host._handle_reboot_server_confirm_selection(admin_user, "no")
+    assert rebooted == ["admin"]
+    assert host._user_states["admin"]["menu"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_reboot_spawn_failure_aborts_safely(monkeypatch):
+    """If the deploy helper cannot launch, nothing is disconnected and no
+    shutdown is requested -- the admin is simply returned to the admin menu."""
+    host = AdminHost()
+    admin_user = DummyUser("admin", TrustLevel.ADMIN)
+    shutdowns = []
+    host.request_shutdown = lambda: shutdowns.append("shutdown")
+    shown = []
+    monkeypatch.setattr(
+        host,
+        "_show_admin_menu",
+        types.MethodType(lambda self, user: shown.append(user.username), host),
+    )
+
+    # Patch create_subprocess_exec so that proc.wait() returns a non-zero exit
+    class FailRun:
+        def __init__(self, argv):
+            self.argv = argv
+
+        async def wait(self):
+            return 3  # non-zero exit code
+
+    async def fake_exec(*args, **kwargs):
+        return FailRun(args)
+
+    monkeypatch.setattr("asyncio.create_subprocess_exec", fake_exec)
+    monkeypatch.setattr(
+        "server.core.administration.asyncio.sleep", AsyncNoop()
+    )
+
+    await host._reboot_server(admin_user)
+
+    assert admin_user.spoken[-1][0] == "server-reboot-failed"
+    assert shown == ["admin"]
+    assert shutdowns == []
+
+
+class AsyncNoop:
+    async def __call__(self, *args, **kwargs):
+        return None
+
+
+@pytest.mark.asyncio
+async def test_reboot_spawn_success_disconnects_and_shuts_down(monkeypatch):
+    """On successful request_shutdown, all approved players receive an
+    auto-reconnect disconnect packet and the server shuts down gracefully."""
+    host = AdminHost()
+    shutdowns = []
+    host.request_shutdown = lambda: shutdowns.append("shutdown")
+
+    class Conn:
+        def __init__(self):
+            self.sent = []
+
+        async def send(self, payload):
+            self.sent.append(payload)
+
+    class Player:
+        def __init__(self, username, approved, trust=TrustLevel.ADMIN):
+            self.username = username
+            self.approved = approved
+            self.trust_level = trust
+            self.locale = "en"
+            self.connection = Conn()
+
+        def speak_l(self, *a, **k):
+            pass
+
+        def play_sound(self, *a):
+            pass
+
+        def get_queued_messages(self):
+            return []
+
+    alice = Player("alice", approved=True)
+    bob = Player("bob", approved=False, trust=TrustLevel.USER)
+    host._users = {"alice": alice, "bob": bob}
+
+    class OkRun:
+        async def wait(self):
+            return 0
+
+    async def fake_exec(*args, **kwargs):
+        return OkRun()
+
+    monkeypatch.setattr("asyncio.create_subprocess_exec", fake_exec)
+    monkeypatch.setattr(
+        "server.core.administration.asyncio.sleep", AsyncNoop()
+    )
+
+    await host._reboot_server(alice)
+
+    # Only the approved player was sent the reconnect disconnect packet.
+    assert len(alice.connection.sent) == 1
+    disconnect = alice.connection.sent[0]
+    assert disconnect["type"] == "disconnect"
+    assert disconnect["reconnect"] is True
+    assert disconnect["retry_after"] >= 1
+    assert bob.connection.sent == []
+    assert shutdowns == ["shutdown"]

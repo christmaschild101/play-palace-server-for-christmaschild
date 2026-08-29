@@ -321,3 +321,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) overrides: { $ov
 virtual-bots-profiles-no-overrides = inherits base configuration
 
 localization-in-progress-try-again = A localização está em andamento. Tente novamente em um minuto.
+
+# Server reboot
+admin-reboot-server = Reiniciar servidor
+confirm-reboot-server = Tem certeza de que deseja reiniciar o servidor? Todos os jogadores serão desconectados e reconectados.
+server-reboot-warning = O servidor reiniciará em { $seconds } segundos.
+server-restarting = O servidor está reiniciando. Você será reconectado automaticamente.
+server-reboot-failed = Não foi possível reiniciar o servidor. Tente novamente.

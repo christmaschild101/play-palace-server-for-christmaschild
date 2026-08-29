@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } бот) дарж би�
 virtual-bots-profiles-no-overrides = үндсэн тохиргооноос өвлөнө
 
 localization-in-progress-try-again = Нутагшуулалт хийгдэж байна. Нэг минутын дараа дахин оролдоно уу.
+
+# Server reboot
+admin-reboot-server = Серверийг дахин эхлүүлэх
+confirm-reboot-server = Серверийг дахин эхлүүлэхдээ итгэлтэй байна уу? Бүх тоглогчид салж, дахин холбогдох болно.
+server-reboot-warning = Сервер { $seconds } секундын дараа дахин эхлэх болно.
+server-restarting = Сервер дахин эхэлж байна. Та автоматаар дахин холбогдох болно.
+server-reboot-failed = Серверийг дахин эхлүүлж чадсангүй. Дахин оролдоно уу.

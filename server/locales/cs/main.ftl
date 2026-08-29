@@ -418,3 +418,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } botů) přepsání: { 
 virtual-bots-profiles-no-overrides = dědí základní konfiguraci
 
 localization-in-progress-try-again = Lokalizace se stále načítá. Zkuste to prosím za minutu znovu.
+
+# Server reboot
+admin-reboot-server = Restartovat server
+confirm-reboot-server = Opravdu chcete restartovat server? Všichni hráči budou odpojeni a znovu připojeni.
+server-reboot-warning = Server se restartuje za { $seconds } sekund.
+server-restarting = Server se restartuje. Budete automaticky znovu připojeni.
+server-reboot-failed = Server se nepodařilo restartovat. Zkuste to znovu.

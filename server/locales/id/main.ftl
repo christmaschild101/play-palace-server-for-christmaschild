@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bot) override: { $over
 virtual-bots-profiles-no-overrides = mewarisi konfigurasi dasar
 
 localization-in-progress-try-again = Lokalisasi sedang diproses. Silakan coba lagi dalam satu menit.
+
+# Server reboot
+admin-reboot-server = Mulai ulang server
+confirm-reboot-server = Apakah Anda yakin ingin memulai ulang server? Semua pemain akan terputus dan tersambung kembali.
+server-reboot-warning = Server akan dimulai ulang dalam { $seconds } detik.
+server-restarting = Server sedang dimulai ulang. Anda akan tersambung kembali secara otomatis.
+server-reboot-failed = Server gagal dimulai ulang. Silakan coba lagi.

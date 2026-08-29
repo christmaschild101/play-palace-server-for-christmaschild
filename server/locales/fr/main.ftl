@@ -384,3 +384,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) remplacements : 
 virtual-bots-profiles-no-overrides = hérite de la configuration de base
 
 localization-in-progress-try-again = La localisation est en cours. Veuillez réessayer dans une minute.
+
+# Server reboot
+admin-reboot-server = Redémarrer le serveur
+confirm-reboot-server = Voulez-vous vraiment redémarrer le serveur ? Tous les joueurs seront déconnectés puis reconnectés.
+server-reboot-warning = Le serveur redémarre dans { $seconds } secondes.
+server-restarting = Le serveur redémarre. Vous serez reconnecté automatiquement.
+server-reboot-failed = Impossible de redémarrer le serveur. Veuillez réessayer.

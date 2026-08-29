@@ -466,3 +466,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } { $bot_count ->
 virtual-bots-profiles-no-overrides = يرث الإعدادات الأساسية
 
 localization-in-progress-try-again = جارٍ إعداد الترجمة. يُرجى المحاولة مرة أخرى بعد دقيقة.
+
+# Server reboot
+admin-reboot-server = إعادة تشغيل الخادم
+confirm-reboot-server = هل أنت متأكد من رغبتك في إعادة تشغيل الخادم؟ سيتم فصل جميع اللاعبين وإعادة توصيلهم.
+server-reboot-warning = سيتم إعادة تشغيل الخادم خلال { $seconds } ثانية.
+server-restarting = الخادم قيد إعادة التشغيل. سوف يتم إعادة توصيلك تلقائياً.
+server-reboot-failed = تعذر إعادة تشغيل الخادم. يرجى المحاولة مرة أخرى.

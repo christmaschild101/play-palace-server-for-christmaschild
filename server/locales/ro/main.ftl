@@ -384,3 +384,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } boți) suprascrie: { $
 virtual-bots-profiles-no-overrides = moștenește configurația de bază
 
 localization-in-progress-try-again = Localizarea este în curs. Vă rugăm să încercați din nou peste un minut.
+
+# Server reboot
+admin-reboot-server = Reporniți serverul
+confirm-reboot-server = Sigur doriți să reporniți serverul? Toți jucătorii vor fi deconectați și reconectați.
+server-reboot-warning = Serverul se repornește în { $seconds } secunde.
+server-restarting = Serverul se repornește. Veți fi reconectat automat.
+server-reboot-failed = Serverul nu a putut fi repornit. Încercați din nou.

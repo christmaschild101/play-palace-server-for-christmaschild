@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } ботів) перев
 virtual-bots-profiles-no-overrides = успадковує базову конфігурацію
 
 localization-in-progress-try-again = Локалізація ще завантажується. Будь ласка, спробуйте знову за хвилину.
+
+# Server reboot
+admin-reboot-server = Перезапустити сервер
+confirm-reboot-server = Ви впевнені, що хочете перезапустити сервер? Усі гравці будуть відключені та знову підключені.
+server-reboot-warning = Сервер перезапуститься через { $seconds } секунд.
+server-restarting = Сервер перезапускається. Вас буде автоматично перепідключено.
+server-reboot-failed = Не вдалося перезапустити сервер. Спробуйте ще раз.

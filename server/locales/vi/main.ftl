@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) ghi đè: { $ove
 virtual-bots-profiles-no-overrides = kế thừa cấu hình gốc
 
 localization-in-progress-try-again = Bản địa hóa đang được xử lý. Vui lòng thử lại sau một phút.
+
+# Server reboot
+admin-reboot-server = Khởi động lại máy chủ
+confirm-reboot-server = Bạn có chắc muốn khởi động lại máy chủ? Tất cả người chơi sẽ bị ngắt kết nối và kết nối lại.
+server-reboot-warning = Máy chủ sẽ khởi động lại sau { $seconds } giây nữa.
+server-restarting = Máy chủ đang khởi động lại. Bạn sẽ được kết nối lại tự động.
+server-reboot-failed = Không thể khởi động lại máy chủ. Vui lòng thử lại.

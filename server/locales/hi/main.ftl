@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } बॉट) ओवर�
 virtual-bots-profiles-no-overrides = आधार कॉन्फ़िगरेशन विरासत में मिलता है
 
 localization-in-progress-try-again = स्थानीयकरण जारी है। कृपया एक मिनट बाद फिर प्रयास करें।
+
+# Server reboot
+admin-reboot-server = सर्वर पुनरारंभ करें
+confirm-reboot-server = क्या आप सचमुच सर्वर पुनरारंभ करना चाहते हैं? सभी खिलाड़ी डिस्कनेक्ट और फिर से कनेक्ट होंगे।
+server-reboot-warning = सर्वर { $seconds } सेकंड में पुनरारंभ हो रहा है।
+server-restarting = सर्वर पुनरारंभ हो रहा है। आप स्वचालित रूप से फिर से कनेक्ट होंगे।
+server-reboot-failed = सर्वर पुनरारंभ नहीं हो सका। कृपया फिर से प्रयास करें।

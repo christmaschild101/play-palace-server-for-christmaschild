@@ -368,3 +368,10 @@ virtual-bots-profiles-line = { $profile }({ $bot_count }個のボット)オー�
 virtual-bots-profiles-no-overrides = ベース設定を継承
 
 localization-in-progress-try-again = ローカライズ処理中です。1分後にもう一度お試しください。
+
+# Server reboot
+admin-reboot-server = サーバーを再起動
+confirm-reboot-server = サーバーを再起動しますか? すべてのプレイヤーは切断され、自動的に再接続されます。
+server-reboot-warning = サーバーは{ $seconds }秒後に再起動します。
+server-restarting = サーバーを再起動しています。自動的に再接続されます。
+server-reboot-failed = サーバーを再起動できませんでした。もう一度お試しください。

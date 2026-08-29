@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bot) sostituzioni: { $
 virtual-bots-profiles-no-overrides = eredita configurazione base
 
 localization-in-progress-try-again = La localizzazione è in corso. Riprova tra un minuto.
+
+# Server reboot
+admin-reboot-server = Riavvia server
+confirm-reboot-server = Sei sicuro di voler riavviare il server? Tutti i giocatori verranno disconnessi e riconnessi.
+server-reboot-warning = Il server si riavvierà tra { $seconds } secondi.
+server-restarting = Il server si sta riavviando. Verrai riconnesso automaticamente.
+server-reboot-failed = Impossibile riavviare il server. Riprova.

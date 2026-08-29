@@ -368,3 +368,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count }개 봇) 재정의: { $
 virtual-bots-profiles-no-overrides = 기본 구성 상속
 
 localization-in-progress-try-again = 현지화 작업이 진행 중입니다. 1분 후에 다시 시도해 주세요.
+
+# Server reboot
+admin-reboot-server = 서버 다시 시작
+confirm-reboot-server = 서버를 다시 시작하시겠습니까? 모든 플레이어가 연결이 끊겼다가 다시 연결됩니다.
+server-reboot-warning = 서버가 { $seconds }초 후 다시 시작됩니다.
+server-restarting = 서버가 다시 시작되고 있습니다. 자동으로 다시 연결됩니다.
+server-reboot-failed = 서버를 다시 시작할 수 없습니다. 다시 시도해 주세요.

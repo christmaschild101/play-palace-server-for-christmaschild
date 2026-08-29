@@ -384,3 +384,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } robota) zamene: { $ove
 virtual-bots-profiles-no-overrides = Preuzima osnovnu konfiguraciju
 
 localization-in-progress-try-again = Učitavanje prevoda u toku. Molimo pokušajte ponovo za minut.
+
+# Server reboot
+admin-reboot-server = Поново покрени сервер
+confirm-reboot-server = Да ли сте сигурни да желите поново покренути сервер? Сви играчи ће бити искључени и поново повезани.
+server-reboot-warning = Сервер ће се поново покренути за { $seconds } секунди.
+server-restarting = Сервер се поново покреће. Бићете аутоматски поново повезани.
+server-reboot-failed = Поновно покретање сервера није успело. Покушајте поново.

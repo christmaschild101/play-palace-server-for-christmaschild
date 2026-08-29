@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) overschrijvingen
 virtual-bots-profiles-no-overrides = erft basisconfiguratie
 
 localization-in-progress-try-again = Lokalisatie is bezig. Probeer het over een minuut opnieuw.
+
+# Server reboot
+admin-reboot-server = Server opnieuw starten
+confirm-reboot-server = Weet u zeker dat u de server opnieuw wilt starten? Alle spelers worden losgekoppeld en opnieuw verbonden.
+server-reboot-warning = De server wordt over { $seconds } seconden opnieuw gestart.
+server-restarting = De server wordt opnieuw gestart. U wordt automatisch opnieuw verbonden.
+server-reboot-failed = De server kon niet opnieuw worden gestart. Probeer het opnieuw.

@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) anulaciones: { $
 virtual-bots-profiles-no-overrides = hereda configuración base
 
 localization-in-progress-try-again = La localización está en progreso. Vuelve a intentarlo en un minuto.
+
+# Server reboot
+admin-reboot-server = Reiniciar servidor
+confirm-reboot-server = ¿Seguro que quieres reiniciar el servidor? Todos los jugadores se desconectarán y volverán a conectarse.
+server-reboot-warning = El servidor se reiniciará en { $seconds } segundos.
+server-restarting = El servidor se está reiniciando. Serás reconectado automáticamente.
+server-reboot-failed = No se pudo reiniciar el servidor. Inténtalo de nuevo.

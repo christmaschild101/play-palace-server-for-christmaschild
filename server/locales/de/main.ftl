@@ -380,3 +380,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } Bots) Überschreibunge
 virtual-bots-profiles-no-overrides = erbt Basiskonfiguration
 
 localization-in-progress-try-again = Die Lokalisierung wird noch geladen. Bitte versuchen Sie es in einer Minute erneut.
+
+# Server reboot
+admin-reboot-server = Server neu starten
+confirm-reboot-server = Sind Sie sicher, dass Sie den Server neu starten möchten? Alle Spieler werden getrennt und wieder verbunden.
+server-reboot-warning = Der Server wird in { $seconds } Sekunden neu gestartet.
+server-restarting = Der Server wird neu gestartet. Sie werden automatisch wieder verbunden.
+server-reboot-failed = Der Server konnte nicht neu gestartet werden. Bitte versuchen Sie es erneut.

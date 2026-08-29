@@ -311,3 +311,10 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) overrides: { $ov
 virtual-bots-profiles-no-overrides = inherits base configuration
 
 localization-in-progress-try-again = 本地化正在进行中。请在一分钟后重试。
+
+# Server reboot
+admin-reboot-server = 重新启动服务器
+confirm-reboot-server = 您确定要重新启动服务器吗？ 所有玩家将被断开并重新连接。
+server-reboot-warning = 服务器将在 { $seconds } 秒后重新启动。
+server-restarting = 服务器正在重新启动。 您将自动重新连接。
+server-reboot-failed = 无法重新启动服务器。 请重试。

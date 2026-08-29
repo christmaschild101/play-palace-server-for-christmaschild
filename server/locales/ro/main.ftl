@@ -382,6 +382,22 @@ virtual-bots-profiles-header = Profiluri: { $count } definite (implicit: { $defa
 virtual-bots-profiles-empty = Niciun profil definit.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } boți) suprascrie: { $overrides }.
 virtual-bots-profiles-no-overrides = moștenește configurația de bază
+virtual-bots-add = Adaugă bot virtual
+virtual-bots-edit = Editează bot virtual
+virtual-bots-delete = Șterge bot virtual
+virtual-bots-add-prompt = Introduceți un nume pentru noul bot virtual:
+virtual-bots-rename-prompt = Introduceți un nume nou pentru { $name }:
+virtual-bots-rename = Redenumește
+virtual-bots-change-profile = Schimbă profilul
+virtual-bots-added = Botul virtual { $name } a fost adăugat și adus online.
+virtual-bots-renamed = Botul virtual a fost redenumit din { $old_name } în { $new_name }.
+virtual-bots-profile-changed = Profilul botului virtual { $name } a fost schimbat în { $profile }.
+virtual-bots-deleted = Botul virtual { $name } a fost șters. { $tables } masă(mese) închisă(închise).
+virtual-bots-name-taken = Există deja un bot virtual cu acest nume.
+virtual-bots-name-invalid = Acest nume nu este valid.
+virtual-bots-no-bots = Nu există boți virtuali de gestionat.
+virtual-bots-delete-confirm = Ștergeți botul virtual { $name }? Aceasta va închide orice masă la care participă.
+virtual-bots-no-profiles = Nu sunt profiluri disponibile.
 
 localization-in-progress-try-again = Localizarea este în curs. Vă rugăm să încercați din nou peste un minut.
 

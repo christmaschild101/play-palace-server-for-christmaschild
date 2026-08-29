@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Профайлууд: { $count } тодорхой
 virtual-bots-profiles-empty = Профайл тодорхойлоогүй байна.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } бот) дарж бичих: { $overrides }.
 virtual-bots-profiles-no-overrides = үндсэн тохиргооноос өвлөнө
+virtual-bots-add = Виртуал бот нэмэх
+virtual-bots-edit = Виртуал ботыг засах
+virtual-bots-delete = Виртуал ботыг устгах
+virtual-bots-add-prompt = Шинэ виртуал ботын нэрийг оруулна уу:
+virtual-bots-rename-prompt = { $name } -ийн шинэ нэрийг оруулна уу:
+virtual-bots-rename = Нэрийг өөрчлөх
+virtual-bots-change-profile = Профайл өөрчлөх
+virtual-bots-added = Виртуал бот { $name } нэмэгдэж, онлайн боллоо.
+virtual-bots-renamed = Виртуал ботын нэрийг { $old_name } -аас { $new_name } болгон өөрчилсөн.
+virtual-bots-profile-changed = Виртуал бот { $name } -ийн профайлыг { $profile } болгон өөрчилсөн.
+virtual-bots-deleted = Виртуал бот { $name } устгагдлаа. { $tables } ширээ хаагдлаа.
+virtual-bots-name-taken = Энэ нэртэй виртуал бот аль хэдийн байна.
+virtual-bots-name-invalid = Энэ нэр хүчингүй байна.
+virtual-bots-no-bots = Удирдах виртуал бот байхгүй байна.
+virtual-bots-delete-confirm = Виртуал бот { $name } -ыг устгах уу? Энэ нь түүний байгаа ширээг хаах болно.
+virtual-bots-no-profiles = Боломжтой профайл байхгүй байна.
 
 localization-in-progress-try-again = Нутагшуулалт хийгдэж байна. Нэг минутын дараа дахин оролдоно уу.
 

@@ -2811,3 +2811,206 @@ def test_try_create_game_picks_available_game_type(monkeypatch):
     assert created is True
     assert server._tables.created_game_types == ["ninetynine"]
     assert bot.state == VirtualBotState.IN_GAME
+
+
+# ==================== Roster Management (add/edit/delete) ====================
+
+
+class RosterDB:
+    """In-memory fake for virtual_bot_definitions persistence."""
+
+    def __init__(self):
+        self.definitions = {}
+        self.deleted = []
+        self.tombstones = []
+
+    def load_virtual_bot_definitions(self):
+        return [
+            {"name": name, "profile": profile, "removed": removed}
+            for name, (profile, removed) in self.definitions.items()
+        ]
+
+    def save_virtual_bot_definition(self, name, profile):
+        self.definitions[name] = (profile, False)
+
+    def tombstone_virtual_bot_definition(self, name):
+        self.definitions[name] = ("default", True)
+        self.tombstones.append(name)
+
+    def delete_virtual_bot_definition(self, name):
+        self.definitions.pop(name, None)
+        self.deleted.append(name)
+
+    def delete_virtual_bot(self, name):
+        pass
+
+    def delete_all_virtual_bots(self):
+        pass
+
+    def save_virtual_bot(self, **payload):
+        pass
+
+    def load_all_virtual_bots(self):
+        return []
+
+
+def _roster_manager(names=None):
+    """Build a manager with roster maps wired to a fake persisted DB."""
+    server = FakeServer(db=RosterDB())
+    manager = VirtualBotManager(server)
+    if names:
+        manager._config.names = list(names)
+    manager._profiles = {
+        "default": vb_module.VirtualBotProfileOverride(name="default"),
+        "host": vb_module.VirtualBotProfileOverride(name="host"),
+    }
+    manager._bot_memberships = {n: set() for n in (names or [])}
+    manager._bot_profiles_map = {n: "default" for n in (names or [])}
+    return manager
+
+
+def test_add_bot_adds_to_roster_and_brings_online(monkeypatch):
+    manager = _roster_manager(names=["Alpha"])
+    monkeypatch.setattr("server.core.virtual_bots.random.randint", lambda a, b: a)
+
+    assert manager.add_bot("Beta") is True
+    assert "Beta" in manager._config.names
+    assert "Beta" in manager._bots
+    assert manager._bots["Beta"].state == VirtualBotState.ONLINE_IDLE
+    assert manager._managed_names == {"Beta"}
+    assert manager._server._db.definitions["Beta"] == ("default", False)
+
+    # Duplicate adds are rejected
+    assert manager.add_bot("Beta") is False
+
+
+def test_rename_bot_config_source_tombstones_old_name(monkeypatch):
+    manager = _roster_manager(names=["Alpha"])
+    manager._bots["Alpha"] = VirtualBot("Alpha", state=VirtualBotState.OFFLINE)
+    monkeypatch.setattr("server.core.virtual_bots.random.randint", lambda a, b: a)
+    db = manager._server._db
+
+    assert manager.rename_bot("Alpha", "Gamma") is True
+    assert "Alpha" not in manager._config.names
+    assert "Gamma" in manager._config.names
+    assert manager._bots["Gamma"].name == "Gamma"
+    assert db.tombstones == ["Alpha"]
+    assert db.definitions["Gamma"] == ("default", False)
+
+
+def test_rename_bot_managed_source_deletes_old_row(monkeypatch):
+    manager = _roster_manager(names=["Alpha"])
+    manager._managed_names.add("Alpha")
+    manager._server._db.definitions["Alpha"] = ("default", False)
+    monkeypatch.setattr("server.core.virtual_bots.random.randint", lambda a, b: a)
+
+    assert manager.rename_bot("Alpha", "Gamma") is True
+    assert manager._server._db.deleted == ["Alpha"]
+    assert manager._server._db.definitions["Gamma"] == ("default", False)
+
+
+def test_rename_bot_online_comes_back_online(monkeypatch):
+    manager = _roster_manager(names=["Alpha"])
+    manager._bots["Alpha"] = VirtualBot("Alpha", state=VirtualBotState.ONLINE_IDLE)
+    manager._server._users["Alpha"] = object()
+    manager._server._user_states["Alpha"] = {"menu": "main_menu"}
+    monkeypatch.setattr("server.core.virtual_bots.random.randint", lambda a, b: a)
+
+    manager.rename_bot("Alpha", "Gamma")
+    assert manager._bots["Gamma"].state == VirtualBotState.ONLINE_IDLE
+    assert "Gamma" in manager._server._users
+    assert "Alpha" not in manager._server._users
+
+
+def test_set_bot_profile_persists_override():
+    manager = _roster_manager(names=["Alpha"])
+    bot = VirtualBot("Alpha", state=VirtualBotState.OFFLINE)
+    manager._bots["Alpha"] = bot
+
+    assert manager.set_bot_profile("Alpha", "host") is True
+    assert manager._bot_profiles_map["Alpha"] == "host"
+    assert bot.profile == "host"
+    assert manager._server._db.definitions["Alpha"] == ("host", False)
+
+    # Unknown profile rejected
+    assert manager.set_bot_profile("Alpha", "nope") is False
+
+
+def test_remove_bot_tombstones_config_and_kills_table():
+    server = FakeServer(db=RosterDB())
+    manager = VirtualBotManager(server)
+    manager._config.names = ["Alpha"]
+    manager._profiles = {"default": vb_module.VirtualBotProfileOverride(name="default")}
+    manager._bot_memberships = {"Alpha": set()}
+    manager._bot_profiles_map = {"Alpha": "default"}
+    bot = VirtualBot("Alpha", state=VirtualBotState.IN_GAME, table_id="t1")
+    manager._bots["Alpha"] = bot
+    server._tables.tables["t1"] = SimpleNamespace(table_id="t1", game=None)
+
+    ok, tables = manager.remove_bot("Alpha")
+    assert ok is True
+    assert tables == 1
+    assert "Alpha" not in manager._config.names
+    assert "t1" not in server._tables.tables
+    assert server._db.tombstones == ["Alpha"]
+
+
+def test_remove_bot_managed_deletes_row():
+    manager = _roster_manager(names=["Alpha"])
+    manager._managed_names.add("Alpha")
+    manager._server._db.definitions["Alpha"] = ("default", False)
+    manager._bots["Alpha"] = VirtualBot("Alpha", state=VirtualBotState.OFFLINE)
+
+    ok, tables = manager.remove_bot("Alpha")
+    assert ok is True
+    assert tables == 0
+    assert manager._server._db.deleted == ["Alpha"]
+
+
+def test_get_roster_includes_source_and_state():
+    manager = _roster_manager(names=["Alpha"])
+    manager._managed_names.add("Beta")
+    manager._config.names.append("Beta")
+    manager._bot_profiles_map["Beta"] = "host"
+    manager._bots["Beta"] = VirtualBot("Beta", state=VirtualBotState.ONLINE_IDLE)
+
+    roster = {entry["name"]: entry for entry in manager.get_roster()}
+    assert roster["Alpha"]["source"] == "config"
+    assert roster["Alpha"]["state"] == "offline"
+    assert roster["Alpha"]["online"] is False
+    assert roster["Beta"]["source"] == "managed"
+    assert roster["Beta"]["profile"] == "host"
+    assert roster["Beta"]["online"] is True
+
+
+def test_merge_managed_definitions_applies_tombstones_and_overrides():
+    class FakeDB:
+        def load_virtual_bot_definitions(self):
+            return [
+                {"name": "Gone", "profile": "default", "removed": True},
+                {"name": "NewBot", "profile": "host", "removed": False},
+                {"name": "Alpha", "profile": "patron", "removed": False},
+            ]
+
+    server = FakeServer(db=FakeDB())
+    manager = VirtualBotManager(server)
+    manager._config.names = ["Alpha", "Gone", "Zed"]
+    manager._bot_memberships = {"Alpha": {"hosts"}, "Gone": {"hosts"}, "Zed": set()}
+    manager._bot_profiles_map = {"Alpha": "default", "Gone": "default", "Zed": "default"}
+    manager._bot_groups = {
+        "hosts": vb_module.BotGroupConfig(name="hosts", bots=["Alpha", "Gone"], profile=None)
+    }
+    manager._profiles = {
+        "default": vb_module.VirtualBotProfileOverride(name="default"),
+        "host": vb_module.VirtualBotProfileOverride(name="host"),
+        "patron": vb_module.VirtualBotProfileOverride(name="patron"),
+    }
+
+    manager._merge_managed_definitions()
+
+    assert "Gone" not in manager._config.names
+    assert "Gone" not in manager._bot_groups["hosts"].bots
+    assert manager._config.names == ["Alpha", "Zed", "NewBot"]
+    assert manager._bot_profiles_map["Alpha"] == "patron"
+    assert manager._bot_profiles_map["NewBot"] == "host"
+    assert manager._managed_names == {"NewBot"}

@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Profiller: { $count } tanımlı (varsayılan: { $
 virtual-bots-profiles-empty = Profil tanımlanmamış.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } bot) geçersiz kılmalar: { $overrides }.
 virtual-bots-profiles-no-overrides = temel yapılandırmayı miras alır
+virtual-bots-add = Sanal Bot Ekle
+virtual-bots-edit = Sanal Botu Düzenle
+virtual-bots-delete = Sanal Botu Sil
+virtual-bots-add-prompt = Yeni sanal bot için bir ad girin:
+virtual-bots-rename-prompt = { $name } için yeni bir ad girin:
+virtual-bots-rename = Yeniden Adlandır
+virtual-bots-change-profile = Profili Değiştir
+virtual-bots-added = Sanal bot { $name } eklendi ve çevrimiçi yapıldı.
+virtual-bots-renamed = Sanal bot { $old_name } adından { $new_name } adına yeniden adlandırıldı.
+virtual-bots-profile-changed = Sanal bot { $name } profili { $profile } olarak değiştirildi.
+virtual-bots-deleted = Sanal bot { $name } silindi. { $tables } masa kapatıldı.
+virtual-bots-name-taken = Bu ada sahip bir sanal bot zaten var.
+virtual-bots-name-invalid = Bu ad geçerli değil.
+virtual-bots-no-bots = Yönetilecek sanal bot yok.
+virtual-bots-delete-confirm = Sanal bot { $name } silinsin mi? Bu, bulunduğu masayı kapatır.
+virtual-bots-no-profiles = Kullanılabilir profil yok.
 
 localization-in-progress-try-again = Yerelleştirme sürüyor. Lütfen bir dakika sonra tekrar deneyin.
 

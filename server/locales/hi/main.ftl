@@ -378,6 +378,22 @@ virtual-bots-profiles-header = प्रोफाइल: { $count } परिभ
 virtual-bots-profiles-empty = कोई प्रोफाइल परिभाषित नहीं हैं।
 virtual-bots-profiles-line = { $profile } ({ $bot_count } बॉट) ओवरराइड: { $overrides }।
 virtual-bots-profiles-no-overrides = आधार कॉन्फ़िगरेशन विरासत में मिलता है
+virtual-bots-add = वर्चुअल बॉट जोड़ें
+virtual-bots-edit = वर्चुअल बॉट संपादित करें
+virtual-bots-delete = वर्चुअल बॉट हटाएं
+virtual-bots-add-prompt = नए वर्चुअल बॉट के लिए एक नाम दर्ज करें:
+virtual-bots-rename-prompt = { $name } के लिए एक नया नाम दर्ज करें:
+virtual-bots-rename = नाम बदलें
+virtual-bots-change-profile = प्रोफ़ाइल बदलें
+virtual-bots-added = वर्चुअल बॉट { $name } जोड़ा गया और ऑनलाइन किया गया।
+virtual-bots-renamed = वर्चुअल बॉट का नाम { $old_name } से { $new_name } में बदला गया।
+virtual-bots-profile-changed = वर्चुअल बॉट { $name } की प्रोफ़ाइल बदलकर { $profile } कर दी गई।
+virtual-bots-deleted = वर्चुअल बॉट { $name } हटा दिया गया। { $tables } टेबल(टेबलें) बंद की गईं।
+virtual-bots-name-taken = इस नाम का वर्चुअल बॉट पहले से मौजूद है।
+virtual-bots-name-invalid = यह नाम मान्य नहीं है।
+virtual-bots-no-bots = प्रबंधित करने के लिए कोई वर्चुअल बॉट नहीं हैं।
+virtual-bots-delete-confirm = वर्चुअल बॉट { $name } हटाएं? इससे वह कोई भी टेबल बंद हो जाएगी जिसमें वह है।
+virtual-bots-no-profiles = कोई प्रोफ़ाइल उपलब्ध नहीं है।
 
 localization-in-progress-try-again = स्थानीयकरण जारी है। कृपया एक मिनट बाद फिर प्रयास करें।
 

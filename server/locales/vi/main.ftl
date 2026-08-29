@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Hồ sơ: { $count } đã định nghĩa (mặc �
 virtual-bots-profiles-empty = Chưa định nghĩa hồ sơ nào.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) ghi đè: { $overrides }.
 virtual-bots-profiles-no-overrides = kế thừa cấu hình gốc
+virtual-bots-add = Thêm Bot ảo
+virtual-bots-edit = Chỉnh sửa Bot ảo
+virtual-bots-delete = Xóa Bot ảo
+virtual-bots-add-prompt = Nhập tên cho bot ảo mới:
+virtual-bots-rename-prompt = Nhập tên mới cho { $name }:
+virtual-bots-rename = Đổi tên
+virtual-bots-change-profile = Đổi hồ sơ
+virtual-bots-added = Bot ảo { $name } đã được thêm và đưa lên mạng.
+virtual-bots-renamed = Bot ảo đã được đổi tên từ { $old_name } thành { $new_name }.
+virtual-bots-profile-changed = Hồ sơ của bot ảo { $name } đã được đổi thành { $profile }.
+virtual-bots-deleted = Bot ảo { $name } đã bị xóa. Đã đóng { $tables } bàn.
+virtual-bots-name-taken = Bot ảo có tên đó đã tồn tại.
+virtual-bots-name-invalid = Tên đó không hợp lệ.
+virtual-bots-no-bots = Không có bot ảo nào để quản lý.
+virtual-bots-delete-confirm = Xóa bot ảo { $name }? Thao tác này sẽ đóng bất kỳ bàn nào bot đang ngồi.
+virtual-bots-no-profiles = Không có hồ sơ nào khả dụng.
 
 localization-in-progress-try-again = Bản địa hóa đang được xử lý. Vui lòng thử lại sau một phút.
 

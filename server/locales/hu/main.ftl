@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Profilok: { $count } definiálva (alapértelmezet
 virtual-bots-profiles-empty = Nincsenek definiált profilok.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } bot) felülírások: { $overrides }.
 virtual-bots-profiles-no-overrides = örökli az alap konfigurációt
+virtual-bots-add = Virtuális bot hozzáadása
+virtual-bots-edit = Virtuális bot szerkesztése
+virtual-bots-delete = Virtuális bot törlése
+virtual-bots-add-prompt = Adjon meg egy nevet az új virtuális botnak:
+virtual-bots-rename-prompt = Adjon meg egy új nevet a következőhöz: { $name }:
+virtual-bots-rename = Átnevezés
+virtual-bots-change-profile = Profil módosítása
+virtual-bots-added = A { $name } virtuális bot hozzáadva és online.
+virtual-bots-renamed = A virtuális bot átnevezve { $old_name }-ról { $new_name }-re.
+virtual-bots-profile-changed = A { $name } virtuális bot profilja { $profile } értékre módosult.
+virtual-bots-deleted = A { $name } virtuális bot törölve. { $tables } asztal(ok) bezárva.
+virtual-bots-name-taken = Már létezik ilyen nevű virtuális bot.
+virtual-bots-name-invalid = Ez a név nem érvényes.
+virtual-bots-no-bots = Nincs kezelhető virtuális bot.
+virtual-bots-delete-confirm = Törli a { $name } virtuális botot? Ez bezárja az asztalt, amelyen van.
+virtual-bots-no-profiles = Nincs elérhető profil.
 
 localization-in-progress-try-again = A lokalizáció folyamatban van. Kérjük, próbálja újra egy perc múlva.
 

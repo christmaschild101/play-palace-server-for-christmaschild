@@ -538,6 +538,18 @@ class AdministrationMixin:
                 text=Localization.get(user.locale, "virtual-bots-profiles-overview"),
                 id="profiles",
             ),
+            MenuItem(
+                text=Localization.get(user.locale, "virtual-bots-add"),
+                id="add",
+            ),
+            MenuItem(
+                text=Localization.get(user.locale, "virtual-bots-edit"),
+                id="edit",
+            ),
+            MenuItem(
+                text=Localization.get(user.locale, "virtual-bots-delete"),
+                id="delete",
+            ),
             MenuItem(text=Localization.get(user.locale, "back"), id="back"),
         ]
         user.show_menu(
@@ -553,6 +565,135 @@ class AdministrationMixin:
         question = Localization.get(user.locale, "virtual-bots-clear-confirm")
         show_yes_no_menu(user, "virtual_bots_clear_confirm_menu", question)
         self._user_states[user.username] = {"menu": "virtual_bots_clear_confirm_menu"}
+
+    def _show_add_bot_name_editbox(self, user: NetworkUser) -> None:
+        """Show editbox for entering a new virtual bot name."""
+        prompt = Localization.get(user.locale, "virtual-bots-add-prompt")
+        user.show_editbox(
+            "bot_name_editbox",
+            prompt,
+            default_value="",
+            multiline=False,
+            read_only=False,
+        )
+        self._user_states[user.username] = {"menu": "bot_name_editbox", "mode": "add"}
+
+    def _show_edit_bot_menu(self, user: NetworkUser) -> None:
+        """Show list of virtual bots to edit."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            _speak_activity(user, "virtual-bots-not-available")
+            self._show_virtual_bots_menu(user)
+            return
+        roster = manager.get_roster()
+        if not roster:
+            user.speak_l("virtual-bots-no-bots", buffer="misc")
+            self._show_virtual_bots_menu(user)
+            return
+        items = [MenuItem(text=entry["name"], id=f"edit_{entry['name']}") for entry in roster]
+        items.append(MenuItem(text=Localization.get(user.locale, "back"), id="back"))
+        user.show_menu(
+            "edit_bot_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {"menu": "edit_bot_menu"}
+
+    def _show_edit_bot_actions_menu(self, user: NetworkUser, bot_name: str) -> None:
+        """Show actions for editing a single virtual bot."""
+        items = [
+            MenuItem(
+                text=Localization.get(user.locale, "virtual-bots-rename"),
+                id="rename",
+            ),
+            MenuItem(
+                text=Localization.get(user.locale, "virtual-bots-change-profile"),
+                id="profile",
+            ),
+            MenuItem(text=Localization.get(user.locale, "back"), id="back"),
+        ]
+        user.show_menu(
+            "edit_bot_actions_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {
+            "menu": "edit_bot_actions_menu",
+            "bot_name": bot_name,
+        }
+
+    def _show_rename_bot_editbox(self, user: NetworkUser, bot_name: str) -> None:
+        """Show editbox for renaming a virtual bot (pre-filled with current name)."""
+        prompt = Localization.get(user.locale, "virtual-bots-rename-prompt", name=bot_name)
+        user.show_editbox(
+            "rename_bot_editbox",
+            prompt,
+            default_value=bot_name,
+            multiline=False,
+            read_only=False,
+        )
+        self._user_states[user.username] = {
+            "menu": "rename_bot_editbox",
+            "bot_name": bot_name,
+        }
+
+    def _show_bot_profile_menu(self, user: NetworkUser, bot_name: str) -> None:
+        """Show profile selection menu for a virtual bot."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            _speak_activity(user, "virtual-bots-not-available")
+            self._show_virtual_bots_menu(user)
+            return
+        profiles = manager.get_profiles()
+        if not profiles:
+            user.speak_l("virtual-bots-no-profiles", buffer="misc")
+            self._show_edit_bot_actions_menu(user, bot_name)
+            return
+        items = [MenuItem(text=profile, id=profile) for profile in profiles]
+        items.append(MenuItem(text=Localization.get(user.locale, "back"), id="back"))
+        user.show_menu(
+            "bot_profile_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {
+            "menu": "bot_profile_menu",
+            "bot_name": bot_name,
+        }
+
+    def _show_delete_bot_menu(self, user: NetworkUser) -> None:
+        """Show list of virtual bots to delete."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            _speak_activity(user, "virtual-bots-not-available")
+            self._show_virtual_bots_menu(user)
+            return
+        roster = manager.get_roster()
+        if not roster:
+            user.speak_l("virtual-bots-no-bots", buffer="misc")
+            self._show_virtual_bots_menu(user)
+            return
+        items = [MenuItem(text=entry["name"], id=f"del_{entry['name']}") for entry in roster]
+        items.append(MenuItem(text=Localization.get(user.locale, "back"), id="back"))
+        user.show_menu(
+            "delete_bot_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {"menu": "delete_bot_menu"}
+
+    def _show_delete_bot_confirm_menu(self, user: NetworkUser, bot_name: str) -> None:
+        """Show confirmation menu for deleting a virtual bot."""
+        question = Localization.get(user.locale, "virtual-bots-delete-confirm", name=bot_name)
+        show_yes_no_menu(user, "delete_bot_confirm_menu", question)
+        self._user_states[user.username] = {
+            "menu": "delete_bot_confirm_menu",
+            "bot_name": bot_name,
+        }
 
     # ==================== Menu Selection Handlers ====================
 
@@ -933,6 +1074,12 @@ class AdministrationMixin:
             await self._show_virtual_bots_groups_overview(user)
         elif selection_id == "profiles":
             await self._show_virtual_bots_profiles_overview(user)
+        elif selection_id == "add":
+            self._show_add_bot_name_editbox(user)
+        elif selection_id == "edit":
+            self._show_edit_bot_menu(user)
+        elif selection_id == "delete":
+            self._show_delete_bot_menu(user)
         elif selection_id == "back":
             self._show_admin_menu(user)
 
@@ -944,6 +1091,87 @@ class AdministrationMixin:
             await self._clear_virtual_bots(user)
         else:
             self._show_virtual_bots_menu(user)
+
+    async def _handle_edit_bot_selection(self, user: NetworkUser, selection_id: str) -> None:
+        """Handle edit bot menu selection."""
+        if selection_id == "back":
+            self._show_virtual_bots_menu(user)
+        elif selection_id.startswith("edit_"):
+            bot_name = selection_id[5:]
+            self._show_edit_bot_actions_menu(user, bot_name)
+
+    async def _handle_edit_bot_actions_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Handle edit bot actions menu selection."""
+        bot_name = state.get("bot_name")
+        if not bot_name:
+            self._show_edit_bot_menu(user)
+            return
+        if selection_id == "rename":
+            self._show_rename_bot_editbox(user, bot_name)
+        elif selection_id == "profile":
+            self._show_bot_profile_menu(user, bot_name)
+        elif selection_id == "back":
+            self._show_edit_bot_menu(user)
+
+    async def _handle_bot_name_editbox(self, user: NetworkUser, text: str, state: dict) -> None:
+        """Handle new virtual bot name submission."""
+        error = self._validate_bot_name(text)
+        if error:
+            _speak_activity(user, error)
+            self._show_add_bot_name_editbox(user)
+            return
+        await self._add_virtual_bot(user, text)
+
+    async def _handle_rename_bot_editbox(
+        self, user: NetworkUser, text: str, state: dict
+    ) -> None:
+        """Handle virtual bot rename submission."""
+        bot_name = state.get("bot_name")
+        if not bot_name:
+            self._show_edit_bot_menu(user)
+            return
+        error = self._validate_bot_name(text, exclude=bot_name)
+        if error:
+            _speak_activity(user, error)
+            self._show_rename_bot_editbox(user, bot_name)
+            return
+        await self._rename_virtual_bot(user, bot_name, text)
+
+    async def _handle_bot_profile_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Handle bot profile selection."""
+        bot_name = state.get("bot_name")
+        if not bot_name:
+            self._show_edit_bot_menu(user)
+            return
+        if selection_id == "back":
+            self._show_edit_bot_actions_menu(user, bot_name)
+            return
+        await self._change_bot_profile(user, bot_name, selection_id)
+
+    async def _handle_delete_bot_selection(self, user: NetworkUser, selection_id: str) -> None:
+        """Handle delete bot menu selection."""
+        if selection_id == "back":
+            self._show_virtual_bots_menu(user)
+        elif selection_id.startswith("del_"):
+            bot_name = selection_id[4:]
+            self._show_delete_bot_confirm_menu(user, bot_name)
+
+    async def _handle_delete_bot_confirm_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Handle delete bot confirmation menu selection."""
+        bot_name = state.get("bot_name")
+        if not bot_name:
+            self._show_delete_bot_menu(user)
+            return
+        if selection_id == "yes":
+            await self._delete_virtual_bot(user, bot_name)
+        else:
+            self._show_delete_bot_menu(user)
 
     # ==================== Admin Actions ====================
 
@@ -1406,6 +1634,94 @@ class AdministrationMixin:
         self.request_shutdown()
 
     # ==================== Virtual Bot Actions ====================
+
+    def _validate_bot_name(self, name: str, exclude: str | None = None) -> str | None:
+        """Validate a virtual bot name.
+
+        Returns an error message id, or None if the name is acceptable.
+        """
+        name = name.strip()
+        if not name:
+            return "virtual-bots-name-invalid"
+        if not (self._username_min_length <= len(name) <= self._username_max_length):
+            return "virtual-bots-name-invalid"
+        manager = getattr(self, "_virtual_bots", None)
+        if manager and manager.is_roster_name(name):
+            if not (exclude and exclude.lower() == name.lower()):
+                return "virtual-bots-name-taken"
+        for username in self._users:
+            if username.lower() == name.lower():
+                if not (exclude and exclude.lower() == name.lower()):
+                    return "virtual-bots-name-taken"
+        return None
+
+    @require_developer
+    async def _add_virtual_bot(self, owner: NetworkUser, name: str) -> None:
+        """Add a new virtual bot and bring it online."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            _speak_activity(owner, "virtual-bots-not-available")
+            self._show_virtual_bots_menu(owner)
+            return
+        name = name.strip()
+        if not manager.add_bot(name):
+            _speak_activity(owner, "virtual-bots-name-taken")
+            self._show_add_bot_name_editbox(owner)
+            return
+        manager.save_state()
+        _speak_activity(owner, "virtual-bots-added", name=name)
+        self._show_virtual_bots_menu(owner)
+
+    @require_developer
+    async def _rename_virtual_bot(self, owner: NetworkUser, old_name: str, new_name: str) -> None:
+        """Rename a virtual bot, preserving its profile and online status."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            _speak_activity(owner, "virtual-bots-not-available")
+            self._show_virtual_bots_menu(owner)
+            return
+        new_name = new_name.strip()
+        if old_name.lower() == new_name.lower():
+            self._show_edit_bot_actions_menu(owner, old_name)
+            return
+        if not manager.rename_bot(old_name, new_name):
+            _speak_activity(owner, "virtual-bots-name-taken")
+            self._show_rename_bot_editbox(owner, old_name)
+            return
+        manager.save_state()
+        _speak_activity(owner, "virtual-bots-renamed", old_name=old_name, new_name=new_name)
+        self._show_edit_bot_menu(owner)
+
+    @require_developer
+    async def _change_bot_profile(self, owner: NetworkUser, bot_name: str, profile: str) -> None:
+        """Change a virtual bot's profile."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            _speak_activity(owner, "virtual-bots-not-available")
+            self._show_virtual_bots_menu(owner)
+            return
+        if not manager.set_bot_profile(bot_name, profile):
+            _speak_activity(owner, "virtual-bots-no-profiles")
+            self._show_edit_bot_actions_menu(owner, bot_name)
+            return
+        _speak_activity(owner, "virtual-bots-profile-changed", name=bot_name, profile=profile)
+        self._show_edit_bot_actions_menu(owner, bot_name)
+
+    @require_developer
+    async def _delete_virtual_bot(self, owner: NetworkUser, bot_name: str) -> None:
+        """Delete a virtual bot, killing any table it is in."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            _speak_activity(owner, "virtual-bots-not-available")
+            self._show_virtual_bots_menu(owner)
+            return
+        removed, tables_killed = manager.remove_bot(bot_name)
+        if not removed:
+            _speak_activity(owner, "virtual-bots-no-bots")
+            self._show_delete_bot_menu(owner)
+            return
+        _speak_activity(owner, "virtual-bots-deleted", name=bot_name, tables=tables_killed)
+        self._show_delete_bot_menu(owner)
 
     @require_developer
     async def _fill_virtual_bots(self, owner: NetworkUser) -> None:

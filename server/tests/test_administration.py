@@ -32,6 +32,7 @@ class DummyUser:
         self.spoken = []
         self.sounds = []
         self.menus = []
+        self.editboxes = []
 
     def speak_l(self, message_id: str, **kwargs):
         self.spoken.append((message_id, kwargs))
@@ -44,6 +45,9 @@ class DummyUser:
 
     def show_menu(self, menu_id: str, items: list[MenuItem], **kwargs):
         self.menus.append({"menu_id": menu_id, "items": items, "kwargs": kwargs})
+
+    def show_editbox(self, input_id: str, prompt: str, **kwargs):
+        self.editboxes.append((input_id, prompt, kwargs))
 
 
 class DummyDB:
@@ -786,3 +790,202 @@ async def test_developer_cannot_transfer_ownership(monkeypatch):
     # require_server_owner blocks developers; they land back on the main menu.
     assert host.main_menu_calls == ["dev"]
     assert dev_user.spoken[0][0] == "not-server-owner"
+
+
+# ==================== Virtual Bot Add/Edit/Delete Flows ====================
+
+
+class BotManagerStub:
+    """Stub manager for the virtual-bot management menu flows."""
+
+    def __init__(self, roster=None, profiles=None):
+        self.roster = roster or []
+        self.profiles = profiles or ["default", "host"]
+        self.added = []
+        self.renamed = []
+        self.profile_changes = []
+        self.removed = []
+        self.saved = 0
+
+    def get_roster(self):
+        return list(self.roster)
+
+    def get_profiles(self):
+        return list(self.profiles)
+
+    def is_roster_name(self, name):
+        return any(r["name"].lower() == name.lower() for r in self.roster)
+
+    def add_bot(self, name):
+        self.added.append(name)
+        return True
+
+    def rename_bot(self, old_name, new_name):
+        self.renamed.append((old_name, new_name))
+        return True
+
+    def set_bot_profile(self, name, profile):
+        self.profile_changes.append((name, profile))
+        return True
+
+    def remove_bot(self, name):
+        self.removed.append(name)
+        return True, 0
+
+    def save_state(self):
+        self.saved += 1
+
+    def get_status(self):
+        return {"total": len(self.roster), "online": 0, "offline": 0, "in_game": 0}
+
+
+def _roster_entry(name, source="config", profile="default", online=False):
+    return {
+        "name": name,
+        "profile": profile,
+        "state": "online_idle" if online else "offline",
+        "online": online,
+        "source": source,
+    }
+
+
+def test_virtual_bots_menu_includes_management_items():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    host._virtual_bots = BotManagerStub(roster=[_roster_entry("Alpha")])
+
+    host._show_virtual_bots_menu(owner)
+    ids = _get_menu_ids(owner)
+    assert ids == ["fill", "clear", "status", "guided", "groups", "profiles", "add", "edit", "delete", "back"]
+
+
+@pytest.mark.asyncio
+async def test_add_bot_flow_shows_editbox_and_adds():
+    host = AdminHost()
+    host._username_min_length = 3
+    host._username_max_length = 32
+    host._virtual_bots = BotManagerStub()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_virtual_bots_selection(owner, "add")
+    assert host._user_states["owner"]["menu"] == "bot_name_editbox"
+
+    await host._handle_bot_name_editbox(owner, "NewBot", host._user_states["owner"])
+    assert host._virtual_bots.added == ["NewBot"]
+    assert owner.spoken[-1][0] == "virtual-bots-added"
+    assert host._user_states["owner"]["menu"] == "virtual_bots_menu"
+
+
+@pytest.mark.asyncio
+async def test_add_bot_name_taken_and_invalid():
+    host = AdminHost()
+    host._username_min_length = 3
+    host._username_max_length = 32
+    host._virtual_bots = BotManagerStub(roster=[_roster_entry("Taken")])
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_bot_name_editbox(owner, "taken", {"menu": "bot_name_editbox"})
+    assert host._virtual_bots.added == []
+    assert owner.spoken[0][0] == "virtual-bots-name-taken"
+    assert host._user_states["owner"]["menu"] == "bot_name_editbox"
+
+    owner.spoken.clear()
+    await host._handle_bot_name_editbox(owner, "x", {"menu": "bot_name_editbox"})
+    assert host._virtual_bots.added == []
+    assert owner.spoken[0][0] == "virtual-bots-name-invalid"
+
+
+@pytest.mark.asyncio
+async def test_edit_bot_rename_and_profile_flows():
+    host = AdminHost()
+    host._username_min_length = 3
+    host._username_max_length = 32
+    host._virtual_bots = BotManagerStub(roster=[_roster_entry("Alpha")])
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_virtual_bots_selection(owner, "edit")
+    assert _get_menu_ids(owner) == ["edit_Alpha", "back"]
+
+    await host._handle_edit_bot_selection(owner, "edit_Alpha")
+    assert _get_menu_ids(owner) == ["rename", "profile", "back"]
+
+    await host._handle_edit_bot_actions_selection(owner, "rename", {"bot_name": "Alpha"})
+    assert host._user_states["owner"]["menu"] == "rename_bot_editbox"
+    await host._handle_rename_bot_editbox(owner, "Beta", host._user_states["owner"])
+    assert host._virtual_bots.renamed == [("Alpha", "Beta")]
+    assert owner.spoken[-1][0] == "virtual-bots-renamed"
+    assert host._user_states["owner"]["menu"] == "edit_bot_menu"
+
+    await host._handle_edit_bot_selection(owner, "edit_Alpha")
+    await host._handle_edit_bot_actions_selection(owner, "profile", {"bot_name": "Alpha"})
+    assert _get_menu_ids(owner) == ["default", "host", "back"]
+    await host._handle_bot_profile_selection(owner, "host", {"bot_name": "Alpha"})
+    assert host._virtual_bots.profile_changes == [("Alpha", "host")]
+    assert owner.spoken[-1][0] == "virtual-bots-profile-changed"
+
+
+@pytest.mark.asyncio
+async def test_rename_bot_same_name_is_noop():
+    host = AdminHost()
+    host._username_min_length = 3
+    host._username_max_length = 32
+    host._virtual_bots = BotManagerStub(roster=[_roster_entry("Alpha")])
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_rename_bot_editbox(
+        owner, "alpha", {"menu": "rename_bot_editbox", "bot_name": "Alpha"}
+    )
+    assert host._virtual_bots.renamed == []
+    assert host._user_states["owner"]["menu"] == "edit_bot_actions_menu"
+
+
+@pytest.mark.asyncio
+async def test_delete_bot_flow():
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub(roster=[_roster_entry("Alpha")])
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_virtual_bots_selection(owner, "delete")
+    assert _get_menu_ids(owner) == ["del_Alpha", "back"]
+
+    await host._handle_delete_bot_selection(owner, "del_Alpha")
+    assert host._user_states["owner"]["menu"] == "delete_bot_confirm_menu"
+
+    await host._handle_delete_bot_confirm_selection(owner, "yes", host._user_states["owner"])
+    assert host._virtual_bots.removed == ["Alpha"]
+    assert owner.spoken[-1][0] == "virtual-bots-deleted"
+    assert host._user_states["owner"]["menu"] == "delete_bot_menu"
+
+
+@pytest.mark.asyncio
+async def test_edit_and_delete_empty_roster_fall_back():
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_virtual_bots_selection(owner, "edit")
+    assert owner.spoken[-1][0] == "virtual-bots-no-bots"
+    assert host._user_states["owner"]["menu"] == "virtual_bots_menu"
+
+    owner.spoken.clear()
+    await host._handle_virtual_bots_selection(owner, "delete")
+    assert owner.spoken[-1][0] == "virtual-bots-no-bots"
+    assert host._user_states["owner"]["menu"] == "virtual_bots_menu"
+
+
+@pytest.mark.asyncio
+async def test_add_virtual_bot_requires_developer():
+    host = AdminHost()
+    host._username_min_length = 3
+    host._username_max_length = 32
+    host._virtual_bots = BotManagerStub()
+    admin = DummyUser("admin", TrustLevel.ADMIN)
+
+    await host._add_virtual_bot(admin, "HackerBot")
+    assert host._virtual_bots.added == []
+    assert admin.spoken[0][0] == "not-server-owner"
+    assert host.main_menu_calls == ["admin"]
+
+    dev = DummyUser("dev", TrustLevel.DEVELOPER)
+    await host._add_virtual_bot(dev, "DevBot")
+    assert host._virtual_bots.added == ["DevBot"]

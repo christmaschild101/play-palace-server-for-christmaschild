@@ -290,3 +290,30 @@ def test_approve_and_delete_user(db):
 
     assert db.delete_user("pending") is True
     assert db.get_user("pending") is None
+
+
+def test_virtual_bot_definition_crud_and_tombstone(db):
+    db.save_virtual_bot_definition("Alpha", "host")
+    db.save_virtual_bot_definition("Beta", "default")
+    db.tombstone_virtual_bot_definition("Gone")
+
+    definitions = {d["name"]: d for d in db.load_virtual_bot_definitions()}
+    assert definitions["Alpha"]["profile"] == "host"
+    assert definitions["Alpha"]["removed"] is False
+    assert definitions["Gone"]["removed"] is True
+
+    # Re-saving a tombstoned name clears the tombstone (re-add)
+    db.save_virtual_bot_definition("Gone", "patron")
+    definitions = {d["name"]: d for d in db.load_virtual_bot_definitions()}
+    assert definitions["Gone"]["removed"] is False
+    assert definitions["Gone"]["profile"] == "patron"
+
+    # Updating an existing definition keeps a single row
+    db.save_virtual_bot_definition("Alpha", "mixer")
+    definitions = {d["name"]: d for d in db.load_virtual_bot_definitions()}
+    assert len([d for d in definitions.values() if d["name"] == "Alpha"]) == 1
+    assert definitions["Alpha"]["profile"] == "mixer"
+
+    db.delete_virtual_bot_definition("Beta")
+    remaining = {d["name"] for d in db.load_virtual_bot_definitions()}
+    assert remaining == {"Alpha", "Gone"}

@@ -418,6 +418,22 @@ virtual-bots-profiles-header = Профили: определено { $count } (
 virtual-bots-profiles-empty = Профили не определены.
 virtual-bots-profiles-line = { $profile } (ботов: { $bot_count }) переопределения: { $overrides }.
 virtual-bots-profiles-no-overrides = наследует базовую конфигурацию
+virtual-bots-add = Добавить виртуального бота
+virtual-bots-edit = Изменить виртуального бота
+virtual-bots-delete = Удалить виртуального бота
+virtual-bots-add-prompt = Введите имя для нового виртуального бота:
+virtual-bots-rename-prompt = Введите новое имя для { $name }:
+virtual-bots-rename = Переименовать
+virtual-bots-change-profile = Сменить профиль
+virtual-bots-added = Виртуальный бот { $name } добавлен и подключён онлайн.
+virtual-bots-renamed = Виртуальный бот переименован с { $old_name } на { $new_name }.
+virtual-bots-profile-changed = Профиль виртуального бота { $name } изменён на { $profile }.
+virtual-bots-deleted = Виртуальный бот { $name } удалён. Закрыто { $tables } стол(столов).
+virtual-bots-name-taken = Виртуальный бот с таким именем уже существует.
+virtual-bots-name-invalid = Это имя недействительно.
+virtual-bots-no-bots = Нет виртуальных ботов для управления.
+virtual-bots-delete-confirm = Удалить виртуального бота { $name }? Это закроет любой стол, за которым он находится.
+virtual-bots-no-profiles = Нет доступных профилей.
 
 localization-in-progress-try-again = Локализация ещё загружается. Пожалуйста, попробуйте снова через минуту.
 

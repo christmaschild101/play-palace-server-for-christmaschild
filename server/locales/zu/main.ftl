@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Amaphrofayili: { $count } achazwe (okuzenzakalela
 virtual-bots-profiles-empty = Akukho maphrofayili achazwe.
 virtual-bots-profiles-line = { $profile } (ama-bots angu-{ $bot_count }) kweqiwe: { $overrides }.
 virtual-bots-profiles-no-overrides = idla ifa ukucushwa okuyisisekelo
+virtual-bots-add = Engeza I-Bot Ebonakalayo
+virtual-bots-edit = Hlela I-Bot Ebonakalayo
+virtual-bots-delete = Susa I-Bot Ebonakalayo
+virtual-bots-add-prompt = Faka igama le-bot ebonakalayo entsha:
+virtual-bots-rename-prompt = Faka igama elisha le-{ $name }:
+virtual-bots-rename = Qamba kabusha
+virtual-bots-change-profile = Shintsha Iphrofayili
+virtual-bots-added = I-bot ebonakalayo { $name } ingeziwe futhi ifakwe ku-inthanethi.
+virtual-bots-renamed = I-bot ebonakalayo iqanjwe kabusha isuka ku-{ $old_name } iya ku-{ $new_name }.
+virtual-bots-profile-changed = Iphrofayili ye-bot ebonakalayo { $name } ishintshiwe yaba { $profile }.
+virtual-bots-deleted = I-bot ebonakalayo { $name } isusiwe. Kuvalwe itafula(amatafula) angu-{ $tables }.
+virtual-bots-name-taken = I-bot ebonakalayo enalelo gama isivele ikhona.
+virtual-bots-name-invalid = Lelo gama alivumelekile.
+virtual-bots-no-bots = Azikho ama-bot abonakalayo okulawula.
+virtual-bots-delete-confirm = Susa i-bot ebonakalayo { $name }? Lokhu kuvala noma yiliphi itafula elikulo.
+virtual-bots-no-profiles = Azikho amaphrofayili atholakalayo.
 
 localization-in-progress-try-again = Ukuhumusha kusaqhubeka. Sicela uzame futhi emzuzwini.
 

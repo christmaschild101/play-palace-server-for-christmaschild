@@ -366,6 +366,22 @@ virtual-bots-profiles-header = โปรไฟล์: { $count } กำหนด
 virtual-bots-profiles-empty = ไม่มีโปรไฟล์ที่กำหนดไว้
 virtual-bots-profiles-line = { $profile } ({ $bot_count } บอต) แทนที่: { $overrides }
 virtual-bots-profiles-no-overrides = สืบทอดการกำหนดค่าพื้นฐาน
+virtual-bots-add = เพิ่มบอตเสมือน
+virtual-bots-edit = แก้ไขบอตเสมือน
+virtual-bots-delete = ลบบอตเสมือน
+virtual-bots-add-prompt = ป้อนชื่อสำหรับบอตเสมือนใหม่:
+virtual-bots-rename-prompt = ป้อนชื่อใหม่สำหรับ { $name }:
+virtual-bots-rename = เปลี่ยนชื่อ
+virtual-bots-change-profile = เปลี่ยนโปรไฟล์
+virtual-bots-added = เพิ่มบอตเสมือน { $name } และนำออนไลน์แล้ว
+virtual-bots-renamed = เปลี่ยนชื่อบอตเสมือนจาก { $old_name } เป็น { $new_name }
+virtual-bots-profile-changed = เปลี่ยนโปรไฟล์ของบอตเสมือน { $name } เป็น { $profile }
+virtual-bots-deleted = ลบบอตเสมือน { $name } แล้ว ปิดโต๊ะ { $tables } โต๊ะ
+virtual-bots-name-taken = มีบอตเสมือนชื่อนั้นอยู่แล้ว
+virtual-bots-name-invalid = ชื่อนั้นไม่ถูกต้อง
+virtual-bots-no-bots = ไม่มีบอตเสมือนให้จัดการ
+virtual-bots-delete-confirm = ลบบอตเสมือน { $name } หรือไม่? การดำเนินการนี้จะปิดโต๊ะใดก็ตามที่บอตอยู่
+virtual-bots-no-profiles = ไม่มีโปรไฟล์ที่พร้อมใช้งาน
 
 localization-in-progress-try-again = กำลังโหลดการแปลภาษา โปรดลองอีกครั้งในอีกหนึ่งนาที
 

@@ -175,6 +175,7 @@ class VirtualBotManager:
         self._bot_groups: dict[str, BotGroupConfig] = {}
         self._bot_memberships: dict[str, set[str]] = {}
         self._bot_profiles_map: dict[str, str] = {}
+        self._managed_names: set[str] = set()
         self._guided_tables: dict[str, GuidedTableState] = {}
         self._tick_counter = 0
 
@@ -239,10 +240,192 @@ class VirtualBotManager:
         self._guided_tables = self._parse_guided_tables(guided_tables_section)
         self._validate_guided_tables()
 
+        # Merge DB-managed definitions (added/renamed bots, tombstones, profile
+        # overrides) on top of the config-defined roster.
+        self._merge_managed_definitions()
+
         # Update any instantiated bots with the latest metadata
         for bot in self._bots.values():
             bot.profile = self._bot_profiles_map.get(bot.name, self._config.default_profile)
             bot.groups = tuple(sorted(self._bot_memberships.get(bot.name, set())))
+
+    def _merge_managed_definitions(self) -> None:
+        """Merge DB-managed bot definitions into the configured roster.
+
+        Applies tombstones (removed config bots), appends bots added in-game,
+        and applies profile overrides for bots with a stored definition.
+        """
+        db = self._server._db
+        if not db:
+            self._managed_names = set()
+            return
+        definitions = db.load_virtual_bot_definitions()
+        if not definitions:
+            self._managed_names = set()
+            return
+
+        removed = {d["name"] for d in definitions if d["removed"]}
+        if removed:
+            self._config.names = [n for n in self._config.names if n not in removed]
+            for group in self._bot_groups.values():
+                group.bots = [n for n in group.bots if n not in removed]
+            for name in removed:
+                self._bot_memberships.pop(name, None)
+                self._bot_profiles_map.pop(name, None)
+
+        active = [d for d in definitions if not d["removed"]]
+        managed = {
+            d["name"]: d["profile"] for d in active if d["name"] not in self._config.names
+        }
+        overrides = {
+            d["name"]: d["profile"] for d in active if d["name"] in self._config.names
+        }
+
+        self._managed_names = set(managed.keys())
+        for name, profile in managed.items():
+            self._config.names.append(name)
+            self._bot_memberships.setdefault(name, set())
+            self._bot_profiles_map[name] = profile
+
+        for name, profile in overrides.items():
+            self._bot_profiles_map[name] = profile
+
+        for profile in set(managed.values()) | set(overrides.values()):
+            self._profiles.setdefault(profile, VirtualBotProfileOverride(name=profile))
+
+    def get_roster(self) -> list[dict[str, Any]]:
+        """Return the full roster of configured bots for admin management."""
+        roster = []
+        for name in sorted(self._config.names):
+            bot = self._bots.get(name)
+            roster.append(
+                {
+                    "name": name,
+                    "profile": self._bot_profiles_map.get(name, self._config.default_profile),
+                    "state": bot.state.value if bot else VirtualBotState.OFFLINE.value,
+                    "online": bool(bot and bot.state != VirtualBotState.OFFLINE),
+                    "source": "managed" if name in self._managed_names else "config",
+                }
+            )
+        return roster
+
+    def get_profiles(self) -> list[str]:
+        """Return the sorted list of configured profile names."""
+        return sorted(self._profiles.keys())
+
+    def is_roster_name(self, name: str) -> bool:
+        """Return True if the name (case-insensitive) is already in the roster."""
+        lowered = name.lower()
+        return any(existing.lower() == lowered for existing in self._config.names)
+
+    def add_bot(self, name: str) -> bool:
+        """Add a new virtual bot to the roster and bring it online.
+
+        Returns True on success. Callers validate name availability first.
+        """
+        if name in self._config.names:
+            return False
+        profile = self._config.default_profile
+        self._config.names.append(name)
+        self._managed_names.add(name)
+        self._bot_memberships.setdefault(name, set())
+        self._bot_profiles_map[name] = profile
+        self._persist_definition(name, profile)
+        bot = VirtualBot(name=name, profile=profile)
+        self._bots[name] = bot
+        self._bring_bot_online(bot)
+        return True
+
+    def rename_bot(self, old_name: str, new_name: str) -> bool:
+        """Rename a bot, keeping its profile and online status.
+
+        The bot is taken offline (broadcasting its departure), moved to the new
+        name, and brought back online if it was online.
+
+        Returns True on success.
+        """
+        if old_name not in self._config.names or new_name in self._config.names:
+            return False
+        profile = self._bot_profiles_map.get(old_name, self._config.default_profile)
+        was_managed = old_name in self._managed_names
+        bot = self._bots.pop(old_name, None)
+        was_online = bool(bot and bot.state != VirtualBotState.OFFLINE)
+        if bot:
+            self._take_bot_offline(bot)
+
+        # Move roster entries to the new name
+        self._config.names[self._config.names.index(old_name)] = new_name
+        self._bot_memberships[new_name] = self._bot_memberships.pop(old_name, set())
+        self._bot_profiles_map.pop(old_name, None)
+        self._bot_profiles_map[new_name] = profile
+        if was_managed:
+            self._managed_names.discard(old_name)
+            self._managed_names.add(new_name)
+
+        # Persist: tombstone config-sourced old name, drop managed old row
+        db = self._server._db
+        if db:
+            if was_managed:
+                db.delete_virtual_bot_definition(old_name)
+            else:
+                db.tombstone_virtual_bot_definition(old_name)
+            db.delete_virtual_bot(old_name)
+            self._persist_definition(new_name, profile)
+
+        # Recreate the bot under the new name (fresh offline state)
+        new_bot = VirtualBot(name=new_name, profile=profile)
+        self._bots[new_name] = new_bot
+        if was_online:
+            self._bring_bot_online(new_bot)
+        return True
+
+    def set_bot_profile(self, name: str, profile: str) -> bool:
+        """Change a bot's profile and persist the override."""
+        if name not in self._config.names or profile not in self._profiles:
+            return False
+        self._bot_profiles_map[name] = profile
+        bot = self._bots.get(name)
+        if bot:
+            bot.profile = profile
+        self._persist_definition(name, profile)
+        return True
+
+    def remove_bot(self, name: str) -> tuple[bool, int]:
+        """Remove a bot from the roster, killing its table if in a game.
+
+        Returns (success, tables_killed).
+        """
+        if name not in self._config.names:
+            return False, 0
+        was_managed = name in self._managed_names
+        tables_killed = 0
+
+        bot = self._bots.pop(name, None)
+        if bot:
+            if bot.table_id:
+                self._kill_bot_table(bot)
+                tables_killed = 1
+            self._take_bot_offline_silent(bot)
+
+        self._config.names.remove(name)
+        self._bot_memberships.pop(name, None)
+        self._bot_profiles_map.pop(name, None)
+        self._managed_names.discard(name)
+
+        db = self._server._db
+        if db:
+            if was_managed:
+                db.delete_virtual_bot_definition(name)
+            else:
+                db.tombstone_virtual_bot_definition(name)
+            db.delete_virtual_bot(name)
+        return True, tables_killed
+
+    def _persist_definition(self, name: str, profile: str) -> None:
+        """Save a bot definition (clearing any tombstone) to the database."""
+        db = self._server._db
+        if db:
+            db.save_virtual_bot_definition(name, profile)
 
     def _parse_profiles(
         self, profiles_section: dict[str, Any]
@@ -731,15 +914,10 @@ class VirtualBotManager:
 
         for name, bot in list(self._bots.items()):
             # If bot is in a table, kill the table
-            if bot.table_id:
-                table = self._server._tables.get_table(bot.table_id)
-                if table and bot.table_id not in tables_killed:
-                    # Notify members that table is being closed
-                    if table.game:
-                        table.game.broadcast_l("virtual-bot-table-closed")
-                    # Remove the table
-                    self._server._tables.remove_table(bot.table_id)
-                    tables_killed.add(bot.table_id)
+            if bot.table_id and bot.table_id not in tables_killed:
+                table_id = bot.table_id
+                if self._kill_bot_table(bot):
+                    tables_killed.add(table_id)
 
             # Take bot offline (removes from server users)
             if bot.state in (
@@ -756,6 +934,20 @@ class VirtualBotManager:
             self._server._db.delete_all_virtual_bots()
 
         return bot_count, len(tables_killed)
+
+    def _kill_bot_table(self, bot: VirtualBot) -> bool:
+        """Close the table a bot is in, notifying members. Returns True if closed."""
+        if not bot.table_id:
+            return False
+        table = self._server._tables.get_table(bot.table_id)
+        if not table:
+            bot.table_id = None
+            return False
+        if table.game:
+            table.game.broadcast_l("virtual-bot-table-closed")
+        self._server._tables.remove_table(bot.table_id)
+        bot.table_id = None
+        return True
 
     def _take_bot_offline_silent(self, bot: VirtualBot) -> None:
         """Take a bot offline without broadcasting presence."""

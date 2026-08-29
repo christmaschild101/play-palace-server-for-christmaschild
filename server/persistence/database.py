@@ -1366,3 +1366,74 @@ class Database:
         cursor = self._get_conn().cursor()
         cursor.execute("DELETE FROM virtual_bots")
         self._get_conn().commit()
+
+    def _ensure_virtual_bot_definitions_table(self) -> None:
+        """Create virtual_bot_definitions table if it doesn't exist."""
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS virtual_bot_definitions (
+                name TEXT PRIMARY KEY,
+                profile TEXT NOT NULL DEFAULT 'default',
+                removed INTEGER NOT NULL DEFAULT 0
+            )
+            """
+        )
+        self._get_conn().commit()
+
+    def save_virtual_bot_definition(self, name: str, profile: str) -> None:
+        """Save or update a managed virtual bot definition (clears tombstone)."""
+        self._ensure_virtual_bot_definitions_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            INSERT INTO virtual_bot_definitions (name, profile, removed)
+            VALUES (?, ?, 0)
+            ON CONFLICT(name) DO UPDATE SET
+                profile = excluded.profile,
+                removed = 0
+            """,
+            (name, profile),
+        )
+        self._get_conn().commit()
+
+    def tombstone_virtual_bot_definition(self, name: str) -> None:
+        """Mark a config-defined bot as removed so it stays out of the roster."""
+        self._ensure_virtual_bot_definitions_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            INSERT INTO virtual_bot_definitions (name, profile, removed)
+            VALUES (?, 'default', 1)
+            ON CONFLICT(name) DO UPDATE SET
+                removed = 1
+            """,
+            (name,),
+        )
+        self._get_conn().commit()
+
+    def delete_virtual_bot_definition(self, name: str) -> None:
+        """Delete a managed virtual bot definition from the database."""
+        self._ensure_virtual_bot_definitions_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute("DELETE FROM virtual_bot_definitions WHERE name = ?", (name,))
+        self._get_conn().commit()
+
+    def load_virtual_bot_definitions(self) -> list[dict]:
+        """Load all virtual bot definitions from the database."""
+        self._ensure_virtual_bot_definitions_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            SELECT name, profile, removed
+            FROM virtual_bot_definitions
+            """
+        )
+        return [
+            {
+                "name": row["name"],
+                "profile": row["profile"],
+                "removed": bool(row["removed"]),
+            }
+            for row in cursor.fetchall()
+        ]

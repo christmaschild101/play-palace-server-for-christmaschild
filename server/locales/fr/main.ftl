@@ -382,6 +382,22 @@ virtual-bots-profiles-header = Profils : { $count } définis (par défaut : { $d
 virtual-bots-profiles-empty = Aucun profil n'est défini.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) remplacements : { $overrides }.
 virtual-bots-profiles-no-overrides = hérite de la configuration de base
+virtual-bots-add = Ajouter un bot virtuel
+virtual-bots-edit = Modifier un bot virtuel
+virtual-bots-delete = Supprimer un bot virtuel
+virtual-bots-add-prompt = Saisissez un nom pour le nouveau bot virtuel :
+virtual-bots-rename-prompt = Saisissez un nouveau nom pour { $name } :
+virtual-bots-rename = Renommer
+virtual-bots-change-profile = Changer de profil
+virtual-bots-added = Bot virtuel { $name } ajouté et mis en ligne.
+virtual-bots-renamed = Bot virtuel renommé de { $old_name } en { $new_name }.
+virtual-bots-profile-changed = Le profil du bot virtuel { $name } est passé à { $profile }.
+virtual-bots-deleted = Bot virtuel { $name } supprimé. { $tables } table(s) fermée(s).
+virtual-bots-name-taken = Un bot virtuel portant ce nom existe déjà.
+virtual-bots-name-invalid = Ce nom n'est pas valide.
+virtual-bots-no-bots = Aucun bot virtuel à gérer.
+virtual-bots-delete-confirm = Supprimer le bot virtuel { $name } ? Cela fermera toute table dans laquelle il se trouve.
+virtual-bots-no-profiles = Aucun profil disponible.
 
 localization-in-progress-try-again = La localisation est en cours. Veuillez réessayer dans une minute.
 

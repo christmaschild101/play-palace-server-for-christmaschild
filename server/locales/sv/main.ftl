@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Profiler: { $count } definierade (standard: { $de
 virtual-bots-profiles-empty = Inga profiler är definierade.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } botar) åsidosätter: { $overrides }.
 virtual-bots-profiles-no-overrides = ärver baskonfiguration
+virtual-bots-add = Lägg till virtuell bot
+virtual-bots-edit = Redigera virtuell bot
+virtual-bots-delete = Ta bort virtuell bot
+virtual-bots-add-prompt = Ange ett namn för den nya virtuella boten:
+virtual-bots-rename-prompt = Ange ett nytt namn för { $name }:
+virtual-bots-rename = Byt namn
+virtual-bots-change-profile = Ändra profil
+virtual-bots-added = Virtuell bot { $name } lades till och är nu online.
+virtual-bots-renamed = Virtuell bot fick nytt namn från { $old_name } till { $new_name }.
+virtual-bots-profile-changed = Profil för virtuell bot { $name } ändrad till { $profile }.
+virtual-bots-deleted = Virtuell bot { $name } togs bort. { $tables } bord stängdes.
+virtual-bots-name-taken = En virtuell bot med det namnet finns redan.
+virtual-bots-name-invalid = Det namnet är inte giltigt.
+virtual-bots-no-bots = Det finns inga virtuella botar att hantera.
+virtual-bots-delete-confirm = Ta bort virtuell bot { $name }? Detta stänger alla bord den är med vid.
+virtual-bots-no-profiles = Inga profiler är tillgängliga.
 
 localization-in-progress-try-again = Lokalisering pågår. Försök igen om en minut.
 

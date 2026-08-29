@@ -366,6 +366,22 @@ virtual-bots-profiles-header = 프로필: { $count }개 정의됨 (기본: { $de
 virtual-bots-profiles-empty = 정의된 프로필이 없습니다.
 virtual-bots-profiles-line = { $profile } ({ $bot_count }개 봇) 재정의: { $overrides }.
 virtual-bots-profiles-no-overrides = 기본 구성 상속
+virtual-bots-add = 가상 봇 추가
+virtual-bots-edit = 가상 봇 편집
+virtual-bots-delete = 가상 봇 삭제
+virtual-bots-add-prompt = 새 가상 봇의 이름을 입력하세요:
+virtual-bots-rename-prompt = { $name } 의 새 이름을 입력하세요:
+virtual-bots-rename = 이름 바꾸기
+virtual-bots-change-profile = 프로필 변경
+virtual-bots-added = 가상 봇 { $name } 이(가) 추가되어 온라인 상태가 되었습니다.
+virtual-bots-renamed = 가상 봇 이름이 { $old_name } 에서 { $new_name } (으)로 변경되었습니다.
+virtual-bots-profile-changed = 가상 봇 { $name } 의 프로필이 { $profile } (으)로 변경되었습니다.
+virtual-bots-deleted = 가상 봇 { $name } 이(가) 삭제되었습니다. 테이블 { $tables } 개가 닫혔습니다.
+virtual-bots-name-taken = 해당 이름의 가상 봇이 이미 존재합니다.
+virtual-bots-name-invalid = 해당 이름은 유효하지 않습니다.
+virtual-bots-no-bots = 관리할 가상 봇이 없습니다.
+virtual-bots-delete-confirm = 가상 봇 { $name } 을(를) 삭제하시겠습니까? 참여 중인 테이블이 닫힙니다.
+virtual-bots-no-profiles = 사용 가능한 프로필이 없습니다.
 
 localization-in-progress-try-again = 현지화 작업이 진행 중입니다. 1분 후에 다시 시도해 주세요.
 

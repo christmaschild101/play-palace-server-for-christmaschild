@@ -2322,6 +2322,20 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 self._handle_virtual_bots_clear_confirm_selection,
                 (user, selection_id),
             ),
+            "edit_bot_menu": (self._handle_edit_bot_selection, (user, selection_id)),
+            "edit_bot_actions_menu": (
+                self._handle_edit_bot_actions_selection,
+                (user, selection_id, state),
+            ),
+            "bot_profile_menu": (
+                self._handle_bot_profile_selection,
+                (user, selection_id, state),
+            ),
+            "delete_bot_menu": (self._handle_delete_bot_selection, (user, selection_id)),
+            "delete_bot_confirm_menu": (
+                self._handle_delete_bot_confirm_selection,
+                (user, selection_id, state),
+            ),
             "reboot_server_confirm_menu": (
                 self._handle_reboot_server_confirm_selection,
                 (user, selection_id),
@@ -4213,6 +4227,16 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         if current_menu == "reset_password_editbox":
             text = packet.get("text", "")
             await self._handle_reset_password_editbox(user, text, state)
+            return
+
+        if current_menu == "bot_name_editbox":
+            text = packet.get("text", "")
+            await self._handle_bot_name_editbox(user, text, state)
+            return
+
+        if current_menu == "rename_bot_editbox":
+            text = packet.get("text", "")
+            await self._handle_rename_bot_editbox(user, text, state)
             return
 
         # Forward to game if user is in a table

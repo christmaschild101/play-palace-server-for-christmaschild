@@ -416,6 +416,22 @@ virtual-bots-profiles-header = Profily: { $count } definováno (výchozí: { $de
 virtual-bots-profiles-empty = Nejsou definovány žádné profily.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } botů) přepsání: { $overrides }.
 virtual-bots-profiles-no-overrides = dědí základní konfiguraci
+virtual-bots-add = Přidat virtuálního bota
+virtual-bots-edit = Upravit virtuálního bota
+virtual-bots-delete = Smazat virtuálního bota
+virtual-bots-add-prompt = Zadejte jméno pro nového virtuálního bota:
+virtual-bots-rename-prompt = Zadejte nové jméno pro { $name }:
+virtual-bots-rename = Přejmenovat
+virtual-bots-change-profile = Změnit profil
+virtual-bots-added = Virtuální bot { $name } byl přidán a připojen online.
+virtual-bots-renamed = Virtuální bot byl přejmenován z { $old_name } na { $new_name }.
+virtual-bots-profile-changed = Profil virtuálního bota { $name } byl změněn na { $profile }.
+virtual-bots-deleted = Virtuální bot { $name } byl smazán. Byl uzavřen { $tables } stůl(stoly).
+virtual-bots-name-taken = Virtuální bot s tímto jménem již existuje.
+virtual-bots-name-invalid = Toto jméno není platné.
+virtual-bots-no-bots = Nejsou žádní virtuální boti ke správě.
+virtual-bots-delete-confirm = Smazat virtuálního bota { $name }? Tím se uzavře jakýkoli stůl, ve kterém je.
+virtual-bots-no-profiles = Nejsou k dispozici žádné profily.
 
 localization-in-progress-try-again = Lokalizace se stále načítá. Zkuste to prosím za minutu znovu.
 

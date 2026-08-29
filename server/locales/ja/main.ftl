@@ -366,6 +366,22 @@ virtual-bots-profiles-header = プロファイル: { $count }個定義済み(デ
 virtual-bots-profiles-empty = プロファイルは定義されていません。
 virtual-bots-profiles-line = { $profile }({ $bot_count }個のボット)オーバーライド: { $overrides }。
 virtual-bots-profiles-no-overrides = ベース設定を継承
+virtual-bots-add = 仮想ボットを追加
+virtual-bots-edit = 仮想ボットを編集
+virtual-bots-delete = 仮想ボットを削除
+virtual-bots-add-prompt = 新しい仮想ボットの名前を入力してください:
+virtual-bots-rename-prompt = { $name } の新しい名前を入力してください:
+virtual-bots-rename = 名前を変更
+virtual-bots-change-profile = プロフィールを変更
+virtual-bots-added = 仮想ボット { $name } が追加され、オンラインになりました。
+virtual-bots-renamed = 仮想ボットの名前が { $old_name } から { $new_name } に変更されました。
+virtual-bots-profile-changed = 仮想ボット { $name } のプロフィールが { $profile } に変更されました。
+virtual-bots-deleted = 仮想ボット { $name } が削除されました。{ $tables } テーブルを閉じました。
+virtual-bots-name-taken = その名前の仮想ボットはすでに存在します。
+virtual-bots-name-invalid = その名前は無効です。
+virtual-bots-no-bots = 管理する仮想ボットはありません。
+virtual-bots-delete-confirm = 仮想ボット { $name } を削除しますか? これにより、参加中のテーブルは閉じられます。
+virtual-bots-no-profiles = 利用可能なプロフィールがありません。
 
 localization-in-progress-try-again = ローカライズ処理中です。1分後にもう一度お試しください。
 

@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Profil: { $count } didefinisikan (default: { $def
 virtual-bots-profiles-empty = Tidak ada profil yang didefinisikan.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } bot) override: { $overrides }.
 virtual-bots-profiles-no-overrides = mewarisi konfigurasi dasar
+virtual-bots-add = Tambah Bot Virtual
+virtual-bots-edit = Edit Bot Virtual
+virtual-bots-delete = Hapus Bot Virtual
+virtual-bots-add-prompt = Masukkan nama untuk bot virtual baru:
+virtual-bots-rename-prompt = Masukkan nama baru untuk { $name }:
+virtual-bots-rename = Ganti Nama
+virtual-bots-change-profile = Ubah Profil
+virtual-bots-added = Bot virtual { $name } ditambahkan dan dibawa online.
+virtual-bots-renamed = Bot virtual diganti namanya dari { $old_name } menjadi { $new_name }.
+virtual-bots-profile-changed = Profil bot virtual { $name } diubah menjadi { $profile }.
+virtual-bots-deleted = Bot virtual { $name } dihapus. { $tables } meja ditutup.
+virtual-bots-name-taken = Bot virtual dengan nama itu sudah ada.
+virtual-bots-name-invalid = Nama itu tidak valid.
+virtual-bots-no-bots = Tidak ada bot virtual untuk dikelola.
+virtual-bots-delete-confirm = Hapus bot virtual { $name }? Ini akan menutup meja mana pun yang diikutinya.
+virtual-bots-no-profiles = Tidak ada profil yang tersedia.
 
 localization-in-progress-try-again = Lokalisasi sedang diproses. Silakan coba lagi dalam satu menit.
 

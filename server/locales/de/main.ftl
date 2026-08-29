@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Profile: { $count } definiert (Standard: { $defau
 virtual-bots-profiles-empty = Keine Profile definiert.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } Bots) Überschreibungen: { $overrides }.
 virtual-bots-profiles-no-overrides = erbt Basiskonfiguration
+virtual-bots-add = Virtuellen Bot hinzufügen
+virtual-bots-edit = Virtuellen Bot bearbeiten
+virtual-bots-delete = Virtuellen Bot löschen
+virtual-bots-add-prompt = Gib einen Namen für den neuen virtuellen Bot ein:
+virtual-bots-rename-prompt = Gib einen neuen Namen für { $name } ein:
+virtual-bots-rename = Umbenennen
+virtual-bots-change-profile = Profil ändern
+virtual-bots-added = Virtueller Bot { $name } wurde hinzugefügt und ist jetzt online.
+virtual-bots-renamed = Virtueller Bot wurde von { $old_name } in { $new_name } umbenannt.
+virtual-bots-profile-changed = Profil des virtuellen Bots { $name } wurde auf { $profile } geändert.
+virtual-bots-deleted = Virtueller Bot { $name } wurde gelöscht. { $tables } Tisch(e) geschlossen.
+virtual-bots-name-taken = Ein virtueller Bot mit diesem Namen existiert bereits.
+virtual-bots-name-invalid = Dieser Name ist ungültig.
+virtual-bots-no-bots = Es gibt keine virtuellen Bots zu verwalten.
+virtual-bots-delete-confirm = Virtuellen Bot { $name } löschen? Dadurch wird jeder Tisch geschlossen, an dem er spielt.
+virtual-bots-no-profiles = Keine Profile verfügbar.
 
 localization-in-progress-try-again = Die Lokalisierung wird noch geladen. Bitte versuchen Sie es in einer Minute erneut.
 

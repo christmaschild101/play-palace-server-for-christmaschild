@@ -464,6 +464,22 @@ virtual-bots-profiles-line = { $profile } ({ $bot_count } { $bot_count ->
    *[other] بوت
 }) التجاوزات: { $overrides }.
 virtual-bots-profiles-no-overrides = يرث الإعدادات الأساسية
+virtual-bots-add = إضافة بوت افتراضي
+virtual-bots-edit = تعديل بوت افتراضي
+virtual-bots-delete = حذف بوت افتراضي
+virtual-bots-add-prompt = أدخل اسماً للبوت الافتراضي الجديد:
+virtual-bots-rename-prompt = أدخل اسماً جديداً لـ { $name }:
+virtual-bots-rename = إعادة تسمية
+virtual-bots-change-profile = تغيير الملف الشخصي
+virtual-bots-added = تمت إضافة البوت الافتراضي { $name } وإحضاره عبر الإنترنت.
+virtual-bots-renamed = تمت إعادة تسمية البوت الافتراضي من { $old_name } إلى { $new_name }.
+virtual-bots-profile-changed = تم تغيير ملف البوت الافتراضي { $name } إلى { $profile }.
+virtual-bots-deleted = تم حذف البوت الافتراضي { $name }. تم إغلاق { $tables } جدول(جداول).
+virtual-bots-name-taken = يوجد بالفعل بوت افتراضي بهذا الاسم.
+virtual-bots-name-invalid = هذا الاسم غير صالح.
+virtual-bots-no-bots = لا توجد بوتات افتراضية لإدارتها.
+virtual-bots-delete-confirm = حذف البوت الافتراضي { $name }؟ سيؤدي ذلك إلى إغلاق أي جدول فيه.
+virtual-bots-no-profiles = لا توجد ملفات شخصية متاحة.
 
 localization-in-progress-try-again = جارٍ إعداد الترجمة. يُرجى المحاولة مرة أخرى بعد دقيقة.
 

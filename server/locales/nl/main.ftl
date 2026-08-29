@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Profielen: { $count } gedefinieerd (standaard: { 
 virtual-bots-profiles-empty = Geen profielen zijn gedefinieerd.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) overschrijvingen: { $overrides }.
 virtual-bots-profiles-no-overrides = erft basisconfiguratie
+virtual-bots-add = Virtuele bot toevoegen
+virtual-bots-edit = Virtuele bot bewerken
+virtual-bots-delete = Virtuele bot verwijderen
+virtual-bots-add-prompt = Voer een naam in voor de nieuwe virtuele bot:
+virtual-bots-rename-prompt = Voer een nieuwe naam in voor { $name }:
+virtual-bots-rename = Hernoemen
+virtual-bots-change-profile = Profiel wijzigen
+virtual-bots-added = Virtuele bot { $name } toegevoegd en online gebracht.
+virtual-bots-renamed = Virtuele bot hernoemd van { $old_name } naar { $new_name }.
+virtual-bots-profile-changed = Profiel van virtuele bot { $name } gewijzigd naar { $profile }.
+virtual-bots-deleted = Virtuele bot { $name } verwijderd. { $tables } tafel(s) gesloten.
+virtual-bots-name-taken = Er bestaat al een virtuele bot met die naam.
+virtual-bots-name-invalid = Die naam is niet geldig.
+virtual-bots-no-bots = Er zijn geen virtuele bots om te beheren.
+virtual-bots-delete-confirm = Virtuele bot { $name } verwijderen? Dit sluit elke tafel waar deze aan deelneemt.
+virtual-bots-no-profiles = Geen profielen beschikbaar.
 
 localization-in-progress-try-again = Lokalisatie is bezig. Probeer het over een minuut opnieuw.
 

@@ -319,6 +319,22 @@ virtual-bots-profiles-header = Profiles: { $count } defined (default: { $default
 virtual-bots-profiles-empty = No profiles are defined.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } bots) overrides: { $overrides }.
 virtual-bots-profiles-no-overrides = inherits base configuration
+virtual-bots-add = Add Virtual Bot
+virtual-bots-edit = Edit Virtual Bot
+virtual-bots-delete = Delete Virtual Bot
+virtual-bots-add-prompt = Enter a name for the new virtual bot:
+virtual-bots-rename-prompt = Enter a new name for { $name }:
+virtual-bots-rename = Rename
+virtual-bots-change-profile = Change Profile
+virtual-bots-added = Virtual bot { $name } added and brought online.
+virtual-bots-renamed = Virtual bot renamed from { $old_name } to { $new_name }.
+virtual-bots-profile-changed = Virtual bot { $name } profile changed to { $profile }.
+virtual-bots-deleted = Virtual bot { $name } deleted. { $tables } table(s) closed.
+virtual-bots-name-taken = A virtual bot with that name already exists.
+virtual-bots-name-invalid = That name is not valid.
+virtual-bots-no-bots = There are no virtual bots to manage.
+virtual-bots-delete-confirm = Delete virtual bot { $name }? This will close any table it is in.
+virtual-bots-no-profiles = No profiles are available.
 
 localization-in-progress-try-again = A localização está em andamento. Tente novamente em um minuto.
 

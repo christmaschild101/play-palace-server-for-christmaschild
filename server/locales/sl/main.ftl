@@ -378,6 +378,22 @@ virtual-bots-profiles-header = Profili: { $count } definiranih (privzeto: { $def
 virtual-bots-profiles-empty = Ni definiranih profilov.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } botov) prepiše: { $overrides }.
 virtual-bots-profiles-no-overrides = podeduje osnovno konfiguracijo
+virtual-bots-add = Dodaj virtualnega bota
+virtual-bots-edit = Uredi virtualnega bota
+virtual-bots-delete = Izbriši virtualnega bota
+virtual-bots-add-prompt = Vnesite ime za novega virtualnega bota:
+virtual-bots-rename-prompt = Vnesite novo ime za { $name }:
+virtual-bots-rename = Preimenuj
+virtual-bots-change-profile = Spremeni profil
+virtual-bots-added = Virtualni bot { $name } je bil dodan in priklopljen na splet.
+virtual-bots-renamed = Virtualni bot je bil preimenovan iz { $old_name } v { $new_name }.
+virtual-bots-profile-changed = Profil virtualnega bota { $name } je bil spremenjen v { $profile }.
+virtual-bots-deleted = Virtualni bot { $name } je bil izbrisan. Zaprt je { $tables } miza(mize).
+virtual-bots-name-taken = Virtualni bot s tem imenom že obstaja.
+virtual-bots-name-invalid = To ime ni veljavno.
+virtual-bots-no-bots = Ni virtualnih botov za upravljanje.
+virtual-bots-delete-confirm = Izbrisati virtualnega bota { $name }? To bo zaprlo vsako mizo, pri kateri je.
+virtual-bots-no-profiles = Ni na voljo nobenega profila.
 
 localization-in-progress-try-again = Lokalizacija je v teku. Poskusite znova čez minuto.
 

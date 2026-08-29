@@ -378,6 +378,22 @@ virtual-bots-profiles-header = پروفایل‌ها: { $count } تعریف‌ش
 virtual-bots-profiles-empty = هیچ پروفایلی تعریف نشده است.
 virtual-bots-profiles-line = { $profile } ({ $bot_count } ربات) بازنویسی‌ها: { $overrides }.
 virtual-bots-profiles-no-overrides = ارث‌بری پیکربندی پایه
+virtual-bots-add = افزودن ربات مجازی
+virtual-bots-edit = ویرایش ربات مجازی
+virtual-bots-delete = حذف ربات مجازی
+virtual-bots-add-prompt = نامی برای ربات مجازی جدید وارد کنید:
+virtual-bots-rename-prompt = نام جدیدی برای { $name } وارد کنید:
+virtual-bots-rename = تغییر نام
+virtual-bots-change-profile = تغییر نمایه
+virtual-bots-added = ربات مجازی { $name } اضافه و آنلاین شد.
+virtual-bots-renamed = ربات مجازی از { $old_name } به { $new_name } تغییر نام داد.
+virtual-bots-profile-changed = نمایه ربات مجازی { $name } به { $profile } تغییر کرد.
+virtual-bots-deleted = ربات مجازی { $name } حذف شد. { $tables } میز(میزها) بسته شد.
+virtual-bots-name-taken = ربات مجازی با این نام از قبل وجود دارد.
+virtual-bots-name-invalid = این نام معتبر نیست.
+virtual-bots-no-bots = ربات مجازی برای مدیریت وجود ندارد.
+virtual-bots-delete-confirm = ربات مجازی { $name } حذف شود؟ این کار هر میزی را که در آن است می‌بندد.
+virtual-bots-no-profiles = هیچ نمایه‌ای در دسترس نیست.
 
 localization-in-progress-try-again = بومی‌سازی در حال انجام است. لطفاً یک دقیقه دیگر دوباره تلاش کنید.
 

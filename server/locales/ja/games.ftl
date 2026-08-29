@@ -32,6 +32,7 @@ game-set-team-mode = チームモード: { $mode }
 game-select-team-mode = チームモードを選択
 game-option-changed-team = チームモードが{ $mode }に設定されました。
 game-team-mode-individual = 個人
+game-team-mode-random = ランダム
 game-team-mode-x-teams-of-y = { $num_teams }チーム、各{ $team_size }人
 
 # ブール値オプション

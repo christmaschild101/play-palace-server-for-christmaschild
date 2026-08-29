@@ -44,6 +44,7 @@ game-set-team-mode = Командный режим: { $mode }
 game-select-team-mode = Выберите командный режим
 game-option-changed-team = Командный режим изменён на { $mode }.
 game-team-mode-individual = Индивидуальный
+game-team-mode-random = Случайный
 game-team-mode-x-teams-of-y = { $num_teams } { $num_teams ->
     [one] команда
     [few] команды

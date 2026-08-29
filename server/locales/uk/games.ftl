@@ -32,6 +32,7 @@ game-set-team-mode = Командний режим: { $mode }
 game-select-team-mode = Виберіть командний режим
 game-option-changed-team = Командний режим встановлено на { $mode }.
 game-team-mode-individual = Індивідуальний
+game-team-mode-random = Випадковий
 game-team-mode-x-teams-of-y = { $num_teams } команд по { $team_size }
 
 # Boolean option values

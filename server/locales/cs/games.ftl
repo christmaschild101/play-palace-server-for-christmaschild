@@ -32,6 +32,7 @@ game-set-team-mode = Týmový režim: { $mode }
 game-select-team-mode = Vyberte týmový režim
 game-option-changed-team = Týmový režim nastaven na { $mode }.
 game-team-mode-individual = Individuální
+game-team-mode-random = Náhodně
 game-team-mode-x-teams-of-y = { $num_teams } týmů po { $team_size }
 
 # Hodnoty booleovských možností

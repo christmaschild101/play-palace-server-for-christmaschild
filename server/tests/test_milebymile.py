@@ -342,3 +342,71 @@ class TestMileByMilePersistence:
         assert loaded.game_active is True
         assert loaded.current_race == 1
         assert loaded.options.round_distance == 500
+
+
+class TestMileByMileRandomTeams:
+    """Tests for random team assignment mode."""
+
+    def _make_game(self, num_players: int, seed: int = 42):
+        random.seed(seed)
+        game = MileByMileGame()
+        game.options.team_mode = "random"
+        for i in range(num_players):
+            bot = Bot(f"Bot{i}")
+            game.add_player(f"Bot{i}", bot)
+        game.on_start()
+        return game
+
+    def test_random_teams_four_players(self):
+        """4-player random mode creates 2 teams of 2."""
+        game = self._make_game(4)
+        assert game.get_num_teams() == 2
+        assert all(len(t.members) == 2 for t in game._team_manager.teams)
+        all_members = [m for t in game._team_manager.teams for m in t.members]
+        assert sorted(all_members) == [f"Bot{i}" for i in range(4)]
+
+    def test_random_teams_five_players(self):
+        """5-player random mode creates a team of 3 and a team of 2."""
+        game = self._make_game(5)
+        sizes = sorted(len(t.members) for t in game._team_manager.teams)
+        assert sizes == [2, 3]
+        all_members = [m for t in game._team_manager.teams for m in t.members]
+        assert sorted(all_members) == [f"Bot{i}" for i in range(5)]
+
+    def test_random_teams_two_players_is_individual(self):
+        """2-player random mode resolves to individual mode."""
+        game = self._make_game(2)
+        assert game.get_num_teams() == 2
+        assert game.is_individual_mode()
+        assert all(len(t.members) == 1 for t in game._team_manager.teams)
+
+    def test_random_teams_deterministic_with_seed(self):
+        """The same seed produces the same team assignment."""
+
+        def build_assignment():
+            game = self._make_game(6, seed=1234)
+            return sorted(tuple(sorted(t.members)) for t in game._team_manager.teams)
+
+        assert build_assignment() == build_assignment()
+
+    def test_random_teams_game_completes(self):
+        """A 4-player random-mode bot game completes."""
+        random.seed(9876)
+        game = MileByMileGame()
+        game.options.round_distance = 500
+        game.options.winning_score = 1000
+        game.options.team_mode = "random"
+        for i in range(4):
+            bot = Bot(f"Bot{i}")
+            game.add_player(f"Bot{i}", bot)
+        game.on_start()
+
+        assert game.get_num_teams() == 2
+
+        max_ticks = 100000
+        for _ in range(max_ticks):
+            if game.status == "finished":
+                break
+            game.on_tick()
+
+        assert game.status == "finished"

@@ -31,6 +31,7 @@ game-set-team-mode = وضع الفريق: { $mode }
 game-select-team-mode = اختر وضع الفريق
 game-option-changed-team = تم تعيين وضع الفريق إلى { $mode }.
 game-team-mode-individual = فردي
+game-team-mode-random = عشوائي
 game-team-mode-x-teams-of-y = { $num_teams } فرق من { $team_size }
 
 # Boolean option values

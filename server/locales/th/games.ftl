@@ -32,6 +32,7 @@ game-set-team-mode = โหมดทีม: { $mode }
 game-select-team-mode = เลือกโหมดทีม
 game-option-changed-team = ตั้งโหมดทีมเป็น { $mode } แล้ว
 game-team-mode-individual = แบบเดี่ยว
+game-team-mode-random = สุ่ม
 game-team-mode-x-teams-of-y = { $num_teams } ทีมจาก { $team_size } คน
 
 # Boolean option values

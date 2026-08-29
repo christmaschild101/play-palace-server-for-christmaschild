@@ -32,6 +32,7 @@ game-set-team-mode = Chế độ đội: { $mode }
 game-select-team-mode = Chọn chế độ đội
 game-option-changed-team = Chế độ đội đã đặt là { $mode }.
 game-team-mode-individual = Cá nhân
+game-team-mode-random = Ngẫu nhiên
 game-team-mode-x-teams-of-y = { $num_teams } đội, mỗi đội { $team_size } người
 
 # Giá trị tùy chọn Bật/Tắt

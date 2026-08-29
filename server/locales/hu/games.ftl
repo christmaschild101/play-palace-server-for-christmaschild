@@ -32,6 +32,7 @@ game-set-team-mode = Csapat mód: { $mode }
 game-select-team-mode = Válaszd ki a csapat módot
 game-option-changed-team = Csapat mód beállítva: { $mode }.
 game-team-mode-individual = Egyéni
+game-team-mode-random = Véletlenszerű
 game-team-mode-x-teams-of-y = { $num_teams } csapat, egyenként { $team_size } fővel
 
 # Boolean option values

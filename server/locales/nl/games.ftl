@@ -32,6 +32,7 @@ game-set-team-mode = Teammodus: { $mode }
 game-select-team-mode = Selecteer teammodus
 game-option-changed-team = Teammodus ingesteld op { $mode }.
 game-team-mode-individual = Individueel
+game-team-mode-random = Willekeurig
 game-team-mode-x-teams-of-y = { $num_teams } teams van { $team_size }
 
 # Boolean option values

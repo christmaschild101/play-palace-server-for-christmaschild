@@ -32,6 +32,7 @@ game-set-team-mode = Mode tim: { $mode }
 game-select-team-mode = Pilih mode tim
 game-option-changed-team = Mode tim diatur ke { $mode }.
 game-team-mode-individual = Individual
+game-team-mode-random = Acak
 game-team-mode-x-teams-of-y = { $num_teams } tim dari { $team_size }
 
 # Boolean option values

@@ -32,6 +32,7 @@ game-set-team-mode = Takım modu: { $mode }
 game-select-team-mode = Takım modunu seç
 game-option-changed-team = Takım modu { $mode } olarak ayarlandı.
 game-team-mode-individual = Bireysel
+game-team-mode-random = Rastgele
 game-team-mode-x-teams-of-y = { $team_size } kişilik { $num_teams } takım
 
 # Boolean seçenek değerleri

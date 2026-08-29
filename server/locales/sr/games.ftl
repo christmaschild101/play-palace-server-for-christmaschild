@@ -36,6 +36,7 @@ game-set-team-mode = Režim timova: { $mode }
 game-select-team-mode = Izaberite režim timova
 game-option-changed-team = Režim timova podešen na { $mode }.
 game-team-mode-individual = Individualni
+game-team-mode-random = Nasumično
 game-team-mode-x-teams-of-y = { $num_teams } timova sa po { $team_size }
 
 # Boolean option values

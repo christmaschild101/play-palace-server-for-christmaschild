@@ -32,6 +32,7 @@ game-set-team-mode = 团队模式：{ $mode }
 game-select-team-mode = 选择团队模式
 game-option-changed-team = 团队模式已设为 { $mode }。
 game-team-mode-individual = 个人
+game-team-mode-random = 随机
 game-team-mode-x-teams-of-y = { $num_teams } 个 { $team_size } 人团队
 
 # 布尔选项值

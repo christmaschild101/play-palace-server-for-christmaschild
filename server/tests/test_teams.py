@@ -87,3 +87,36 @@ class TestTeamSerialization:
         alice_team = loaded.get_team("Alice")
         assert alice_team is not None
         assert alice_team.total_score == 25
+
+
+class TestRandomTeamSizing:
+    def test_random_sizes_by_player_count(self):
+        assert TeamManager.get_random_team_sizes(2) == []
+        assert TeamManager.get_random_team_sizes(3) == [2, 1]
+        assert TeamManager.get_random_team_sizes(4) == [2, 2]
+        assert TeamManager.get_random_team_sizes(5) == [3, 2]
+        assert TeamManager.get_random_team_sizes(6) == [2, 2, 2]
+        assert TeamManager.get_random_team_sizes(7) == [3, 2, 2]
+        assert TeamManager.get_random_team_sizes(8) == [2, 2, 2, 2]
+        assert TeamManager.get_random_team_sizes(9) == [3, 2, 2, 2]
+
+    def test_random_always_valid_for_player_counts(self):
+        for count in range(2, 10):
+            assert TeamManager.is_valid_team_mode("random", count)
+
+    def test_random_display_localized(self):
+        assert TeamManager.format_team_mode_for_display("random", "en") == "Random"
+
+    def test_random_setup_assigns_everyone_once(self):
+        import random as rng
+
+        rng.seed(42)
+        tm = TeamManager(team_mode="random")
+        sizes = TeamManager.get_random_team_sizes(5)
+        tm.team_mode = "v".join(str(s) for s in sizes)
+        players = ["Alice", "Bob", "Carol", "Dave", "Erin"]
+        rng.shuffle(players)
+        tm.setup_teams(players)
+        all_members = [m for team in tm.teams for m in team.members]
+        assert sorted(all_members) == sorted(players)
+        assert [len(t.members) for t in tm.teams] == [3, 2]

@@ -32,6 +32,7 @@ game-set-team-mode = Mod echipă: { $mode }
 game-select-team-mode = Selectați modul echipă
 game-option-changed-team = Mod echipă setat la { $mode }.
 game-team-mode-individual = Individual
+game-team-mode-random = Aleatoriu
 game-team-mode-x-teams-of-y = { $num_teams } echipe de { $team_size }
 
 # Boolean option values

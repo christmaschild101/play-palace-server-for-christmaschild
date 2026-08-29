@@ -32,6 +32,7 @@ game-set-team-mode = Tímový režim: { $mode }
 game-select-team-mode = Vyberte tímový režim
 game-option-changed-team = Tímový režim nastavený na { $mode }.
 game-team-mode-individual = Individuálny
+game-team-mode-random = Náhodný
 game-team-mode-x-teams-of-y = { $num_teams } tímov po { $team_size }
 
 # Boolean option values

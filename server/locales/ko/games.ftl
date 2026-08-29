@@ -32,6 +32,7 @@ game-set-team-mode = 팀 모드: { $mode }
 game-select-team-mode = 팀 모드 선택
 game-option-changed-team = 팀 모드가 { $mode }(으)로 설정되었습니다.
 game-team-mode-individual = 개인전
+game-team-mode-random = 랜덤
 game-team-mode-x-teams-of-y = { $num_teams }팀 { $team_size }명
 
 # Boolean option values

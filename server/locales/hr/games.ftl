@@ -32,6 +32,7 @@ game-set-team-mode = Timski način: { $mode }
 game-select-team-mode = Odaberite timski način
 game-option-changed-team = Timski način postavljen na { $mode }.
 game-team-mode-individual = Individualno
+game-team-mode-random = Nasumično
 game-team-mode-x-teams-of-y = { $num_teams } timova od { $team_size }
 
 # Boolean option values

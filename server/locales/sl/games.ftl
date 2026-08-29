@@ -32,6 +32,7 @@ game-set-team-mode = Ekipni način: { $mode }
 game-select-team-mode = Izberite ekipni način
 game-option-changed-team = Ekipni način nastavljen na { $mode }.
 game-team-mode-individual = Posamezno
+game-team-mode-random = Naključno
 game-team-mode-x-teams-of-y = { $num_teams } ekip po { $team_size }
 
 # Boolean option values

@@ -32,6 +32,7 @@ game-set-team-mode = Багийн горим: { $mode }
 game-select-team-mode = Багийн горим сонгох
 game-option-changed-team = Багийн горим { $mode } болгов.
 game-team-mode-individual = Хувь хүн
+game-team-mode-random = Санамсаргүй
 game-team-mode-x-teams-of-y = { $team_size } тоглогчтой { $num_teams } баг
 
 # Логик сонголтын утгууд

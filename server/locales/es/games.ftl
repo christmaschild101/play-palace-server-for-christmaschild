@@ -32,6 +32,7 @@ game-set-team-mode = Modo de equipos: { $mode }
 game-select-team-mode = Selecciona el modo de equipos
 game-option-changed-team = Modo de equipos establecido en { $mode }.
 game-team-mode-individual = Individual
+game-team-mode-random = Aleatorio
 game-team-mode-x-teams-of-y = { $num_teams } equipos de { $team_size }
 
 # Boolean option values

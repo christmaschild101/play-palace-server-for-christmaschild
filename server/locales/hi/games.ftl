@@ -32,6 +32,7 @@ game-set-team-mode = टीम मोड: { $mode }
 game-select-team-mode = टीम मोड चुनें
 game-option-changed-team = टीम मोड { $mode } पर सेट किया गया।
 game-team-mode-individual = व्यक्तिगत
+game-team-mode-random = यादृच्छिक
 game-team-mode-x-teams-of-y = { $team_size } की { $num_teams } टीमें
 
 # Boolean option values

@@ -32,6 +32,7 @@ game-set-team-mode = Lagläge: { $mode }
 game-select-team-mode = Välj lagläge
 game-option-changed-team = Lagläge satt till { $mode }.
 game-team-mode-individual = Individuellt
+game-team-mode-random = Slumpmässig
 game-team-mode-x-teams-of-y = { $num_teams } lag om { $team_size }
 
 # Boolean option values

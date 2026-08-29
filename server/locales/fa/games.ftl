@@ -32,6 +32,7 @@ game-set-team-mode = حالت تیمی: { $mode }
 game-select-team-mode = حالت تیمی را انتخاب کنید
 game-option-changed-team = حالت تیمی به { $mode } تنظیم شد.
 game-team-mode-individual = انفرادی
+game-team-mode-random = تصادفی
 game-team-mode-x-teams-of-y = { $num_teams } تیم { $team_size } نفره
 
 # Boolean option values

@@ -122,6 +122,17 @@ class MileByMileGame(Game):
         # If it contains spaces or uppercase (except 'v'), it's likely old display format
         if " " in team_mode or any(c.isupper() for c in team_mode if c != "v"):
             team_mode = TeamManager.parse_display_to_team_mode(team_mode)
+
+        # Random mode: the server decides team sizes from the player count and
+        # randomly assigns players to teams.
+        if team_mode == "random":
+            team_sizes = TeamManager.get_random_team_sizes(len(player_names))
+            if team_sizes:
+                team_mode = "v".join(str(size) for size in team_sizes)
+                random.shuffle(player_names)
+            else:
+                team_mode = "individual"
+
         self._team_manager.team_mode = team_mode
         self._team_manager.setup_teams(player_names)
 
@@ -151,8 +162,12 @@ class MileByMileGame(Game):
         return f"Team {team_index + 1}"
 
     def is_individual_mode(self) -> bool:
-        """Check if game is in individual mode."""
-        return self.options.team_mode == "individual"
+        """Check if game is in individual mode (based on resolved teams).
+
+        Uses the resolved team manager mode so that random mode which falls
+        back to individual (e.g. a 2-player game) announces player names.
+        """
+        return self._team_manager.team_mode == "individual"
 
     def get_num_teams(self) -> int:
         """Get the number of teams."""

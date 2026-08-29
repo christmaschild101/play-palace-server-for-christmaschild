@@ -225,6 +225,9 @@ class TeamManager(DataClassJSONMixin):
         if mode == "individual":
             return Localization.get(locale, "game-team-mode-individual")
 
+        if mode == "random":
+            return Localization.get(locale, "game-team-mode-random")
+
         # Parse the mode
         parts = mode.lower().split("v")
         team_sizes = [int(p) for p in parts if p.isdigit()]
@@ -393,8 +396,47 @@ class TeamManager(DataClassJSONMixin):
         Returns:
             True if the team mode is valid for the player count, False otherwise.
         """
+        if team_mode == "random":
+            # Random mode is valid for any player count; the server resolves
+            # team sizes from the actual number of players at game start.
+            return True
         valid_modes = TeamManager.get_team_modes_for_player_count_internal(num_players)
         return team_mode in valid_modes
+
+    @staticmethod
+    def get_random_team_sizes(num_players: int) -> list[int]:
+        """
+        Determine team sizes for random team assignment based on player count.
+
+        Prefers teams of 2 for even counts; odd counts (5, 7, 9) get one team
+        of 3 with the rest teams of 2. Three players split as 2v1, and two
+        players fall back to individual mode (no teams).
+
+        Examples:
+            2 -> []          (individual)
+            3 -> [2, 1]
+            4 -> [2, 2]
+            5 -> [3, 2]
+            6 -> [2, 2, 2]
+            7 -> [3, 2, 2]
+            8 -> [2, 2, 2, 2]
+            9 -> [3, 2, 2, 2]
+
+        Args:
+            num_players: Number of players in the game.
+
+        Returns:
+            List of team sizes (empty list = individual mode).
+        """
+        if num_players <= 2:
+            return []
+        if num_players == 3:
+            return [2, 1]
+        num_teams_of_two = num_players // 2
+        if num_players % 2 == 0:
+            return [2] * num_teams_of_two
+        # Odd count (5, 7, 9): one team of 3, the rest teams of 2
+        return [3] + [2] * (num_teams_of_two - 1)
 
     # ==========================================================================
     # Score Formatting

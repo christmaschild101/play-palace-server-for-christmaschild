@@ -32,6 +32,7 @@ game-set-team-mode = Imodi yethimba: { $mode }
 game-select-team-mode = Khetha imodi yethimba
 game-option-changed-team = Imodi yethimba isetelwe ku-{ $mode }.
 game-team-mode-individual = Ngamunye
+game-team-mode-random = Okungahleliwe
 game-team-mode-x-teams-of-y = Amathimba angu-{ $num_teams } obu-{ $team_size }
 
 # Boolean option values

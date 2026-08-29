@@ -32,6 +32,7 @@ game-set-team-mode = Teammodus: { $mode }
 game-select-team-mode = Teammodus auswählen
 game-option-changed-team = Teammodus auf { $mode } gesetzt.
 game-team-mode-individual = Einzelspieler
+game-team-mode-random = Zufällig
 game-team-mode-x-teams-of-y = { $num_teams } Teams à { $team_size }
 
 # Boolesche Optionswerte

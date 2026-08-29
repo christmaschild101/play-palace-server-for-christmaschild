@@ -45,7 +45,7 @@ class MileByMileOptions(GameOptions):
         TeamModeOption(
             default="individual",
             value_key="mode",
-            choices=lambda g, p: TeamManager.get_all_team_modes(2, 9),
+            choices=lambda g, p: ["random"] + TeamManager.get_all_team_modes(2, 9),
             label="game-set-team-mode",
             prompt="game-select-team-mode",
             change_msg="game-option-changed-team",

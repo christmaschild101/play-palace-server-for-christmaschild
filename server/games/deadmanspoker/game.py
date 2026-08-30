@@ -7,7 +7,6 @@ from datetime import datetime
 import random
 
 from ..base import Game, GameOptions, Player
-from ..categories import CATEGORY_POKER
 from ..registry import register_game
 from ...game_utils.actions import Action, ActionSet, MenuInput, Visibility
 from ...game_utils.bot_helper import BotHelper
@@ -187,7 +186,7 @@ class DeadMansPokerGame(Game):
 
     @classmethod
     def get_category(cls) -> str:
-        return CATEGORY_POKER
+        return "category-poker"
 
     @classmethod
     def get_min_players(cls) -> int:

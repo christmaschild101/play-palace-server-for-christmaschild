@@ -9,7 +9,6 @@ import random
 from mashumaro.mixins.json import DataClassJSONMixin
 
 from ..base import Game, GameOptions, Player
-from ..categories import CATEGORY_CARDS
 from ..registry import register_game
 from ...game_utils.actions import Action, ActionSet, Visibility
 from ...game_utils.bot_helper import BotHelper
@@ -196,7 +195,7 @@ class DeadMansDeckGame(Game):
 
     @classmethod
     def get_category(cls) -> str:
-        return CATEGORY_CARDS
+        return "category-card-games"
 
     @classmethod
     def get_min_players(cls) -> int:

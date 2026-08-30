@@ -425,3 +425,8 @@ virtual-bots-bring-online = Bot online állapotba hozása
 virtual-bots-brought-online = A(z) { $name } virtuális bot online állapotba került.
 virtual-bots-already-online = A(z) { $name } virtuális bot már online van.
 virtual-bots-all-online = Az összes virtuális bot már online van.
+
+# Cards Against Humanity mature-content notice
+cah-content-notice = Ez a játék erősen éretlen tartalmat tartalmaz. Nem ajánlott 16 éven aluli játékosoknak vagy bizonyos témákra érzékeny személyeknek.
+cah-keep-playing = Folytatás
+cah-go-back = Vissza

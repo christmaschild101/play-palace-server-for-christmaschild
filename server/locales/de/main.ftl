@@ -425,3 +425,8 @@ virtual-bots-bring-online = Bot online schalten
 virtual-bots-brought-online = Virtueller Bot { $name } wurde online geschaltet.
 virtual-bots-already-online = Virtueller Bot { $name } ist bereits online.
 virtual-bots-all-online = Alle virtuellen Bots sind bereits online.
+
+# Cards Against Humanity mature-content notice
+cah-content-notice = Dieses Spiel enthält sehr unreifen Inhalt. Es wird nicht für Spieler unter 16 Jahren oder für Personen empfohlen, die empfindlich auf bestimmte Themen reagieren.
+cah-keep-playing = Weiter spielen
+cah-go-back = Zurück

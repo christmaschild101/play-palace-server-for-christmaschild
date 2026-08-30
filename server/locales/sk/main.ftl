@@ -433,3 +433,8 @@ virtual-bots-bring-online = Dostať bota online
 virtual-bots-brought-online = Virtuálny bot { $name } je online.
 virtual-bots-already-online = Virtuálny bot { $name } už je online.
 virtual-bots-all-online = Všetci virtuálni boti sú už online.
+
+# Cards Against Humanity mature-content notice
+cah-content-notice = Táto hra obsahuje veľmi nezrelý obsah. Neodporúča sa hráčom mladším ako 16 rokov ani ľuďom citlivým na určité témy.
+cah-keep-playing = Pokračovať v hre
+cah-go-back = Späť

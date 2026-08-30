@@ -2243,6 +2243,10 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             "games_menu": (self._handle_games_selection, (user, selection_id, state)),
             "tables_menu": (self._handle_tables_selection, (user, selection_id, state)),
             "active_tables_menu": (self._handle_active_tables_selection, (user, selection_id)),
+            "cah_content_notice_menu": (
+                self._handle_cah_notice_selection,
+                (user, selection_id, state),
+            ),
             "join_menu": (self._handle_join_selection, (user, selection_id, state)),
             "options_menu": (self._handle_options_selection, (user, selection_id)),
             "language_menu": (self._handle_language_menu_dispatch, (user, selection_id)),
@@ -2713,37 +2717,33 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         game_type = state.get("game_type", "")
 
         if selection_id == "create_table":
-            table = self._tables.create_table(game_type, user.username, user)
-
-            # Create game immediately and initialize lobby
-            game_class = get_game_class(game_type)
-            if game_class:
-                game = game_class()
-                table.game = game
-                game._table = table  # Enable game to call table.destroy()
-                game.initialize_lobby(user.username, user)
-
-                # Broadcast table creation to all users
-                self._broadcast_table_created(user.username, game_type)
-
-                min_players = game_class.get_min_players()
-                max_players = game_class.get_max_players()
-                user.speak_l(
-                    "waiting-for-players",
-                    current=len(game.players),
-                    min=min_players,
-                    max=max_players,
-                    buffer="table",
+            if game_type == "humanitycards":
+                self._show_cah_content_notice_menu(
+                    user,
+                    pending={
+                        "action": "create",
+                        "game_type": game_type,
+                        "return_menu": "tables_menu",
+                    },
                 )
-            self._user_states[user.username] = {
-                "menu": "in_game",
-                "table_id": table.table_id,
-            }
+                return
+            self._do_create_table(user, game_type)
 
         elif selection_id.startswith("table_"):
             table_id = selection_id[6:]  # Remove "table_" prefix
             table = self._tables.get_table(table_id)
             if table:
+                if table.game_type == "humanitycards":
+                    self._show_cah_content_notice_menu(
+                        user,
+                        pending={
+                            "action": "join",
+                            "table_id": table_id,
+                            "game_type": table.game_type,
+                            "return_menu": "tables_menu",
+                        },
+                    )
+                    return
                 self._auto_join_table(user, table, game_type)
             else:
                 user.speak_l("table-not-exists")
@@ -2771,6 +2771,17 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             table_id = selection_id[6:]
             table = self._tables.get_table(table_id)
             if table:
+                if table.game_type == "humanitycards":
+                    self._show_cah_content_notice_menu(
+                        user,
+                        pending={
+                            "action": "join",
+                            "table_id": table_id,
+                            "game_type": table.game_type,
+                            "return_menu": "active_tables_menu",
+                        },
+                    )
+                    return
                 self._auto_join_table(user, table, table.game_type)
             else:
                 user.speak_l("table-not-exists")
@@ -2778,6 +2789,96 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                     self._show_main_menu(user)
         elif selection_id == "back":
             self._show_main_menu(user)
+
+    def _do_create_table(self, user: NetworkUser, game_type: str) -> None:
+        """Create a table for *game_type* and put *user* in its lobby."""
+        table = self._tables.create_table(game_type, user.username, user)
+
+        # Create game immediately and initialize lobby
+        game_class = get_game_class(game_type)
+        if game_class:
+            game = game_class()
+            table.game = game
+            game._table = table  # Enable game to call table.destroy()
+            game.initialize_lobby(user.username, user)
+
+            # Broadcast table creation to all users
+            self._broadcast_table_created(user.username, game_type)
+
+            min_players = game_class.get_min_players()
+            max_players = game_class.get_max_players()
+            user.speak_l(
+                "waiting-for-players",
+                current=len(game.players),
+                min=min_players,
+                max=max_players,
+                buffer="table",
+            )
+        self._user_states[user.username] = {
+            "menu": "in_game",
+            "table_id": table.table_id,
+        }
+
+    def _show_cah_content_notice_menu(self, user: NetworkUser, pending: dict) -> None:
+        """Show the mature-content notice before creating/joining a Cards Against Humanity table.
+
+        The pending action is stored in user state so the notice handler can
+        resume the interrupted create/join ("Keep playing") or return to the
+        previous menu ("Go back").
+        """
+        notice = Localization.get(user.locale, "cah-content-notice")
+        items = [
+            MenuItem(text=notice, id="notice"),
+            MenuItem(text=Localization.get(user.locale, "cah-keep-playing"), id="keep_playing"),
+            MenuItem(text=Localization.get(user.locale, "cah-go-back"), id="back"),
+        ]
+        user.speak(notice)
+        user.show_menu(
+            "cah_content_notice_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+            position=2,  # Focus "Keep playing" so the notice label is read as a message
+        )
+        self._user_states[user.username] = {
+            "menu": "cah_content_notice_menu",
+            "pending": pending,
+        }
+
+    async def _handle_cah_notice_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Handle the mature-content notice menu selection.
+
+        "keep_playing" resumes the pending table create/join; "back" returns
+        to the menu the user was in before the notice.
+        """
+        pending = state.get("pending")
+        if selection_id == "back" or not pending:
+            self._return_from_cah_notice(user, state)
+            return
+        if selection_id != "keep_playing":
+            return
+
+        action = pending.get("action")
+        if action == "create":
+            self._do_create_table(user, pending.get("game_type", ""))
+        elif action == "join":
+            table = self._tables.get_table(pending.get("table_id", ""))
+            if table:
+                self._auto_join_table(user, table, table.game_type)
+            else:
+                user.speak_l("table-not-exists")
+                self._return_from_cah_notice(user, state)
+
+    def _return_from_cah_notice(self, user: NetworkUser, state: dict) -> None:
+        """Return to the menu the user was in before the CAH notice."""
+        pending = state.get("pending") or {}
+        if pending.get("return_menu") == "active_tables_menu":
+            if not self._show_active_tables_menu(user):
+                self._show_main_menu(user)
+        else:
+            self._show_tables_menu(user, pending.get("game_type", ""))
 
     def _auto_join_table(self, user: NetworkUser, table: "Table", game_type: str) -> None:
         """Automatically join a table as player or spectator.

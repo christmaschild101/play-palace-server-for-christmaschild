@@ -628,3 +628,8 @@ no-admins-to-promote-developer = No admins available to promote to developer.
 no-developers-to-demote = No developers available to demote.
 promote-developer-unavailable = { $player } cannot be promoted to developer.
 demote-developer-unavailable = { $player } cannot be demoted from developer.
+
+# Cards Against Humanity mature-content notice
+cah-content-notice = This game contains highly immature content. It is not recommended for players under the age of 16 or those sensitive to certain topics.
+cah-keep-playing = Keep playing
+cah-go-back = Go back

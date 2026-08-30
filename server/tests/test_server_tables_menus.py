@@ -25,10 +25,16 @@ class DummyUser:
     def speak_l(self, message_id: str, buffer: str = "misc", **kwargs) -> None:
         self.spoken.append((message_id, kwargs))
 
+    def speak(self, text: str, buffer: str = "activity") -> None:
+        self.spoken.append((text, {}))
+
     def show_menu(self, menu_id: str, *args, **kwargs) -> None:
         self.menu_shown.append(menu_id)
 
     def play_music(self, name: str, looping: bool = True) -> None:
+        self.music_played.append(name)
+
+    def play_sound(self, name: str) -> None:
         self.music_played.append(name)
 
     def stop_ambience(self):
@@ -68,6 +74,9 @@ class DummyGame:
             if p.id == pid:
                 return p
         return None
+
+    def to_json(self):
+        return "{}"
 
 
 class DummyTable:
@@ -338,3 +347,176 @@ def test_restore_saved_table_success(server, monkeypatch):
     assert server._user_states["alice"]["menu"] == "in_game"
     # bot user should be attached via Bot recreation (is_bot True path)
     assert any(u.username == "bot" for u in game._users.values())
+
+
+def _cah_pending_state(server, user, action="create", return_menu="tables_menu", table_id=None):
+    pending = {"action": action, "return_menu": return_menu, "game_type": "humanitycards"}
+    if table_id:
+        pending["table_id"] = table_id
+    server._user_states[user.username] = {"menu": "cah_content_notice_menu", "pending": pending}
+    return server._user_states[user.username]
+
+
+def test_create_cah_table_shows_notice_first(server, monkeypatch):
+    user = DummyUser("alice")
+    server._users = {"alice": user}
+    monkeypatch.setattr(
+        "server.core.server.get_game_class", lambda _gt: CahStubGameClass
+    )
+
+    asyncio.run(
+        server._handle_tables_selection(user, "create_table", {"game_type": "humanitycards"})
+    )
+
+    assert user.menu_shown[-1] == "cah_content_notice_menu"
+    state = server._user_states["alice"]
+    assert state["menu"] == "cah_content_notice_menu"
+    assert state["pending"]["action"] == "create"
+    # Table must not be created yet.
+    assert server._tables.get_all_tables() == []
+
+
+def test_cah_notice_keep_playing_creates_table(server, monkeypatch):
+    user = DummyUser("alice")
+    server._users = {"alice": user}
+    monkeypatch.setattr(
+        "server.core.server.get_game_class", lambda _gt: CahStubGameClass
+    )
+    state = _cah_pending_state(server, user, action="create")
+
+    asyncio.run(server._handle_cah_notice_selection(user, "keep_playing", state))
+
+    tables = server._tables.get_all_tables()
+    assert len(tables) == 1
+    assert tables[0].game_type == "humanitycards"
+    assert server._user_states["alice"]["menu"] == "in_game"
+
+
+def test_cah_notice_go_back_returns_to_tables_menu(server):
+    user = DummyUser("alice")
+    server._users = {"alice": user}
+    state = _cah_pending_state(server, user, action="create")
+
+    asyncio.run(server._handle_cah_notice_selection(user, "back", state))
+
+    assert user.menu_shown[-1] == "tables_menu"
+    assert server._tables.get_all_tables() == []
+
+
+def test_join_cah_table_from_tables_menu_shows_notice(server):
+    user = DummyUser("alice")
+    host = DummyUser("hosty")
+    server._users = {"alice": user, "hosty": host}
+    table = server._tables.create_table("humanitycards", "hosty", host)
+    table.game = DummyGame(status="waiting", players=[])
+
+    asyncio.run(
+        server._handle_tables_selection(user, f"table_{table.table_id}", {"game_type": "humanitycards"})
+    )
+
+    assert user.menu_shown[-1] == "cah_content_notice_menu"
+    state = server._user_states["alice"]
+    assert state["pending"]["action"] == "join"
+    assert state["pending"]["table_id"] == table.table_id
+    # User must not have joined yet.
+    assert server._user_states.get("alice", {}).get("menu") == "cah_content_notice_menu"
+
+
+def test_cah_notice_keep_playing_joins_table(server):
+    user = DummyUser("alice")
+    host = DummyUser("hosty")
+    server._users = {"alice": user, "hosty": host}
+    table = server._tables.create_table("humanitycards", "hosty", host)
+    game = DummyGame(status="waiting", players=[])
+    table.game = game
+    state = _cah_pending_state(
+        server, user, action="join", table_id=table.table_id
+    )
+
+    asyncio.run(server._handle_cah_notice_selection(user, "keep_playing", state))
+
+    assert any(msg[0] == "table-joined" for msg in game.broadcasts)
+    assert "join.ogg" in game.sounds
+    assert server._user_states["alice"]["menu"] == "in_game"
+
+
+def test_join_cah_table_from_active_tables_shows_notice(server):
+    user = DummyUser("alice")
+    host = DummyUser("hosty")
+    server._users = {"alice": user, "hosty": host}
+    table = server._tables.create_table("humanitycards", "hosty", host)
+    table.game = DummyGame(status="waiting", players=[])
+
+    asyncio.run(server._handle_active_tables_selection(user, f"table_{table.table_id}"))
+
+    assert user.menu_shown[-1] == "cah_content_notice_menu"
+    state = server._user_states["alice"]
+    assert state["pending"]["action"] == "join"
+    assert state["pending"]["return_menu"] == "active_tables_menu"
+
+
+def test_cah_notice_go_back_from_active_tables_returns_to_active_tables(server):
+    user = DummyUser("alice")
+    host = DummyUser("hosty")
+    server._users = {"alice": user, "hosty": host}
+    table = server._tables.create_table("humanitycards", "hosty", host)
+    table.game = DummyGame(status="waiting", players=[])
+    state = _cah_pending_state(
+        server, user, action="join", return_menu="active_tables_menu", table_id=table.table_id
+    )
+
+    asyncio.run(server._handle_cah_notice_selection(user, "back", state))
+
+    assert user.menu_shown[-1] == "active_tables_menu"
+
+
+def test_cah_notice_join_missing_table_speaks(server):
+    user = DummyUser("alice")
+    server._users = {"alice": user}
+    state = _cah_pending_state(server, user, action="join", table_id="missing")
+
+    asyncio.run(server._handle_cah_notice_selection(user, "keep_playing", state))
+
+    assert ("table-not-exists", {}) in user.spoken
+    assert user.menu_shown[-1] == "tables_menu"
+
+
+def test_non_cah_create_does_not_show_notice(server):
+    user = DummyUser("alice")
+    server._users = {"alice": user}
+
+    asyncio.run(
+        server._handle_tables_selection(user, "create_table", {"game_type": "stub"})
+    )
+
+    assert "cah_content_notice_menu" not in user.menu_shown
+    assert server._user_states["alice"]["menu"] == "in_game"
+
+
+class CahStubGameClass:
+    """Minimal stand-in for the real humanitycards game class."""
+
+    @staticmethod
+    def get_name_key():
+        return "game-name-humanitycards"
+
+    @staticmethod
+    def get_min_players():
+        return 3
+
+    @staticmethod
+    def get_max_players():
+        return 10
+
+    @staticmethod
+    def get_type():
+        return "humanitycards"
+
+    def __init__(self):
+        self.players = []
+
+    def initialize_lobby(self, host_name, user):
+        self.players.append(SimpleNamespace(id=user.uuid, name=user.username, is_bot=False))
+
+    def to_json(self):
+        return "{}"

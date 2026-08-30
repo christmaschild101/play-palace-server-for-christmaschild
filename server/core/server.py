@@ -168,6 +168,7 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         self._virtual_bots = VirtualBotManager(self)
         self._localization_warmup_task: asyncio.Task | None = None
 
+        self._started_at = time.monotonic()
         self._username_min_length = DEFAULT_USERNAME_MIN_LENGTH
         self._username_max_length = DEFAULT_USERNAME_MAX_LENGTH
         self._password_min_length = DEFAULT_PASSWORD_MIN_LENGTH
@@ -2360,6 +2361,26 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 self._handle_reboot_server_confirm_selection,
                 (user, selection_id),
             ),
+            "reboot_server_bots_confirm_menu": (
+                self._handle_reboot_server_bots_confirm_selection,
+                (user, selection_id),
+            ),
+            "server_status_menu": (
+                self._handle_server_status_selection,
+                (user, selection_id),
+            ),
+            "kick_user_menu": (
+                self._handle_kick_user_selection,
+                (user, selection_id),
+            ),
+            "kick_confirm_menu": (
+                self._handle_kick_confirm_selection,
+                (user, selection_id, state),
+            ),
+            "lookup_user_result_menu": (
+                self._handle_server_status_selection,
+                (user, selection_id),
+            ),
             "promote_developer_menu": (
                 self._handle_promote_developer_selection,
                 (user, selection_id),
@@ -4344,6 +4365,16 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         if current_menu == "reset_password_editbox":
             text = packet.get("text", "")
             await self._handle_reset_password_editbox(user, text, state)
+            return
+
+        if current_menu == "broadcast_announcement_editbox":
+            text = packet.get("text", "")
+            await self._handle_broadcast_announcement_editbox(user, text, state)
+            return
+
+        if current_menu == "lookup_user_editbox":
+            text = packet.get("text", "")
+            await self._handle_lookup_user_editbox(user, text, state)
             return
 
         if current_menu == "bot_name_editbox":

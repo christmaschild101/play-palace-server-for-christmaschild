@@ -4,6 +4,15 @@ This document records changes to the PlayPalace server. New entries are added at
 
 ## 2026-08-30
 
+- Added four new server-side admin actions, all built as in-game menus (no client changes, no new packet types):
+  - **Server Status** (admin): a read-only snapshot showing uptime, tick number, online/approved users, open tables, registered users, and the virtual-bot roster — so admins can gauge server health without leaving the game.
+  - **Kick User** (admin): immediately disconnect a single online player without banning them (handy for stuck or AFK clients). You can't kick yourself or anyone of equal/higher rank, and it asks for confirmation first.
+  - **Broadcast Announcement** (developer): send a custom server-wide message with a chime to every approved online user — e.g. "restart in 10 minutes".
+  - **Look Up User** (developer): search any account and see its role, approval status, whether it's online, and whether it's banned.
+- Rebooting the server now protects connected virtual bots. If any bots are online when an admin confirms a reboot, an extra confirmation appears showing how many bots are connected and warning that they'll be disconnected. Choosing yes disconnects all bots immediately (raising any bot table and taking the bots offline, while keeping the roster intact) before the reboot proceeds; choosing no cancels. If no bots are connected, the extra prompt never appears.
+
+## 2026-08-30 (earlier)
+
 - Server startup is much faster: locale bundles are now **cached in compiled form** (the generated Python code objects), so subsequent restarts load all languages in under a second instead of recompiling every `.ftl` file from scratch. The cache is per-locale and version-aware — a changed translation, a new language, a Python upgrade, or a `fluent-compiler` upgrade only triggers a one-time recompile for what actually changed, and anything missing or corrupt falls back to the normal compile path automatically. The existing cache can still be disabled with `PLAYPALACE_DISABLE_LOCALE_CACHE=true`.
 
 ## 2026-08-30 (earlier)

@@ -3074,3 +3074,31 @@ def test_take_bot_offline_unknown_or_missing_bot():
     # Never-instantiated bot (in roster but not in _bots) -> rejected.
     assert manager.take_bot_offline("Alpha") is False
     assert manager.take_bot_offline("Ghost") is False
+
+
+def test_disconnect_all_bots_takes_bots_offline_but_preserves_roster():
+    manager = _make_single_bot_manager(["BotA", "BotB"])
+    server = manager._server
+    server._users = {"BotA": object(), "BotB": object(), "Human": object()}
+    server._user_states = {"BotA": {}, "BotB": {}, "Human": {}}
+    server._db = None
+
+    count = manager.disconnect_all_bots()
+
+    assert count == 2
+    # Roster preserved (non-destructive, unlike clear_bots).
+    assert set(manager._bots) == {"BotA", "BotB"}
+    # All bots forced offline.
+    assert all(b.state == VirtualBotState.OFFLINE for b in manager._bots.values())
+    # Bot network users dropped, humans untouched.
+    assert "BotA" not in server._users
+    assert "BotB" not in server._users
+    assert "Human" in server._users
+    assert "BotA" not in server._user_states
+    # Already-offline bots are skipped.
+    add = manager._bots
+    offline_bot = VirtualBot("BotC", state=VirtualBotState.OFFLINE)
+    add["BotC"] = offline_bot
+    server._users["BotC"] = object()
+    assert manager.disconnect_all_bots() == 0
+    assert server._users.get("BotC") is not None

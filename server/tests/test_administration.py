@@ -37,8 +37,8 @@ class DummyUser:
     def speak_l(self, message_id: str, **kwargs):
         self.spoken.append((message_id, kwargs))
 
-    def speak(self, text: str):
-        self.spoken.append(("__raw__", {"text": text}))
+    def speak(self, text: str, buffer: str = "misc"):
+        self.spoken.append(("__raw__", {"text": text, "buffer": buffer}))
 
     def play_sound(self, sound: str):
         self.sounds.append(sound)
@@ -74,12 +74,21 @@ class DummyDB:
 
     def get_user(self, username):
         if username in self.non_admin_users:
-            return SimpleNamespace(username=username, trust_level=TrustLevel.USER)
+            return SimpleNamespace(
+                username=username, trust_level=TrustLevel.USER, approved=True
+            )
         if username in self.admin_users:
-            return SimpleNamespace(username=username, trust_level=TrustLevel.ADMIN)
+            return SimpleNamespace(
+                username=username, trust_level=TrustLevel.ADMIN, approved=True
+            )
         if username in self.developers:
-            return SimpleNamespace(username=username, trust_level=TrustLevel.DEVELOPER)
+            return SimpleNamespace(
+                username=username, trust_level=TrustLevel.DEVELOPER, approved=True
+            )
         return None
+
+    def get_user_count(self):
+        return len(self.non_admin_users) + len(self.admin_users) + len(self.developers)
 
     def update_user_trust_level(self, username: str, trust_level: TrustLevel) -> None:
         for bucket in (self.non_admin_users, self.admin_users, self.developers):
@@ -98,10 +107,20 @@ class AdminHost(AdministrationMixin):
         self._db = db or DummyDB()
         self._users = {}
         self._user_states = {}
+        self._started_at = None
+        self._tables = SimpleNamespace(get_all_tables=lambda: [])
+        self._virtual_bots = SimpleNamespace(
+            get_status=lambda: {"total": 0, "online": 0, "offline": 0, "in_game": 0}
+        )
         self.main_menu_calls = []
 
     def _show_main_menu(self, user: DummyUser) -> None:
         self.main_menu_calls.append(user.username)
+
+    def _iter_approved_users(self):
+        for username, u in self._users.items():
+            if getattr(u, "approved", True):
+                yield username, u
 
 
 @pytest.mark.asyncio
@@ -207,6 +226,8 @@ def test_show_admin_menu_includes_owner_actions():
         "reset_user_password",
         "ban_user",
         "unban_user",
+        "server_status",
+        "kick_user",
         "reboot_server",
         "back",
     ]
@@ -219,10 +240,14 @@ def test_show_admin_menu_includes_owner_actions():
         "reset_user_password",
         "ban_user",
         "unban_user",
+        "server_status",
+        "kick_user",
         "reboot_server",
         "promote_admin",
         "demote_admin",
         "virtual_bots",
+        "broadcast_announcement",
+        "lookup_user",
         "promote_developer",
         "demote_developer",
         "transfer_ownership",
@@ -637,10 +662,14 @@ def test_show_admin_menu_developer_sees_admin_management_but_not_owner_actions()
         "reset_user_password",
         "ban_user",
         "unban_user",
+        "server_status",
+        "kick_user",
         "reboot_server",
         "promote_admin",
         "demote_admin",
         "virtual_bots",
+        "broadcast_announcement",
+        "lookup_user",
         "back",
     ]
 
@@ -850,6 +879,11 @@ class BotManagerStub:
 
     def get_status(self):
         return {"total": len(self.roster), "online": 0, "offline": 0, "in_game": 0}
+
+    def disconnect_all_bots(self):
+        self.disconnected_all = True
+        self.saved += 1
+        return len(self.roster)
 
     # --- Presence stub surface ---
     def presence_status(self):
@@ -1236,3 +1270,221 @@ async def test_presence_profiles_back_returns_to_presence_menu():
 
     await host._handle_virtual_bots_presence_profile_selection(owner, "back")
     assert host._user_states["owner"]["menu"] == "virtual_bots_presence_menu"
+
+
+# ==================== Tiered admin actions: status / kick / broadcast / lookup ====================
+
+def test_server_status_menu_shows_readout():
+    host = AdminHost()
+    admin = DummyUser("admin", TrustLevel.ADMIN)
+    host._users = {"admin": admin}
+    host._db.non_admin_users = ["alice", "bob"]
+
+    host._show_server_status_menu(admin)
+    mu = admin.menus[-1]
+    assert mu["menu_id"] == "server_status_menu"
+    assert host._user_states["admin"]["menu"] == "server_status_menu"
+    assert _get_menu_ids(admin)[-1] == "back"
+
+
+def test_kick_user_menu_lists_lower_rank_and_excludes_self():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    admin2 = DummyUser("admin2", TrustLevel.ADMIN)
+    bob = DummyUser("bob", TrustLevel.USER)
+    host._users = {"owner": owner, "admin2": admin2, "bob": bob}
+
+    # Owner can kick users strictly below their rank (users + admins), not self.
+    host._show_kick_user_menu(owner)
+    assert _get_menu_ids(owner) == ["kick_admin2", "kick_bob", "back"]
+    assert host._user_states["owner"]["menu"] == "kick_user_menu"
+
+    # An admin cannot kick other admins/owner, only users below.
+    bob_only = DummyUser("admin3", TrustLevel.ADMIN)
+    host._users = {"admin3": bob_only, "bob": bob}
+    host._show_kick_user_menu(bob_only)
+    assert _get_menu_ids(bob_only) == ["kick_bob", "back"]
+
+
+def test_kick_user_menu_empty_goes_back_to_admin():
+    host = AdminHost()
+    admin = DummyUser("admin", TrustLevel.ADMIN)
+    host._users = {"admin": admin}
+    host._show_kick_user_menu(admin)
+    assert admin.spoken[-1][0] == "no-users-to-kick"
+    assert admin.menus[-1]["menu_id"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_kick_confirm_disconnects_user():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    bob = DummyUser("bob", TrustLevel.USER)
+
+    class FakeConn:
+        def __init__(self):
+            self.sent = []
+            self.closed = []
+
+        async def send(self, packet):
+            self.sent.append(packet)
+
+        async def close(self):
+            self.closed.append(True)
+
+    bob.connection = FakeConn()
+    host._users = {"owner": owner, "bob": bob}
+
+    await host._handle_kick_confirm_selection(owner, "yes", {"target_username": "bob"})
+    assert bob.connection.sent == [{"type": "disconnect", "reconnect": True}]
+    assert bob.connection.closed == [True]
+    assert owner.spoken[-1][0] == "user-kicked"
+    assert host._user_states["owner"]["menu"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_kick_confirm_no_cancels():
+    host = AdminHost()
+    admin = DummyUser("admin", TrustLevel.ADMIN)
+    await host._handle_kick_confirm_selection(admin, "no", {"target_username": "bob"})
+    assert host._user_states["admin"]["menu"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_broadcast_announcement_sends_to_approved_users_only():
+    host = AdminHost()
+    admin = DummyUser("admin", TrustLevel.DEVELOPER)
+    alice = DummyUser("alice", TrustLevel.USER)
+    alice.approved = True
+    bob = DummyUser("bob", TrustLevel.USER)
+    bob.approved = False
+    host._users = {"admin": admin, "alice": alice, "bob": bob}
+
+    await host._handle_broadcast_announcement_editbox(admin, "Restart soon", {})
+
+    assert alice.spoken[0][0] == "__raw__"
+    assert alice.spoken[0][1]["text"] == "Restart soon"
+    assert alice.sounds == ["accountactionnotify.ogg"]
+    assert bob.spoken == []
+    assert admin.spoken[-1][0] == "broadcast-sent"
+
+
+@pytest.mark.asyncio
+async def test_broadcast_empty_message_rejected():
+    host = AdminHost()
+    admin = DummyUser("admin", TrustLevel.DEVELOPER)
+    await host._handle_broadcast_announcement_editbox(admin, "   ", {})
+    assert admin.spoken[-1][0] == "broadcast-empty-message"
+    assert host._user_states["admin"]["menu"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_lookup_user_shows_record_and_missing_user():
+    db = DummyDB()
+    host = AdminHost(db=db)
+    admin = DummyUser("admin", TrustLevel.DEVELOPER)
+    db.non_admin_users = ["alice"]
+
+    await host._handle_lookup_user_editbox(admin, "alice", {})
+    mu = admin.menus[-1]
+    assert mu["menu_id"] == "lookup_user_result_menu"
+    assert host._user_states["admin"]["menu"] == "lookup_user_result_menu"
+    assert _get_menu_ids(admin)[-1] == "back"
+
+    admin.spoken.clear()
+    await host._handle_lookup_user_editbox(admin, "nobody", {})
+    assert admin.spoken[-1][0] == "user-not-found"
+    assert host._user_states["admin"]["menu"] == "admin_menu"
+
+
+# ==================== Reboot flow with virtual bots ====================
+
+class _BotsWithOnline:
+    def __init__(self, online=0, in_game=0):
+        self.online = online
+        self.in_game = in_game
+        self.disconnect_calls = 0
+
+    def get_status(self):
+        return {
+            "total": self.online + self.in_game,
+            "online": self.online,
+            "in_game": self.in_game,
+            "offline": 0,
+        }
+
+    def disconnect_all_bots(self):
+        self.disconnect_calls += 1
+        return self.online + self.in_game
+
+
+@pytest.mark.asyncio
+async def test_reboot_with_connected_bots_shows_second_confirm(monkeypatch):
+    host = AdminHost()
+    admin = DummyUser("admin", TrustLevel.ADMIN)
+    reboots = []
+
+    async def fake_reboot(_user):
+        reboots.append(True)
+
+    monkeypatch.setattr(host, "_reboot_server", fake_reboot)
+    host._virtual_bots = _BotsWithOnline(online=2, in_game=1)
+
+    await host._handle_reboot_server_confirm_selection(admin, "yes")
+    assert admin.menus[-1]["menu_id"] == "reboot_server_bots_confirm_menu"
+    assert reboots == []
+    assert host._user_states["admin"]["menu"] == "reboot_server_bots_confirm_menu"
+
+
+@pytest.mark.asyncio
+async def test_reboot_bots_confirm_yes_disconnects_then_reboots(monkeypatch):
+    host = AdminHost()
+    admin = DummyUser("admin", TrustLevel.ADMIN)
+    reboots = []
+
+    async def fake_reboot(_user):
+        reboots.append(True)
+
+    monkeypatch.setattr(host, "_reboot_server", fake_reboot)
+    host._virtual_bots = _BotsWithOnline(online=2)
+
+    await host._handle_reboot_server_bots_confirm_selection(admin, "yes")
+    assert host._virtual_bots.disconnect_calls == 1
+    assert reboots == [True]
+
+
+@pytest.mark.asyncio
+async def test_reboot_bots_confirm_no_cancels(monkeypatch):
+    host = AdminHost()
+    admin = DummyUser("admin", TrustLevel.ADMIN)
+    reboots = []
+
+    async def fake_reboot(_user):
+        reboots.append(True)
+
+    monkeypatch.setattr(host, "_reboot_server", fake_reboot)
+    host._virtual_bots = _BotsWithOnline(online=2)
+
+    await host._handle_reboot_server_bots_confirm_selection(admin, "no")
+    assert host._virtual_bots.disconnect_calls == 0
+    assert reboots == []
+    assert host._user_states["admin"]["menu"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_reboot_without_bots_skips_warning(monkeypatch):
+    host = AdminHost()
+    admin = DummyUser("admin", TrustLevel.ADMIN)
+    reboots = []
+
+    async def fake_reboot(_user):
+        reboots.append(True)
+
+    monkeypatch.setattr(host, "_reboot_server", fake_reboot)
+    host._virtual_bots = _BotsWithOnline(online=0, in_game=0)
+
+    await host._handle_reboot_server_confirm_selection(admin, "yes")
+    assert reboots == [True]
+    assert all(
+        m["menu_id"] != "reboot_server_bots_confirm_menu" for m in admin.menus
+    )

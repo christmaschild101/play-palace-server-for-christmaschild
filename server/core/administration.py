@@ -124,6 +124,14 @@ class AdministrationMixin:
                 id="unban_user",
             ),
             MenuItem(
+                text=Localization.get(user.locale, "server-status"),
+                id="server_status",
+            ),
+            MenuItem(
+                text=Localization.get(user.locale, "kick-user"),
+                id="kick_user",
+            ),
+            MenuItem(
                 text=Localization.get(user.locale, "admin-reboot-server"),
                 id="reboot_server",
             ),
@@ -146,6 +154,18 @@ class AdministrationMixin:
                 MenuItem(
                     text=Localization.get(user.locale, "virtual-bots"),
                     id="virtual_bots",
+                )
+            )
+            items.append(
+                MenuItem(
+                    text=Localization.get(user.locale, "broadcast-announcement"),
+                    id="broadcast_announcement",
+                )
+            )
+            items.append(
+                MenuItem(
+                    text=Localization.get(user.locale, "lookup-user"),
+                    id="lookup_user",
                 )
             )
         # Only the server owner can change the server owner or manage developers
@@ -469,6 +489,121 @@ class AdministrationMixin:
         show_yes_no_menu(user, "reboot_server_confirm_menu", question)
         self._user_states[user.username] = {"menu": "reboot_server_confirm_menu"}
 
+    def _show_reboot_server_bots_confirm_menu(self, user: NetworkUser) -> None:
+        """Warn the admin that virtual bots are connected before rebooting."""
+        status = self._virtual_bots.get_status()
+        bots = status.get("online", 0) + status.get("in_game", 0)
+        question = Localization.get(
+            user.locale, "confirm-reboot-server-bots-connected", bots=bots
+        )
+        show_yes_no_menu(user, "reboot_server_bots_confirm_menu", question)
+        self._user_states[user.username] = {"menu": "reboot_server_bots_confirm_menu"}
+
+    def _show_server_status_menu(self, user: NetworkUser) -> None:
+        """Show a read-only snapshot of the server's runtime state."""
+        import time
+
+        started_at = getattr(self, "_started_at", None)
+        if started_at is not None:
+            uptime_minutes = int((time.monotonic() - started_at) // 60)
+        else:
+            uptime_minutes = 0
+
+        online_users = len(self._users)
+        approved_users = sum(
+            1 for u in self._users.values() if getattr(u, "approved", True)
+        )
+        open_tables = len(self._tables.get_all_tables())
+        db_users = self._db.get_user_count()
+        bot_status = self._virtual_bots.get_status()
+        tick_scheduler = getattr(self, "_tick_scheduler", None)
+        tick = getattr(tick_scheduler, "tick", 0) if tick_scheduler else 0
+
+        lines = [
+            Localization.get(user.locale, "server-status-title"),
+            "",
+            Localization.get(user.locale, "server-status-uptime", minutes=uptime_minutes),
+            Localization.get(user.locale, "server-status-tick", tick=tick),
+            Localization.get(user.locale, "server-status-online-users", count=online_users),
+            Localization.get(user.locale, "server-status-approved", count=approved_users),
+            Localization.get(user.locale, "server-status-tables", count=open_tables),
+            Localization.get(user.locale, "server-status-db-users", count=db_users),
+            Localization.get(
+                user.locale,
+                "server-status-virtual-bots",
+                total=bot_status.get("total", 0),
+                online=bot_status.get("online", 0),
+                in_game=bot_status.get("in_game", 0),
+            ),
+        ]
+        user.show_menu(
+            "server_status_menu",
+            [MenuItem(text=line, id=f"line_{i}") for i, line in enumerate(lines)]
+            + [MenuItem(text=Localization.get(user.locale, "back"), id="back")],
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {"menu": "server_status_menu"}
+
+    def _show_kick_user_menu(self, user: NetworkUser) -> None:
+        """Show menu of online users the requesting admin may kick."""
+        kickable = []
+        for username, online_user in self._users.items():
+            if username == user.username:
+                continue
+            if online_user.trust_level.value >= user.trust_level.value:
+                continue
+            kickable.append(online_user)
+        kickable.sort(key=lambda u: u.username.lower())
+
+        if not kickable:
+            user.speak_l("no-users-to-kick", buffer="misc")
+            self._show_admin_menu(user)
+            return
+
+        items = [MenuItem(text=u.username, id=f"kick_{u.username}") for u in kickable]
+        items.append(MenuItem(text=Localization.get(user.locale, "back"), id="back"))
+        user.show_menu(
+            "kick_user_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {"menu": "kick_user_menu"}
+
+    def _show_kick_confirm_menu(self, user: NetworkUser, target_username: str) -> None:
+        """Show confirmation menu for kicking a user."""
+        question = Localization.get(user.locale, "confirm-kick-user", player=target_username)
+        show_yes_no_menu(user, "kick_confirm_menu", question)
+        self._user_states[user.username] = {
+            "menu": "kick_confirm_menu",
+            "target_username": target_username,
+        }
+
+    def _show_broadcast_announcement_editbox(self, user: NetworkUser) -> None:
+        """Show editbox for composing a server-wide announcement."""
+        prompt = Localization.get(user.locale, "broadcast-announcement-prompt")
+        user.show_editbox(
+            "broadcast_announcement",
+            prompt,
+            default_value="",
+            multiline=False,
+            read_only=False,
+        )
+        self._user_states[user.username] = {"menu": "broadcast_announcement_editbox"}
+
+    def _show_lookup_user_editbox(self, user: NetworkUser) -> None:
+        """Show editbox for entering a username to look up."""
+        prompt = Localization.get(user.locale, "lookup-user-prompt")
+        user.show_editbox(
+            "lookup_user",
+            prompt,
+            default_value="",
+            multiline=False,
+            read_only=False,
+        )
+        self._user_states[user.username] = {"menu": "lookup_user_editbox"}
+
     def _show_ban_reason_editbox(
         self, user: NetworkUser, target_username: str, broadcast_scope: str
     ) -> None:
@@ -773,6 +908,14 @@ class AdministrationMixin:
             self._show_unban_user_menu(user)
         elif selection_id == "virtual_bots":
             self._show_virtual_bots_menu(user)
+        elif selection_id == "server_status":
+            self._show_server_status_menu(user)
+        elif selection_id == "kick_user":
+            self._show_kick_user_menu(user)
+        elif selection_id == "broadcast_announcement":
+            self._show_broadcast_announcement_editbox(user)
+        elif selection_id == "lookup_user":
+            self._show_lookup_user_editbox(user)
         elif selection_id == "reboot_server":
             self._show_reboot_server_confirm_menu(user)
         elif selection_id == "promote_developer":
@@ -1088,11 +1231,156 @@ class AdministrationMixin:
     async def _handle_reboot_server_confirm_selection(
         self, user: NetworkUser, selection_id: str
     ) -> None:
-        """Handle reboot server confirmation menu selection."""
+        """Handle reboot server confirmation menu selection.
+
+        If any virtual bots are online, route through an extra confirmation
+        so the admin explicitly approves disconnecting them before reboot.
+        """
+        if selection_id != "yes":
+            self._show_admin_menu(user)
+            return
+
+        if self._bots_connected():
+            self._show_reboot_server_bots_confirm_menu(user)
+        else:
+            await self._reboot_server(user)
+
+    def _bots_connected(self) -> bool:
+        """Return True if any virtual bots are currently online or in game."""
+        status = self._virtual_bots.get_status()
+        return status.get("online", 0) + status.get("in_game", 0) > 0
+
+    async def _handle_reboot_server_bots_confirm_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle the bots-connected reboot warning confirmation."""
         if selection_id == "yes":
+            self._virtual_bots.disconnect_all_bots()
             await self._reboot_server(user)
         else:
             self._show_admin_menu(user)
+
+    async def _handle_server_status_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle server status menu selection (read-only, so just go back)."""
+        self._show_admin_menu(user)
+
+    async def _handle_kick_user_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle kick user menu selection."""
+        if selection_id == "back":
+            self._show_admin_menu(user)
+        elif selection_id.startswith("kick_"):
+            target_username = selection_id[5:]
+            self._show_kick_confirm_menu(user, target_username)
+
+    async def _handle_kick_confirm_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Handle kick confirmation menu selection."""
+        target_username = state.get("target_username")
+        if not target_username:
+            self._show_kick_user_menu(user)
+            return
+
+        if selection_id != "yes":
+            self._show_admin_menu(user)
+            return
+
+        target = self._users.get(target_username)
+        if not target:
+            if user.username != target_username:
+                user.speak_l("user-not-online", player=target_username, buffer="activity")
+            self._show_admin_menu(user)
+            return
+        if target.trust_level.value >= user.trust_level.value:
+            user.speak_l("cannot-kick-higher-rank", player=target_username, buffer="activity")
+            self._show_admin_menu(user)
+            return
+
+        try:
+            await target.connection.send({"type": "disconnect", "reconnect": True})
+            await target.connection.close()
+        except Exception:  # noqa: BLE001 - best effort kick
+            LOG.exception("Failed to kick user %s", target_username)
+        user.speak_l("user-kicked", player=target_username, buffer="activity")
+        self._show_admin_menu(user)
+
+    async def _handle_broadcast_announcement_editbox(
+        self, admin: NetworkUser, text: str, state: dict
+    ) -> None:
+        """Broadcast a free-text announcement to every approved online user."""
+        message = (text or "").strip()
+        if not message:
+            admin.speak_l("broadcast-empty-message", buffer="misc")
+            self._show_admin_menu(admin)
+            return
+
+        recipients = 0
+        for _username, online_user in self._iter_approved_users():
+            online_user.speak(message, buffer="activity")
+            online_user.play_sound("accountactionnotify.ogg")
+            recipients += 1
+        admin.speak_l("broadcast-sent", count=recipients, buffer="activity")
+        self._show_admin_menu(admin)
+
+    def _pretty_trust_level(self, trust_level: TrustLevel, locale: str) -> str:
+        """Localized display name for a trust level."""
+        key = {
+            TrustLevel.BANNED: "trust-banned",
+            TrustLevel.USER: "trust-user",
+            TrustLevel.ADMIN: "trust-admin",
+            TrustLevel.DEVELOPER: "trust-developer",
+            TrustLevel.SERVER_OWNER: "trust-server-owner",
+        }.get(trust_level)
+        if key:
+            return Localization.get(locale, key)
+        return str(trust_level)
+
+    async def _handle_lookup_user_editbox(
+        self, admin: NetworkUser, text: str, state: dict
+    ) -> None:
+        """Show account details for the entered username."""
+        username = (text or "").strip()
+        if not username:
+            admin.speak_l("user-not-found", player="", buffer="misc")
+            self._show_admin_menu(admin)
+            return
+
+        record = self._db.get_user(username)
+        online_user = self._users.get(username)
+        if not record:
+            admin.speak_l("user-not-found", player=username, buffer="misc")
+            self._show_admin_menu(admin)
+            return
+
+        trust_name = self._pretty_trust_level(record.trust_level, admin.locale)
+        yes = Localization.get(admin.locale, "confirm-yes")
+        no = Localization.get(admin.locale, "confirm-no")
+        online_text = yes if online_user else no
+        approved_text = yes if record.approved else no
+        banned_text = (
+            yes if record.trust_level == TrustLevel.BANNED else no
+        )
+
+        lines = [
+            Localization.get(admin.locale, "lookup-user-title", player=record.username),
+            "",
+            Localization.get(admin.locale, "lookup-user-trust", role=trust_name),
+            Localization.get(admin.locale, "lookup-user-approved", state=approved_text),
+            Localization.get(admin.locale, "lookup-user-online", state=online_text),
+            Localization.get(admin.locale, "lookup-user-banned", state=banned_text),
+        ]
+        admin.show_menu(
+            "lookup_user_result_menu",
+            [MenuItem(text=line, id=f"line_{i}") for i, line in enumerate(lines)]
+            + [MenuItem(text=Localization.get(admin.locale, "back"), id="back")],
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[admin.username] = {"menu": "lookup_user_result_menu"}
 
     async def _handle_ban_reason_editbox(self, admin: NetworkUser, text: str, state: dict) -> None:
         """Handle ban reason editbox submission."""

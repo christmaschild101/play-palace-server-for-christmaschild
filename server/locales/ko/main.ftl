@@ -391,6 +391,51 @@ confirm-reboot-server = 서버를 다시 시작하시겠습니까? 모든 플레
 server-reboot-warning = 서버가 { $seconds }초 후 다시 시작됩니다.
 server-restarting = 서버가 다시 시작되고 있습니다. 자동으로 다시 연결됩니다.
 server-reboot-failed = 서버를 다시 시작할 수 없습니다. 다시 시도해 주세요.
+# Admin: server status
+server-status = Server Status
+server-status-title = -- Server Status --
+server-status-uptime = Uptime: { $minutes } min
+server-status-tick = Tick: { $tick }
+server-status-online-users = Online users: { $count }
+server-status-approved = Approved online: { $count }
+server-status-tables = Open tables: { $count }
+server-status-db-users = Registered users: { $count }
+server-status-virtual-bots = Virtual bots: { $total } total ({ $online } online, { $in_game } in game)
+
+# Admin: kick user
+kick-user = Kick User
+no-users-to-kick = No online users to kick.
+confirm-kick-user = Are you sure you want to kick { $player }? They will be disconnected but not banned.
+user-kicked = { $player } has been kicked.
+user-not-online = { $player } is not currently online.
+cannot-kick-higher-rank = You cannot kick { $player }.
+
+# Admin: broadcast announcement
+broadcast-announcement = Broadcast Announcement
+broadcast-announcement-prompt = Enter a message to broadcast to all users (or press Escape to cancel):
+broadcast-sent = Announcement sent to { $count } users.
+broadcast-empty-message = The announcement was empty. Nothing was sent.
+
+# Admin: user lookup
+lookup-user = Look Up User
+lookup-user-prompt = Enter a username to look up (or press Escape to cancel):
+lookup-user-title = -- { $player } --
+lookup-user-trust = Role: { $role }
+lookup-user-approved = Approved: { $state }
+lookup-user-online = Online: { $state }
+lookup-user-banned = Banned: { $state }
+user-not-found = User "{ $player }" was not found.
+
+# Trust level names
+trust-banned = Banned
+trust-user = User
+trust-admin = Admin
+trust-developer = Developer
+trust-server-owner = Server Owner
+
+# Server reboot with virtual bots
+confirm-reboot-server-bots-connected = Virtual bots are currently connected ({ $bots }). If you continue, they will be disconnected.
+
 
 # Developer role
 user-is-developer = { $player } 님은 PlayPalace의 개발자입니다.

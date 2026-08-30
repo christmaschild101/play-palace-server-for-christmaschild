@@ -1140,6 +1140,31 @@ class VirtualBotManager:
         bot.online_ticks = 0
         bot.table_id = None
 
+    def disconnect_all_bots(self) -> int:
+        """Force every connected bot offline (kill tables, drop their users).
+
+        Unlike ``clear_bots`` this is non-destructive: the roster and each
+        bot's profile are preserved in ``self._bots`` and re-persisted via
+        ``save_state`` so the bots come back offline after a restart. No
+        presence is broadcast. Returns the number of bots disconnected.
+        """
+        count = 0
+        tables_killed = set()
+        for name, bot in list(self._bots.items()):
+            if bot.state == VirtualBotState.OFFLINE:
+                continue
+            # Close the bot's table (notifies any human members) once per table.
+            if bot.table_id and bot.table_id not in tables_killed:
+                if self._kill_bot_table(bot):
+                    tables_killed.add(bot.table_id)
+            # Drop the bot's network user without broadcasting presence.
+            self._take_bot_offline_silent(bot)
+            count += 1
+
+        if count:
+            self.save_state()
+        return count
+
     def get_status(self) -> dict[str, int]:
         """
         Get counts of bots in each state.

@@ -411,6 +411,51 @@ confirm-reboot-server = Naozaj chcete reštartovať server? Všetci hráči bud�
 server-reboot-warning = Server sa reštartuje o { $seconds } sekúnd.
 server-restarting = Server sa reštartuje. Budete automaticky znova pripojení.
 server-reboot-failed = Server sa nepodarilo reštartovať. Skúste to znova.
+# Admin: server status
+server-status = Server Status
+server-status-title = -- Server Status --
+server-status-uptime = Uptime: { $minutes } min
+server-status-tick = Tick: { $tick }
+server-status-online-users = Online users: { $count }
+server-status-approved = Approved online: { $count }
+server-status-tables = Open tables: { $count }
+server-status-db-users = Registered users: { $count }
+server-status-virtual-bots = Virtual bots: { $total } total ({ $online } online, { $in_game } in game)
+
+# Admin: kick user
+kick-user = Kick User
+no-users-to-kick = No online users to kick.
+confirm-kick-user = Are you sure you want to kick { $player }? They will be disconnected but not banned.
+user-kicked = { $player } has been kicked.
+user-not-online = { $player } is not currently online.
+cannot-kick-higher-rank = You cannot kick { $player }.
+
+# Admin: broadcast announcement
+broadcast-announcement = Broadcast Announcement
+broadcast-announcement-prompt = Enter a message to broadcast to all users (or press Escape to cancel):
+broadcast-sent = Announcement sent to { $count } users.
+broadcast-empty-message = The announcement was empty. Nothing was sent.
+
+# Admin: user lookup
+lookup-user = Look Up User
+lookup-user-prompt = Enter a username to look up (or press Escape to cancel):
+lookup-user-title = -- { $player } --
+lookup-user-trust = Role: { $role }
+lookup-user-approved = Approved: { $state }
+lookup-user-online = Online: { $state }
+lookup-user-banned = Banned: { $state }
+user-not-found = User "{ $player }" was not found.
+
+# Trust level names
+trust-banned = Banned
+trust-user = User
+trust-admin = Admin
+trust-developer = Developer
+trust-server-owner = Server Owner
+
+# Server reboot with virtual bots
+confirm-reboot-server-bots-connected = Virtual bots are currently connected ({ $bots }). If you continue, they will be disconnected.
+
 
 # Developer role
 user-is-developer = { $player } je vývojár hry PlayPalace.

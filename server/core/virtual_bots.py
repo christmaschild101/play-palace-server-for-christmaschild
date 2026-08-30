@@ -75,6 +75,10 @@ class VirtualBotConfig:
     default_profile: str = "default"
     allocation_mode: AllocationMode = AllocationMode.BEST_EFFORT
 
+    # Presence (chat + session cadence). Global opt-in; per-profile flags
+    # refine this. See core.bot_presence for the engine.
+    presence_enabled: bool = False
+
 
 @dataclass
 class VirtualBotProfileOverride:
@@ -99,6 +103,8 @@ class VirtualBotProfileOverride:
     max_bots_per_table: int | None = None
     waiting_min_ticks: int | None = None
     waiting_max_ticks: int | None = None
+    # Presence opt-in for this profile (chat + session cadence)
+    presence_enabled: bool | None = None
 
 
 @dataclass
@@ -178,6 +184,9 @@ class VirtualBotManager:
         self._managed_names: set[str] = set()
         self._guided_tables: dict[str, GuidedTableState] = {}
         self._tick_counter = 0
+        # Presence engine (chat + session cadence). Created lazily by
+        # _load_presence_config; tests may construct a manager without it.
+        self._presence: Any = None
 
     def load_config(self, path: str | Path | None = None) -> None:
         """Load bot configuration from config.toml."""
@@ -240,6 +249,9 @@ class VirtualBotManager:
         self._guided_tables = self._parse_guided_tables(guided_tables_section)
         self._validate_guided_tables()
 
+        # Presence engine config ([virtual_bots.presence])
+        self._load_presence_config(vb_config.get("presence", {}))
+
         # Merge DB-managed definitions (added/renamed bots, tombstones, profile
         # overrides) on top of the config-defined roster.
         self._merge_managed_definitions()
@@ -248,6 +260,122 @@ class VirtualBotManager:
         for bot in self._bots.values():
             bot.profile = self._bot_profiles_map.get(bot.name, self._config.default_profile)
             bot.groups = tuple(sorted(self._bot_memberships.get(bot.name, set())))
+
+    # ==================== Presence (chat + session cadence) ====================
+
+    def _load_presence_config(self, section: dict[str, Any]) -> None:
+        """Build the BotPresenceEngine from [virtual_bots.presence] config."""
+        from .bot_presence import BotPresenceEngine, PresenceConfig
+
+        import dataclasses as _dc
+
+        cfg = PresenceConfig()
+        known = {f.name for f in _dc.fields(PresenceConfig)}
+        kwargs: dict[str, Any] = {}
+        for key, value in section.items():
+            if key in known:
+                kwargs[key] = value
+        # Presence lists in TOML may be single strings
+        for list_field in (
+            "chat_lines_greeting", "chat_lines_ingame",
+            "chat_lines_postgame", "chat_lines_idle",
+        ):
+            if isinstance(kwargs.get(list_field), str):
+                kwargs[list_field] = [kwargs[list_field]]
+        presence_cfg = _dc.replace(cfg, **kwargs) if kwargs else cfg
+        # DB-persisted kill switch overrides config file
+        db = self._server._db
+        if db:
+            try:
+                stored = db.load_virtual_bot_presence_state()
+                if stored and stored.get("kill_switch") is not None:
+                    presence_cfg.kill_switch = bool(stored["kill_switch"])
+            except Exception:  # noqa: BLE001 - presence must never block startup
+                pass
+        self._presence = BotPresenceEngine(self, presence_cfg)
+
+    def bot_profile(self, bot_name: str) -> str:
+        """Return the effective profile name for a bot."""
+        return self._bot_profiles_map.get(bot_name, self._config.default_profile)
+
+    def profile_presence_enabled(self, profile: str) -> bool:
+        """Per-profile presence opt-in; falls back to the global flag."""
+        override = self._profiles.get(profile)
+        if override is not None and override.presence_enabled is not None:
+            return override.presence_enabled
+        return self._config.presence_enabled
+
+    def online_bot_names(self) -> list[str]:
+        """Names of bots currently not OFFLINE (eligible for presence activity)."""
+        return [
+            name for name, bot in self._bots.items()
+            if bot.state != VirtualBotState.OFFLINE
+        ]
+
+    def bot_chat_category(self, bot_name: str) -> str:
+        """Pick a chat category from the bot's current state."""
+        bot = self._bots.get(bot_name)
+        if not bot:
+            return "idle"
+        if bot.state == VirtualBotState.IN_GAME:
+            return "ingame"
+        if bot.state == VirtualBotState.WAITING_FOR_TABLE:
+            return "idle"
+        return "idle"
+
+    def broadcast_chat_packet(self, sender: str, packet: dict[str, str]) -> bool:
+        """Deliver a chat packet to all approved users except bots.
+
+        Mirrors the delivery half of Server._handle_chat: local convo goes to
+        the sender's table (bots have none -> global fallback), global goes to
+        every approved user not inside a table's local chat scope. Bots are
+        skipped because their speak() is a no-op anyway.
+        """
+        server = self._server
+        sent = False
+        try:
+            for username, user in server._iter_approved_users():
+                if username == sender:
+                    continue
+                # Skip other bots entirely (their speak is a no-op)
+                if getattr(user, "is_bot", False):
+                    continue
+                try:
+                    user.connection.send(packet)
+                    sent = True
+                except Exception:  # noqa: BLE001 - one failed client must not stop the broadcast
+                    continue
+        except Exception:  # noqa: BLE001
+            return False
+        return sent
+
+    def presence_status(self) -> dict[str, Any]:
+        """Admin-facing presence status (delegates to the engine)."""
+        if not self._presence:
+            return {"enabled": False, "kill_switch": False, "chats_sent": 0, "chats_blocked": 0}
+        return self._presence.get_status()
+
+    def set_presence_kill_switch(self, value: bool) -> None:
+        """Instantly pause/resume all bot chatter; persisted in DB."""
+        if self._presence:
+            self._presence.config.kill_switch = value
+        db = self._server._db
+        if db:
+            db.save_virtual_bot_presence_state(kill_switch=value)
+
+    def set_presence_enabled(self, value: bool) -> None:
+        """Flip the global presence opt-in flag."""
+        self._config.presence_enabled = value
+        if self._presence:
+            self._presence.config.enabled = value
+
+    def set_profile_presence(self, profile: str, value: bool) -> None:
+        """Set the per-profile presence opt-in (None -> explicit True/False)."""
+        override = self._profiles.get(profile)
+        if override is None:
+            override = VirtualBotProfileOverride(name=profile)
+            self._profiles[profile] = override
+        override.presence_enabled = value
 
     def _merge_managed_definitions(self) -> None:
         """Merge DB-managed bot definitions into the configured roster.
@@ -506,6 +634,7 @@ class VirtualBotManager:
                 max_bots_per_table=overrides.get("max_bots_per_table"),
                 waiting_min_ticks=overrides.get("waiting_min_ticks"),
                 waiting_max_ticks=overrides.get("waiting_max_ticks"),
+                presence_enabled=overrides.get("presence_enabled"),
             )
         return profiles
 
@@ -1222,6 +1351,9 @@ class VirtualBotManager:
         self._refresh_guided_tables()
         for bot in list(self._bots.values()):
             self._process_bot_tick(bot)
+        # Presence chatter (no-op unless enabled + per-profile opt-in)
+        if self._presence:
+            self._presence.on_tick(self._tick_counter)
 
     def _process_bot_tick(self, bot: VirtualBot) -> None:
         """Process a single bot's tick."""
@@ -1320,6 +1452,8 @@ class VirtualBotManager:
                     player = game.get_player_by_name(bot.name)
                     if player:
                         game.execute_action(player, "start_game")
+                        if self._presence:
+                            self._presence.on_game_start(bot.name, self._tick_counter)
 
     def _process_leaving_game_bot(self, bot: VirtualBot) -> None:
         """Process a bot that is leaving a game (staggered departure)."""
@@ -1546,6 +1680,10 @@ class VirtualBotManager:
         # Broadcast online announcement
         self._server._broadcast_presence_l("user-online", bot.name, "online.ogg")
 
+        # Presence: greeting chatter
+        if self._presence:
+            self._presence.on_bot_online(bot.name, self._tick_counter)
+
     def _take_bot_offline(self, bot: VirtualBot) -> None:
         """Take a bot offline."""
         # Leave any table first
@@ -1557,6 +1695,10 @@ class VirtualBotManager:
 
         # Broadcast offline announcement
         self._server._broadcast_presence_l("user-offline", bot.name, "offline.ogg")
+
+        # Presence: drop chatter timers for this bot
+        if self._presence:
+            self._presence.on_bot_offline(bot.name)
 
         # Set up offline state
         bot.state = VirtualBotState.OFFLINE
@@ -1727,4 +1869,6 @@ class VirtualBotManager:
         """
         for bot in self._bots.values():
             if bot.table_id == table_id and bot.state == VirtualBotState.IN_GAME:
+                if self._presence:
+                    self._presence.on_game_end(bot.name, self._tick_counter)
                 self._start_leaving_game(bot)

@@ -1419,6 +1419,46 @@ class Database:
         cursor.execute("DELETE FROM virtual_bot_definitions WHERE name = ?", (name,))
         self._get_conn().commit()
 
+    # ==================== Virtual Bot Presence State ====================
+
+    def _ensure_virtual_bot_presence_table(self) -> None:
+        """Create virtual_bot_presence table if it doesn't exist."""
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS virtual_bot_presence (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+            """
+        )
+        self._get_conn().commit()
+
+    def save_virtual_bot_presence_state(self, kill_switch: bool) -> None:
+        """Persist the presence kill switch (survives restarts)."""
+        self._ensure_virtual_bot_presence_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            INSERT INTO virtual_bot_presence (key, value)
+            VALUES ('kill_switch', ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value
+            """,
+            ("1" if kill_switch else "0",),
+        )
+        self._get_conn().commit()
+
+    def load_virtual_bot_presence_state(self) -> dict:
+        """Load presence state; returns {'kill_switch': bool|None}."""
+        self._ensure_virtual_bot_presence_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute("SELECT key, value FROM virtual_bot_presence")
+        result: dict = {"kill_switch": None}
+        for row in cursor.fetchall():
+            if row["key"] == "kill_switch":
+                result["kill_switch"] = row["value"] == "1"
+        return result
+
     def load_virtual_bot_definitions(self) -> list[dict]:
         """Load all virtual bot definitions from the database."""
         self._ensure_virtual_bot_definitions_table()

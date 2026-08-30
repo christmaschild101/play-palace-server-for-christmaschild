@@ -120,6 +120,37 @@ default_profile = "default"
 #   "strict" fails fast at startup if requirements exceed the pool
 allocation_mode = "best_effort"
 
+# Presence engine (server-side chat + session cadence). Opt-in: nothing changes
+# for existing bots until presence_enabled = true AND a profile opts in.
+[virtual_bots.presence]
+enabled = false          # master switch; per-profile flags refine this
+kill_switch = false      # instant pause of ALL bot chatter (persisted across restarts)
+
+# Chat cadence (ticks; server tick = 50ms)
+chat_min_ticks = 400     # 20s minimum gap between any two bot chats (global guardrail)
+chat_max_ticks = 4800    # 4m maximum idle-chatter interval per bot
+idle_chat_chance = 0.3   # chance an eligible idle bot chats when its timer fires
+
+# Rate caps (guardrails)
+max_chats_per_bot_per_hour = 20
+max_chats_per_minute_global = 12
+quiet_hours_start = 23   # hour of day (0-23), inclusive
+quiet_hours_end = 7      # hour of day (0-23), exclusive
+quiet_multiplier = 0.2   # activity multiplier during quiet hours
+
+# Session cadence shaping
+session_shape_enabled = true
+burst_login_chance = 0.15
+hesitation_factor = 1.5  # human-like pause multiplier before actions
+afk_chance = 0.05
+# (afk_min_ticks/afk_max_ticks default to 1200/6000 ticks = 1-5 min)
+
+# Chat line pools (English defaults; each profile can override)
+chat_lines_greeting = ["morning all", "hey everyone", "back again", "hello o/"]
+chat_lines_ingame = ["nice move", "close one", "good luck all", "this is tense"]
+chat_lines_postgame = ["gg", "good game", "well played", "rematch sometime?"]
+chat_lines_idle = ["anyone up for a game?", "quiet in here", "brb coffee", "table open?"]
+
 [virtual_bots.profiles.default]
 # Profiles inherit any keys omitted here from the top-level [virtual_bots] block
 min_bots_per_table = 0  # 0 means no lower bound

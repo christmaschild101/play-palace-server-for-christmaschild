@@ -429,6 +429,21 @@ virtual-bots-take-offline = बॉट को ऑफ़लाइन करें
 virtual-bots-taken-offline = वर्चुअल बॉट { $name } ऑफ़लाइन कर दिया गया।
 virtual-bots-already-offline = वर्चुअल बॉट { $name } पहले से ऑफ़लाइन है।
 virtual-bots-all-offline = सभी वर्चुअल बॉट्स पहले से ऑफ़लाइन हैं।
+# Virtual bot presence (server-side chat + session cadence)
+virtual-bots-presence = Presence & Chat
+virtual-bots-presence-status = Status
+virtual-bots-presence-report = Presence: enabled { $enabled }, kill switch { $kill_switch }, quiet hours now { $in_quiet_hours }, chats sent { $chats_sent }, blocked { $chats_blocked }.
+virtual-bots-presence-enable = Enable Presence
+virtual-bots-presence-disable = Disable Presence
+virtual-bots-presence-pause = Pause All Chatter
+virtual-bots-presence-resume = Resume All Chatter
+virtual-bots-presence-profiles = Profile Presence
+virtual-bots-presence-enabled = Presence enabled.
+virtual-bots-presence-disabled = Presence disabled.
+virtual-bots-presence-paused = All bot chatter paused.
+virtual-bots-presence-resumed = Bot chatter resumed.
+virtual-bots-presence-profile-enabled = Presence enabled for profile { $profile }.
+virtual-bots-presence-profile-disabled = Presence disabled for profile { $profile }.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = इस गेम में अत्यधिक अपरिपक्व सामग्री है। यह 16 वर्ष से कम उम्र के खिलाड़ियों या कुछ विषयों के प्रति संवेदनशील लोगों के लिए अनुशंसित नहीं है।

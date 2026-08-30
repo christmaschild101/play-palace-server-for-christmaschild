@@ -808,6 +808,9 @@ class BotManagerStub:
         self.brought_online = []
         self.taken_offline = []
         self.saved = 0
+        self._presence_enabled = False
+        self._kill_switch = False
+        self._profile_presence = {}
 
     def get_roster(self):
         return list(self.roster)
@@ -848,6 +851,31 @@ class BotManagerStub:
     def get_status(self):
         return {"total": len(self.roster), "online": 0, "offline": 0, "in_game": 0}
 
+    # --- Presence stub surface ---
+    def presence_status(self):
+        return {
+            "enabled": True,
+            "kill_switch": self._kill_switch,
+            "in_quiet_hours": False,
+            "chats_sent": 3,
+            "chats_blocked": 1,
+        }
+
+    def set_presence_enabled(self, value):
+        self._presence_enabled = value
+        self.saved += 1
+
+    def set_profile_presence(self, profile, value):
+        self._profile_presence[profile] = value
+        self.saved += 1
+
+    def profile_presence_enabled(self, profile):
+        return self._profile_presence.get(profile, False)
+
+    def set_presence_kill_switch(self, value):
+        self._kill_switch = value
+        self.saved += 1
+
 
 def _roster_entry(name, source="config", profile="default", online=False):
     return {
@@ -875,6 +903,7 @@ def test_virtual_bots_menu_includes_management_items():
         "guided",
         "groups",
         "profiles",
+        "presence",
         "add",
         "edit",
         "delete",
@@ -1118,3 +1147,92 @@ async def test_take_bot_offline_back_returns_to_virtual_bots_menu():
     await host._handle_take_bot_offline_selection(owner, "back")
 
     assert host._user_states["owner"]["menu"] == "virtual_bots_menu"
+
+
+# ==================== Presence menu flows ====================
+
+
+async def _open_presence_menu(host, owner):
+    await host._show_virtual_bots_presence_menu(owner)
+    assert host._user_states["owner"]["menu"] == "virtual_bots_presence_menu"
+    return _get_menu_ids(owner)
+
+
+@pytest.mark.asyncio
+async def test_presence_menu_opens():
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub(roster=[_roster_entry("Alpha")])
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await _open_presence_menu(host, owner)
+    ids = _get_menu_ids(owner)
+    assert ids == ["status", "enable", "disable", "kill_switch", "profiles", "back"]
+
+
+@pytest.mark.asyncio
+async def test_presence_menu_enable_flips_flag_and_returns():
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_virtual_bots_presence_selection(owner, "enable")
+
+    assert host._virtual_bots._presence_enabled is True
+    assert "virtual-bots-presence-enabled" in [m[0] for m in owner.spoken]
+    assert host._user_states["owner"]["menu"] == "virtual_bots_presence_menu"
+
+
+@pytest.mark.asyncio
+async def test_presence_menu_disable_flips_flag_and_returns():
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_virtual_bots_presence_selection(owner, "disable")
+
+    assert host._virtual_bots._presence_enabled is False
+    assert "virtual-bots-presence-disabled" in [m[0] for m in owner.spoken]
+    assert host._user_states["owner"]["menu"] == "virtual_bots_presence_menu"
+
+
+@pytest.mark.asyncio
+async def test_presence_menu_kill_switch_toggles():
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    # Stub starts kill_switch False -> toggle to True (pause)
+    await host._handle_virtual_bots_presence_selection(owner, "kill_switch")
+    assert host._virtual_bots._kill_switch is True
+    assert "virtual-bots-presence-paused" in [m[0] for m in owner.spoken]
+
+    await host._handle_virtual_bots_presence_selection(owner, "kill_switch")
+    assert host._virtual_bots._kill_switch is False
+    assert "virtual-bots-presence-resumed" in [m[0] for m in owner.spoken]
+
+
+@pytest.mark.asyncio
+async def test_presence_profiles_menu_and_toggle():
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._show_virtual_bots_presence_profiles_menu(owner)
+    assert host._user_states["owner"]["menu"] == "virtual_bots_presence_profiles_menu"
+    assert _get_menu_ids(owner) == ["profile_default", "profile_host", "back"]
+
+    # Toggle the "host" profile on
+    await host._handle_virtual_bots_presence_profile_selection(owner, "profile_host")
+    assert host._virtual_bots._profile_presence.get("host") is True
+    assert owner.spoken[-1][0] == "virtual-bots-presence-profile-enabled"
+    assert host._user_states["owner"]["menu"] == "virtual_bots_presence_profiles_menu"
+
+
+@pytest.mark.asyncio
+async def test_presence_profiles_back_returns_to_presence_menu():
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_virtual_bots_presence_profile_selection(owner, "back")
+    assert host._user_states["owner"]["menu"] == "virtual_bots_presence_menu"

@@ -429,6 +429,21 @@ virtual-bots-take-offline = Ta bort bot offline
 virtual-bots-taken-offline = Den virtuella botten { $name } togs offline.
 virtual-bots-already-offline = Den virtuella botten { $name } är redan offline.
 virtual-bots-all-offline = Alla virtuella bottar är redan offline.
+# Virtual bot presence (server-side chat + session cadence)
+virtual-bots-presence = Presence & Chat
+virtual-bots-presence-status = Status
+virtual-bots-presence-report = Presence: enabled { $enabled }, kill switch { $kill_switch }, quiet hours now { $in_quiet_hours }, chats sent { $chats_sent }, blocked { $chats_blocked }.
+virtual-bots-presence-enable = Enable Presence
+virtual-bots-presence-disable = Disable Presence
+virtual-bots-presence-pause = Pause All Chatter
+virtual-bots-presence-resume = Resume All Chatter
+virtual-bots-presence-profiles = Profile Presence
+virtual-bots-presence-enabled = Presence enabled.
+virtual-bots-presence-disabled = Presence disabled.
+virtual-bots-presence-paused = All bot chatter paused.
+virtual-bots-presence-resumed = Bot chatter resumed.
+virtual-bots-presence-profile-enabled = Presence enabled for profile { $profile }.
+virtual-bots-presence-profile-disabled = Presence disabled for profile { $profile }.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = Det här spelet innehåller mycket omoget innehåll. Det rekommenderas inte för spelare under 16 år eller personer som är känsliga för vissa ämnen.

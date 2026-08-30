@@ -547,6 +547,10 @@ class AdministrationMixin:
                 id="profiles",
             ),
             MenuItem(
+                text=Localization.get(user.locale, "virtual-bots-presence"),
+                id="presence",
+            ),
+            MenuItem(
                 text=Localization.get(user.locale, "virtual-bots-add"),
                 id="add",
             ),
@@ -1132,6 +1136,8 @@ class AdministrationMixin:
             await self._show_virtual_bots_groups_overview(user)
         elif selection_id == "profiles":
             await self._show_virtual_bots_profiles_overview(user)
+        elif selection_id == "presence":
+            await self._show_virtual_bots_presence_menu(user)
         elif selection_id == "add":
             self._show_add_bot_name_editbox(user)
         elif selection_id == "edit":
@@ -1902,6 +1908,144 @@ class AdministrationMixin:
             buffer="misc",
         )
         self._show_virtual_bots_menu(owner)
+
+    @require_developer
+    async def _show_virtual_bots_presence_menu(self, owner: NetworkUser) -> None:
+        """Show the bot presence tuning menu (server-side, opt-in per profile)."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            owner.speak_l("virtual-bots-not-available", buffer="misc")
+            self._show_virtual_bots_menu(owner)
+            return
+
+        status = manager.presence_status()
+        locale = owner.locale
+        kill_label = Localization.get(locale, "virtual-bots-presence-resume")
+        if status["kill_switch"]:
+            kill_label = Localization.get(locale, "virtual-bots-presence-pause")
+        owner.speak_l(
+            "virtual-bots-presence-report",
+            enabled=status["enabled"],
+            kill_switch=status["kill_switch"],
+            in_quiet_hours=status["in_quiet_hours"],
+            chats_sent=status["chats_sent"],
+            chats_blocked=status["chats_blocked"],
+            buffer="misc",
+        )
+        items = [
+            MenuItem(
+                text=Localization.get(locale, "virtual-bots-presence-status"),
+                id="status",
+            ),
+            MenuItem(
+                text=Localization.get(locale, "virtual-bots-presence-enable"),
+                id="enable",
+            ),
+            MenuItem(
+                text=Localization.get(locale, "virtual-bots-presence-disable"),
+                id="disable",
+            ),
+            MenuItem(
+                text=kill_label,
+                id="kill_switch",
+            ),
+            MenuItem(
+                text=Localization.get(locale, "virtual-bots-presence-profiles"),
+                id="profiles",
+            ),
+            MenuItem(text=Localization.get(locale, "back"), id="back"),
+        ]
+        owner.show_menu(
+            "virtual_bots_presence_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[owner.username] = {"menu": "virtual_bots_presence_menu"}
+
+    @require_developer
+    async def _show_virtual_bots_presence_profiles_menu(self, owner: NetworkUser) -> None:
+        """Show per-profile presence toggle menu."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            owner.speak_l("virtual-bots-not-available", buffer="misc")
+            self._show_virtual_bots_presence_menu(owner)
+            return
+        profiles = manager.get_profiles()
+        if not profiles:
+            owner.speak_l("virtual-bots-no-profiles", buffer="misc")
+            self._show_virtual_bots_presence_menu(owner)
+            return
+        locale = owner.locale
+        items = [
+            MenuItem(text=profile, id=f"profile_{profile}") for profile in profiles
+        ]
+        items.append(MenuItem(text=Localization.get(locale, "back"), id="back"))
+        owner.show_menu(
+            "virtual_bots_presence_profiles_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[owner.username] = {"menu": "virtual_bots_presence_profiles_menu"}
+
+    @require_developer
+    async def _handle_virtual_bots_presence_selection(
+        self, owner: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle virtual bots presence menu selection."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            owner.speak_l("virtual-bots-not-available", buffer="misc")
+            self._show_virtual_bots_menu(owner)
+            return
+
+        if selection_id == "status":
+            await self._show_virtual_bots_presence_menu(owner)
+        elif selection_id == "enable":
+            manager.set_presence_enabled(True)
+            manager.save_state()
+            owner.speak_l("virtual-bots-presence-enabled", buffer="misc")
+            await self._show_virtual_bots_presence_menu(owner)
+        elif selection_id == "disable":
+            manager.set_presence_enabled(False)
+            manager.save_state()
+            owner.speak_l("virtual-bots-presence-disabled", buffer="misc")
+            await self._show_virtual_bots_presence_menu(owner)
+        elif selection_id == "kill_switch":
+            manager.set_presence_kill_switch(not manager.presence_status()["kill_switch"])
+            status = manager.presence_status()
+            if status["kill_switch"]:
+                owner.speak_l("virtual-bots-presence-paused", buffer="misc")
+            else:
+                owner.speak_l("virtual-bots-presence-resumed", buffer="misc")
+            await self._show_virtual_bots_presence_menu(owner)
+        elif selection_id == "profiles":
+            await self._show_virtual_bots_presence_profiles_menu(owner)
+        else:
+            self._show_virtual_bots_menu(owner)
+
+    @require_developer
+    async def _handle_virtual_bots_presence_profile_selection(
+        self, owner: NetworkUser, selection_id: str
+    ) -> None:
+        """Toggle presence for a single profile (opt-in)."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            owner.speak_l("virtual-bots-not-available", buffer="misc")
+            self._show_virtual_bots_menu(owner)
+            return
+        if selection_id == "back":
+            await self._show_virtual_bots_presence_menu(owner)
+            return
+        if selection_id.startswith("profile_"):
+            profile = selection_id[8:]
+            new_value = not manager.profile_presence_enabled(profile)
+            manager.set_profile_presence(profile, new_value)
+            manager.save_state()
+            key = "virtual-bots-presence-profile-enabled" if new_value else "virtual-bots-presence-profile-disabled"
+            owner.speak_l(key, profile=profile, buffer="misc")
+        await self._show_virtual_bots_presence_profiles_menu(owner)
 
     @require_developer
     async def _show_virtual_bots_guided_overview(self, owner: NetworkUser) -> None:

@@ -417,6 +417,21 @@ virtual-bots-take-offline = 봇 오프라인 전환
 virtual-bots-taken-offline = 가상 봇 { $name } 님이 오프라인이 되었습니다.
 virtual-bots-already-offline = 가상 봇 { $name } 님은 이미 오프라인 상태입니다.
 virtual-bots-all-offline = 모든 가상 봇이 이미 오프라인 상태입니다.
+# Virtual bot presence (server-side chat + session cadence)
+virtual-bots-presence = Presence & Chat
+virtual-bots-presence-status = Status
+virtual-bots-presence-report = Presence: enabled { $enabled }, kill switch { $kill_switch }, quiet hours now { $in_quiet_hours }, chats sent { $chats_sent }, blocked { $chats_blocked }.
+virtual-bots-presence-enable = Enable Presence
+virtual-bots-presence-disable = Disable Presence
+virtual-bots-presence-pause = Pause All Chatter
+virtual-bots-presence-resume = Resume All Chatter
+virtual-bots-presence-profiles = Profile Presence
+virtual-bots-presence-enabled = Presence enabled.
+virtual-bots-presence-disabled = Presence disabled.
+virtual-bots-presence-paused = All bot chatter paused.
+virtual-bots-presence-resumed = Bot chatter resumed.
+virtual-bots-presence-profile-enabled = Presence enabled for profile { $profile }.
+virtual-bots-presence-profile-disabled = Presence disabled for profile { $profile }.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = 이 게임에는 매우 미숙한 콘텐츠가 포함되어 있습니다. 16세 미만 플레이어나 특정 주제에 민감한 분에게는 권장되지 않습니다.

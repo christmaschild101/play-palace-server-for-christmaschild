@@ -2348,6 +2348,14 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 self._handle_take_bot_offline_selection,
                 (user, selection_id),
             ),
+            "virtual_bots_presence_menu": (
+                self._handle_virtual_bots_presence_selection,
+                (user, selection_id),
+            ),
+            "virtual_bots_presence_profiles_menu": (
+                self._handle_virtual_bots_presence_profile_selection,
+                (user, selection_id),
+            ),
             "reboot_server_confirm_menu": (
                 self._handle_reboot_server_confirm_selection,
                 (user, selection_id),

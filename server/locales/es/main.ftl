@@ -429,6 +429,21 @@ virtual-bots-take-offline = Desconectar bot virtual
 virtual-bots-taken-offline = Bot virtual { $name } desconectado.
 virtual-bots-already-offline = El bot virtual { $name } ya está desconectado.
 virtual-bots-all-offline = Todos los bots virtuales ya están desconectados.
+# Virtual bot presence (server-side chat + session cadence)
+virtual-bots-presence = Presence & Chat
+virtual-bots-presence-status = Status
+virtual-bots-presence-report = Presence: enabled { $enabled }, kill switch { $kill_switch }, quiet hours now { $in_quiet_hours }, chats sent { $chats_sent }, blocked { $chats_blocked }.
+virtual-bots-presence-enable = Enable Presence
+virtual-bots-presence-disable = Disable Presence
+virtual-bots-presence-pause = Pause All Chatter
+virtual-bots-presence-resume = Resume All Chatter
+virtual-bots-presence-profiles = Profile Presence
+virtual-bots-presence-enabled = Presence enabled.
+virtual-bots-presence-disabled = Presence disabled.
+virtual-bots-presence-paused = All bot chatter paused.
+virtual-bots-presence-resumed = Bot chatter resumed.
+virtual-bots-presence-profile-enabled = Presence enabled for profile { $profile }.
+virtual-bots-presence-profile-disabled = Presence disabled for profile { $profile }.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = Este juego contiene contenido muy inmaduro. No se recomienda para jugadores menores de 16 años ni para personas sensibles a ciertos temas.

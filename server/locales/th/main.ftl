@@ -417,6 +417,21 @@ virtual-bots-take-offline = นำบอทออฟไลน์
 virtual-bots-taken-offline = นำบอทเสมือน { $name } ออฟไลน์แล้ว
 virtual-bots-already-offline = บอทเสมือน { $name } ออฟไลน์อยู่แล้ว
 virtual-bots-all-offline = บอทเสมือนทั้งหมดออฟไลน์อยู่แล้ว
+# Virtual bot presence (server-side chat + session cadence)
+virtual-bots-presence = Presence & Chat
+virtual-bots-presence-status = Status
+virtual-bots-presence-report = Presence: enabled { $enabled }, kill switch { $kill_switch }, quiet hours now { $in_quiet_hours }, chats sent { $chats_sent }, blocked { $chats_blocked }.
+virtual-bots-presence-enable = Enable Presence
+virtual-bots-presence-disable = Disable Presence
+virtual-bots-presence-pause = Pause All Chatter
+virtual-bots-presence-resume = Resume All Chatter
+virtual-bots-presence-profiles = Profile Presence
+virtual-bots-presence-enabled = Presence enabled.
+virtual-bots-presence-disabled = Presence disabled.
+virtual-bots-presence-paused = All bot chatter paused.
+virtual-bots-presence-resumed = Bot chatter resumed.
+virtual-bots-presence-profile-enabled = Presence enabled for profile { $profile }.
+virtual-bots-presence-profile-disabled = Presence disabled for profile { $profile }.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = เกมนี้มีเนื้อหาที่ยังไม่โตเต็มที่สูงมาก ไม่แนะนำสำหรับผู้เล่นอายุต่ำกว่า 16 ปี หรือผู้ที่ไวต่อบางหัวข้อ

@@ -93,3 +93,9 @@ ninetynine-rules-variant-rs_games = RS Games
 # Gründe für deaktivierte Aktionen
 ninetynine-choose-first = Sie müssen zuerst eine Auswahl treffen.
 ninetynine-draw-first = Sie müssen zuerst eine Karte ziehen.
+
+ninetynine-desc-autodraw = Deine Hand füllt sich von selbst ohne Eingriff (empfohlen für Anfänger)
+ninetynine-desc-hand-size = Anzahl der Karten, mit denen jeder Spieler startet
+ninetynine-desc-rules = Wähle zwischen verschiedenen Regelwerken für Neunundneunzig
+ninetynine-desc-tokens = Anzahl der Marken, mit denen jeder Spieler startet; verliere alle Marken, zahle eine weitere und du fliegst raus!
+

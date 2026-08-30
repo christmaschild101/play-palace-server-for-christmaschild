@@ -96,3 +96,12 @@ coup-option-changed-mandatory-coup = Mandatory Coup threshold changed.
 coup-set-timer-duration = Interrupt Timer Duration ({ $seconds }s)
 coup-enter-timer-duration = Enter duration for Challenge/Block window (3 - 15 seconds):
 coup-option-changed-timer = Timer duration changed.
+
+coup-action-block-ambassador = Mit dem Botschafter blocken
+coup-action-block-captain = Mit dem Kapitän blocken
+coup-action-block-with = Mit { $role } blocken
+coup-blocks-steal-ambassador = { $blocker } beansprucht den Botschafter, um { $target }s Raub zu blocken.
+coup-blocks-steal-captain = { $blocker } beansprucht den Kapitän, um { $target }s Raub zu blocken.
+coup-desc-mandatory-coup = Die Münzschwelle, bei der ein Spieler einen Putsch durchführen muss
+coup-desc-timer-duration = Wie lange Spieler Zeit haben, um anzufechten oder zu blocken, bevor sich eine Aktion auflöst
+

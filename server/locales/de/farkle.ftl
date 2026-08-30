@@ -66,3 +66,6 @@ farkle-option-changed-hot-dice-multiplier = Hot-Dice-Multiplikator auf { $enable
 
 # Action feedback
 farkle-minimum-initial-bank-score = Mindestwert für die Anfangs-Bankpunktzahl ist { $score }.
+
+farkle-desc-target-score = Die Punktzahl, die zum Gewinnen des Spiels nötig ist
+

@@ -30,3 +30,6 @@ language-uk = Ukrainisch
 language-vi = Vietnamesisch
 language-zh = Chinesisch
 language-zu = Zulu
+
+language-ja = Japanisch
+

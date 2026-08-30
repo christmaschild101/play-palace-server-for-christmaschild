@@ -43,3 +43,6 @@ lightturret-option-changed-rounds = Max. Runden auf { $rounds } gesetzt.
 
 # Gründe für deaktivierte Aktionen
 lightturret-you-are-eliminated = Sie wurden eliminiert.
+
+lightturret-desc-starting-power = Maximale Energie vor der Zerstörung der Seele
+

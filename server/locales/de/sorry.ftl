@@ -83,3 +83,75 @@ sorry-option-auto-apply-single-move = Auto apply single move: { $auto_apply_sing
 sorry-option-faster-setup-one-pawn-out = Faster setup (one pawn out): { $faster_setup_one_pawn_out }
 sorry-option-changed-auto-apply-single-move = Auto apply single move set to { $auto_apply_single_move }.
 sorry-option-changed-faster-setup-one-pawn-out = Faster setup set to { $faster_setup_one_pawn_out }.
+
+sorry-board-pawn-brief = Spielstein { $pawn } { $zone }
+sorry-board-player-line = { $player }: { $pawns }
+sorry-move-split7-option = Spielstein { $pawn_a } bewegt sich um { $steps_a }, Spielstein { $pawn_b } um { $steps_b }
+sorry-move-split7-pick = Teile 7 zwischen Spielstein { $pawn_a } und Spielstein { $pawn_b } auf
+sorry-pawn-captured = { $player } schickte den Spielstein { $pawn } von { $target_player } zurück zum Start.
+# Brettansicht
+sorry-view-board = Brett anzeigen
+sorry-view-pawns = Deine Spielsteine anzeigen
+sorry-view-your-pawn = Dein Spielstein { $pawn }: { $zone }.
+sorry-you-captured-pawn = Du hast den Spielstein { $pawn } von { $target_player } zurück zum Start geschickt.
+sorry-you-draw-announcement = Du ziehst { $card }.
+sorry-you-no-legal-moves = Du hast keine legalen Züge für { $card }.
+sorry-you-play-backward =
+    Du bewegst Spielstein { $pawn } um { $steps } zurück. Spielstein { $pawn } ist jetzt { $zone ->
+        [track] auf Spielfeld { $position }
+        [home_path] im Zielpfadschritt { $home_steps }
+        [home] zu Hause
+       *[other] im Start
+    }.
+sorry-you-play-forward =
+    Du bewegst Spielstein { $pawn } um { $steps } vor. Spielstein { $pawn } ist jetzt { $zone ->
+        [track] auf Spielfeld { $position }
+        [home_path] im Zielpfadschritt { $home_steps }
+        [home] zu Hause
+       *[other] im Start
+    }.
+sorry-you-play-sorry =
+    Sorry! Du ersetzt den Spielstein { $target_pawn } von { $target_player } durch Spielstein { $pawn }. Spielstein { $pawn } ist jetzt { $zone ->
+        [track] auf Spielfeld { $position }
+        [home_path] im Zielpfadschritt { $home_steps }
+        [home] zu Hause
+       *[other] im Start
+    }.
+sorry-you-play-split7 =
+    Du teilst 7: Spielstein { $pawn_a } bewegt sich um { $steps_a }, Spielstein { $pawn_b } um { $steps_b }. Spielstein { $pawn_a } ist jetzt { $a_zone ->
+        [track] auf Spielfeld { $a_position }
+        [home_path] im Zielpfadschritt { $a_home_steps }
+        [home] zu Hause
+       *[other] im Start
+    }, Spielstein { $pawn_b } ist jetzt { $b_zone ->
+        [track] auf Spielfeld { $b_position }
+        [home_path] im Zielpfadschritt { $b_home_steps }
+        [home] zu Hause
+       *[other] im Start
+    }.
+sorry-you-play-start =
+    Du bewegst Spielstein { $pawn } aus dem Start. Spielstein { $pawn } ist jetzt { $zone ->
+        [track] auf Spielfeld { $position }
+        [home_path] im Zielpfadschritt { $home_steps }
+        [home] zu Hause
+       *[other] im Start
+    }.
+sorry-you-play-swap =
+    Du tauschst Spielstein { $pawn } mit dem Spielstein { $target_pawn } von { $target_player }. Spielstein { $pawn } ist jetzt { $zone ->
+        [track] auf Spielfeld { $position }
+        [home_path] im Zielpfadschritt { $home_steps }
+        [home] zu Hause
+       *[other] im Start
+    }, der Spielstein { $target_pawn } von { $target_player } ist jetzt { $target_zone ->
+        [track] auf Spielfeld { $target_position }
+        [home_path] im Zielpfadschritt { $target_home_steps }
+        [home] zu Hause
+       *[other] im Start
+    }.
+# Gefangen-Ansagen
+sorry-your-pawn-captured = Dein Spielstein { $pawn } wurde von { $by_player } zurück zum Start geschickt.
+sorry-zone-home = zu Hause
+sorry-zone-home-path = im Zielpfadschritt { $steps }
+sorry-zone-start = im Start
+sorry-zone-track = auf Spielfeld { $position }
+

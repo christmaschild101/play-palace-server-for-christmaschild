@@ -14,3 +14,7 @@ metalpipe-set-multiple-bonks = Multiple bonks: { $enabled }
 metalpipe-option-changed-multiple-bonks = Multiple bonks set to { $enabled }.
 metalpipe-set-allow-self-bonk = Allow self-bonk: { $enabled }
 metalpipe-option-changed-allow-self-bonk = Allow self-bonk set to { $enabled }.
+
+metalpipe-desc-allow-self-bonk = Spieler können sich selbst dümmen.
+metalpipe-desc-multiple-bonks = Das Dümmen geht weiter, bis nur noch ein Spieler übrig ist.
+

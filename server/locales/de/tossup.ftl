@@ -54,3 +54,9 @@ tossup-rules-playpalace-desc = Gleichmäßige Verteilung. Fehlschlag, wenn alle 
 
 # Deaktivierte Gründe
 tossup-need-points = Sie brauchen Punkte zum Sichern.
+
+tossup-desc-rules = Wähle zwischen verschiedenen Regelwerken für Toss Up
+tossup-desc-starting-dice = Anzahl der Würfel, mit denen jeder Spieler pro Zug startet
+# Optionen
+tossup-desc-target-score = Der erste Spieler, der diese Punktzahl erreicht, gewinnt
+

@@ -29,3 +29,8 @@ pig-need-more-points = Sie brauchen mehr Punkte zum Sichern.
 
 # Validierungsfehler
 pig-error-min-bank-too-high = Mindestsicherung muss unter der Zielpunktzahl liegen.
+
+pig-desc-dice-sides = Welche Würfelart verwendet wird
+pig-desc-min-bank = Mindestpunktzahl pro Runde, bevor das Abkassieren erlaubt ist
+pig-desc-target-score = Die Punktzahl, die zum Gewinnen des Spiels nötig ist
+

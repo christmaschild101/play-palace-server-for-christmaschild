@@ -142,3 +142,6 @@ pirates-option-changed-stealing = Edelsteinstehlen auf { $mode } gesetzt.
 pirates-stealing-with-bonus = Mit Wurfbonus
 pirates-stealing-no-bonus = Ohne Wurfbonus
 pirates-stealing-disabled = Deaktiviert
+
+pirates-desc-gem-stealing = Kanonenkugeln stehlen Edelsteine, wenn sie treffen
+

@@ -32,3 +32,7 @@ ludo-enter-max-sixes = Enter max consecutive sixes
 ludo-option-changed-max-sixes = Max consecutive sixes set to { $value }.
 ludo-set-safe-start-squares = Safe start squares: { $safe_start_squares }
 ludo-option-changed-safe-start-squares = Safe start squares set to { $value }.
+
+ludo-desc-max-sixes = Nach so vielen Sechsen endet der Zug (verhindert unendliche Züge)
+ludo-desc-safe-start-squares = Das Startfeld jedes Spielers vor dem Schlagen schützen
+

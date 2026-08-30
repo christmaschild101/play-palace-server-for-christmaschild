@@ -204,3 +204,24 @@ lastcard-draw-penalty-none = No draw penalty active.
 # Validation errors
 lastcard-error-too-many-cards = Too many cards needed: { $players } players × { $hand_size } cards exceeds the 108-card deck.
 lastcard-error-hand-exceeds-max = Hand size ({ $hand_size }) cannot exceed the maximum hand size ({ $max_hand }).
+
+lastcard-desc-allow-multiple-play = Erlaube das Ausspielen mehrerer Karten desselben Rangs in einem Zug.
+lastcard-desc-buzzer-enabled = Aktiviere den Buzzer-Button, um Spieler zu ertappen, die vergessen, Letzte Karte zu rufen.
+lastcard-desc-challenge-wild-draw-four = Erlaube anzufechten, ob ein Wilder Vierer legal ausgespielt wurde.
+lastcard-desc-draw-limit = Maximale Anzahl an Karten pro Zug, wenn Ziehen-bis-spielbar aktiv ist. 0 bedeutet unbegrenzt.
+lastcard-desc-draw-until-playable = Ziehe weiter Karten, bis du eine spielbare bekommst.
+lastcard-desc-force-play = Spiele eine gezogene Karte automatisch, wenn sie spielbar ist.
+lastcard-desc-hand-size = Anzahl der Karten, die jedem Spieler zu Beginn einer Runde ausgeteilt werden.
+lastcard-desc-interrupt-timer = Sekunden für Reaktionen wie Einspringen und Anfechten.
+lastcard-desc-jump-in = Erlaube Spielern, außer der Reihe zu spielen, wenn sie eine identische Karte haben.
+lastcard-desc-last-card-callout = Verlangen, dass Spieler Letzte Karte rufen, wenn sie eine Karte übrig haben.
+lastcard-desc-max-hand-size = Maximale Anzahl an Karten, die ein Spieler halten kann. 0 bedeutet unbegrenzt.
+lastcard-desc-reverse-two-players = Wie sich Reverse-Karten in einem Zwei-Spieler-Spiel verhalten.
+lastcard-desc-scoring-mode = Wie Punkte am Ende jeder Runde vergeben werden.
+lastcard-desc-seven-card-rule = Spezialeffekt, wenn eine Sieben ausgespielt wird.
+lastcard-desc-skip-card-rule = Ob eine Skip-Karte nur den nächsten Spieler oder alle überspringt.
+lastcard-desc-stacking = Erlaube das Stapeln von Zwei-Ziehen- und Wild-Vierer-Karten, um die Strafe weiterzugeben.
+lastcard-desc-turn-timer = Zeitlimit für den Zug jedes Spielers. 0 bedeutet unbegrenzt.
+lastcard-desc-winning-score = Punktzahl, die zum Gewinnen des Spiels nötig ist.
+lastcard-desc-zero-card-rule = Spezialeffekt, wenn eine Null ausgespielt wird.
+

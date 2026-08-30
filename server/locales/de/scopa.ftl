@@ -74,3 +74,14 @@ scopa-error-not-enough-cards = Nicht genug Karten in { $decks } { $decks ->
     [one] Spieler
    *[other] Spieler
 } mit { $cards_per_deal } Karten jeweils. (Benötige { $cards_per_deal } × { $players } = { $cards_needed } Karten, habe aber nur { $total_cards }.)
+
+scopa-desc-cards-per-deal = Anzahl der Karten, die jeder Spieler pro Austeilung erhält. Restliche Karten kommen auf den Tisch.
+scopa-desc-decks = Wie viele 40-Karten-Decks verwendet werden (erlaubt mehr Spieler und Austeilungen)
+scopa-desc-escoba = Spanische Variante: Karten erfassen, die 15 ergeben (statt passenden Rang)
+scopa-desc-hints = Im Menü anzeigen, was jede Karte erfassen wird
+scopa-desc-instant-win = Scopas vergeben sofort Punkte und können das Spiel mitten in der Runde gewinnen
+scopa-desc-inverse = Das Erreichen der Zielpunktzahl eliminiert dich - der letzte verbleibende Spieler gewinnt!
+scopa-desc-mechanic = Wie sich Scopas auf die Wertung auswirken
+scopa-desc-target-score = Punkte, die zum Gewinnen des Spiels nötig sind
+scopa-desc-team-scoring = Beeinflusst die Endwertungsberechnungen der Runde. Wenn EIN, bündeln Teams Karten. Wenn AUS, treten Teamkollegen einzeln an (Vorsicht vor Gleichständen)
+

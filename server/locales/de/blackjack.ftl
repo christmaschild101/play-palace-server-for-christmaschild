@@ -372,3 +372,6 @@ twentyone-you-gain-change-card = You gain change card { $card }.
 twentyone-player-gains-change-card = { $player } gains a change card.
 
 
+
+game-name-twentyone = 21 (Überlebensregeln)
+

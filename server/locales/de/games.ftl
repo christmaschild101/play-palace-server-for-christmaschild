@@ -159,3 +159,42 @@ poker-unknown-hand = Unbekanntes Blatt
 
 # Validierungsfehler (spielübergreifend)
 game-error-invalid-team-mode = Der gewählte Teammodus ist für die aktuelle Spielerzahl nicht gültig.
+
+category-party-games = Partyspiele
+game-name-humanitycards = Cards Against Humanity
+option-back = Zurück
+option-deselect-all = Auswahl aufheben
+option-deselected-count =
+    { $count } { $count ->
+        [one] Element
+       *[other] Elemente
+    } abgewählt.
+option-max-selected =
+    Höchstens { $count } { $count ->
+        [one] Element
+       *[other] Elemente
+    } können ausgewählt werden.
+option-min-selected =
+    Mindestens { $count } { $count ->
+        [one] Element
+       *[other] Elemente
+    } müssen ausgewählt werden.
+option-select-all = Alle auswählen
+option-selected-count =
+    { $count } { $count ->
+        [one] Element
+       *[other] Elemente
+    } ausgewählt.
+rank-joker = Joker
+rank-joker-plural = Joker
+shape-circle = Kreis
+shape-cone = Kegel
+shape-cylinder = Zylinder
+shape-hexagon = Sechseck
+shape-oval = Oval
+shape-pentagon = Fünfeck
+shape-prism = Prisma
+shape-rectangle = Rechteck
+shape-square = Quadrat
+shape-triangle = Dreieck
+

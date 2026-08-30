@@ -107,3 +107,16 @@ hc-whose-judge = Who is judging
 hc-waiting-for = Es wird auf { $names } gewartet, bis die Karten eingereicht werden.
 hc-all-submitted-waiting-judge = Alle Spieler haben ihre Karten eingereicht. Es wird auf die Entscheidung von { $judge } gewartet.
 hc-waiting-for-judges = Es wird auf die Entscheidung von { $names } gewartet.
+
+hc-desc-card-packs = Welche Kartensets verwendet werden
+hc-desc-hand-size = Anzahl der Karten auf der Hand
+hc-desc-judging-method = Wie Gewinnerbeiträge gewählt werden. Unabhängig: Jeder Richter wählt einen Gewinner, ein Punkt pro Stimme. Jury: Mehrheit gewinnt; bei Gleichstand erhalten alle Gleichständigen einen Punkt. Zufällig: Methode wird jede Runde zufällig gewählt.
+hc-desc-winning-score = Punkte, die zum Gewinnen nötig sind
+hc-judge-voted = { $player } hat seine Wahl getroffen.
+hc-judging-method-independent = Unabhängig
+hc-judging-method-jury = Jury
+hc-judging-method-random = Zufällig
+hc-option-changed-judging-method = Bewertungsmethode auf { $mode } gesetzt.
+hc-select-judging-method = Bewertungsmethode auswählen
+hc-set-judging-method = Bewertungsmethode: { $mode }
+

@@ -118,3 +118,22 @@ chess-turn-timeout = Time's up!
 chess-timer-120 = 2 minutes
 chess-timer-180 = 3 minutes
 chess-timer-300 = 5 minutes
+
+chess-enter-move = Zug eingeben (z. B. e2-e4, o-o, o-o-o)
+chess-move-parse-error = Konnte diesen Zug nicht verstehen. Versuche e2-e4, pe2-e4, o-o oder o-o-o.
+chess-piece-bishop-gender = m
+chess-piece-king-gender = m
+chess-piece-knight-gender = m
+# Grammatikgeschlecht der Spielfigur (m = männlich, f = weiblich)
+# Übersetzer: passe dies an das grammatische Geschlecht deiner Sprache an.
+chess-piece-pawn-gender = m
+chess-piece-queen-gender = f
+chess-piece-rook-gender = m
+# Aufgabe
+chess-resign = Aufgeben
+chess-resign-confirm = Bist du sicher, dass du aufgeben möchtest?
+chess-resign-no = Nein, weiter spielen
+chess-resign-yes = Ja, aufgeben
+# Zug eingeben
+chess-type-move = Gib einen Zug ein
+

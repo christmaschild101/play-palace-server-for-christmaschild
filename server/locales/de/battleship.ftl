@@ -116,3 +116,9 @@ battleship-enemy-ship-sunk = { $ship } (size { $size }): Sunk
 # End screen
 battleship-winner-line = { $player } wins!
 battleship-stats-line = { $player }: { $shots } shots fired, { $hits } hits, { $accuracy }% accuracy
+
+battleship-desc-grid-size = Größe des Kampfrasters
+battleship-desc-placement-mode = Wie Schiffe auf dem Spielfeld platziert werden
+battleship-desc-replay-on-hit = Erhalte einen Extraschuss, wenn du einen Treffer erzielst
+battleship-desc-turn-timer = Zeitlimit für jeden Zug
+

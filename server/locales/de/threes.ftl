@@ -42,3 +42,6 @@ threes-must-bank = Sie müssen jetzt sichern.
 threes-roll-first = Sie müssen zuerst würfeln.
 threes-keep-all-first = Behalten Sie zuerst alle Würfel zum Sichern.
 threes-last-die = Dies ist Ihr letzter Würfel.
+
+threes-desc-rounds = Wie viele Runden gespielt werden
+

@@ -161,3 +161,17 @@ milebymile-safety-effect-extra-tank = Jetzt vor Liegengeblieben geschützt.
 milebymile-safety-effect-puncture-proof = Jetzt vor Reifenpanne geschützt.
 milebymile-safety-effect-driving-ace = Jetzt vor Unfall geschützt.
 milebymile-safety-effect-right-of-way = Jetzt vor Stopp und Tempolimit geschützt.
+
+milebymile-cant-discard-playable = Du kannst eine Karte, die gespielt werden kann, nicht ablegen.
+milebymile-desc-always-discard = Wenn aktiviert, drücke auf einer Karte Rücktaste, um sie abzulegen, auch wenn sie gespielt werden könnte.
+milebymile-desc-karma = Teams starten mit Karma-Schutz und verlieren ihn beim Angreifen. Falsche-Tugend-Karten können Karma wiederherstellen.
+milebymile-desc-perfect-crossing = Verhindere das Ausspielen von Distanzkarten, die das Rennziel überschreiten würden
+milebymile-desc-reshuffle = Wenn das Deck aufgebraucht ist, mische den Ablagestapel, um fortzufahren. Wenn deaktiviert, endet das Rennen, wenn niemand spielbare Karten hat.
+milebymile-desc-rig = Deckzusammensetzung und Handregeln ändern
+milebymile-desc-round-distance = Zieldistanz für jedes Rennen
+milebymile-desc-stacking = Erlaube das Ausspielen mehrerer Gefahrenkarten auf dasselbe Team
+milebymile-desc-winning-score = Gesamte Punkte, die zum Gewinnen des Spiels nötig sind
+milebymile-discard-confirm = Möchtest du diese Karte ablegen?
+milebymile-option-changed-always-discard = Immer ablegen erlaubt { $enabled }.
+milebymile-toggle-always-discard = Immer ablegen erlaubt: { $enabled }
+

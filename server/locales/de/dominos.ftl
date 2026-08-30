@@ -97,3 +97,10 @@ dominos-no-other-players = No other players.
 
 # End screen
 dominos-line-format = { $rank }. { $player }: { $points }
+
+dominos-desc-domino-set = Mit welchem Dominosatz gespielt wird
+dominos-desc-draw-mode = Der Ziehmodus erlaubt das Ziehen aus dem Vorrat; der Blockmodus nicht
+dominos-desc-opening-rule = Wie der erste Spieler jeder Runde bestimmt wird
+dominos-desc-spinner = Ob das erste gespielte Doppel in alle vier Richtungen verzweigen darf
+dominos-desc-target-score = Die Punktzahl, die zum Gewinnen des Spiels nötig ist
+

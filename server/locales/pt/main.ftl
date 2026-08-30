@@ -359,3 +359,10 @@ no-admins-to-promote-developer = Nenhum administrador disponível para promover 
 no-developers-to-demote = Nenhum desenvolvedor disponível para rebaixar.
 promote-developer-unavailable = { $player } não pode ser promovido a desenvolvedor.
 demote-developer-unavailable = { $player } não pode ser rebaixado de desenvolvedor.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Enquanto a localização estiver em andamento, você não pode colocar os bots online.
+virtual-bots-bring-online = Colocar um bot online
+virtual-bots-brought-online = O bot virtual { $name } foi colocado online.
+virtual-bots-already-online = O bot virtual { $name } já está online.
+virtual-bots-all-online = Todos os bots virtuais já estão online.

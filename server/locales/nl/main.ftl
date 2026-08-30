@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Geen beheerders beschikbaar om te bevorderen to
 no-developers-to-demote = Geen ontwikkelaars beschikbaar om te degraderen.
 promote-developer-unavailable = { $player } kan niet worden bevorderd tot ontwikkelaar.
 demote-developer-unavailable = { $player } kan niet worden gedegradeerd van ontwikkelaar.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Zolang de lokalisatie bezig is, kunt u geen bots online brengen.
+virtual-bots-bring-online = Bot online brengen
+virtual-bots-brought-online = Virtuele bot { $name } is online gebracht.
+virtual-bots-already-online = Virtuele bot { $name } is al online.
+virtual-bots-all-online = Alle virtuele bots zijn al online.

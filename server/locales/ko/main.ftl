@@ -406,3 +406,10 @@ no-admins-to-promote-developer = 개발자로 승급할 관리자가 없습니�
 no-developers-to-demote = 강등할 개발자가 없습니다.
 promote-developer-unavailable = { $player } 님은 개발자로 승급할 수 없습니다.
 demote-developer-unavailable = { $player } 님은 개발자에서 강등할 수 없습니다.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = 현지화 작업 중에는 봇을 온라인으로 전환할 수 없습니다.
+virtual-bots-bring-online = 봇 온라인으로 전환
+virtual-bots-brought-online = 가상 봇 { $name } 님이 온라인 상태가 되었습니다.
+virtual-bots-already-online = 가상 봇 { $name } 님은 이미 온라인 상태입니다.
+virtual-bots-all-online = 모든 가상 봇이 이미 온라인 상태입니다.

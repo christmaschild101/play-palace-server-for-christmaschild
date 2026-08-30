@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Хөгжүүлэгч болгох админ б
 no-developers-to-demote = Буцаах хөгжүүлэгч байхгүй.
 promote-developer-unavailable = { $player }-г хөгжүүлэгч болгох боломжгүй.
 demote-developer-unavailable = { $player }-г хөгжүүлэгчээс буцаах боломжгүй.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Нутгийн хэлд шилжиж байгаа үед ботуудыг онлайнд оруулах боломжгүй.
+virtual-bots-bring-online = Ботыг онлайнд оруулах
+virtual-bots-brought-online = Виртуал бот { $name } онлайнд орлоо.
+virtual-bots-already-online = Виртуал бот { $name } аль хэдийн онлайнд байна.
+virtual-bots-all-online = Бүх виртуал ботууд аль хэдийн онлайнд байна.

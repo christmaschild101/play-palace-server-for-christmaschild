@@ -406,3 +406,10 @@ no-admins-to-promote-developer = 開発者に昇格できる管理者がいま�
 no-developers-to-demote = 降格できる開発者がいません。
 promote-developer-unavailable = { $player } は開発者に昇格できません。
 demote-developer-unavailable = { $player } は開発者から降格できません。
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = ローカライズ処理中のため、ボットをオンラインにできません。
+virtual-bots-bring-online = ボットをオンラインにする
+virtual-bots-brought-online = 仮想ボット { $name } がオンラインになりました。
+virtual-bots-already-online = 仮想ボット { $name } はすでにオンラインです。
+virtual-bots-all-online = すべての仮想ボットはすでにオンラインです。

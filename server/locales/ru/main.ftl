@@ -458,3 +458,10 @@ no-admins-to-promote-developer = Нет доступных администра�
 no-developers-to-demote = Нет доступных разработчиков для снятия.
 promote-developer-unavailable = { $player } не может быть назначен разработчиком.
 demote-developer-unavailable = { $player } не может быть снят с разработчика.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Пока идёт локализация, вы не можете вывести ботов в сеть.
+virtual-bots-bring-online = Вывести бота в сеть
+virtual-bots-brought-online = Виртуальный бот { $name } вышел в сеть.
+virtual-bots-already-online = Виртуальный бот { $name } уже в сети.
+virtual-bots-all-online = Все виртуальные боты уже в сети.

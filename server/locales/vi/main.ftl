@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Không có quản trị viên để thăng ch�
 no-developers-to-demote = Không có nhà phát triển để giáng chức.
 promote-developer-unavailable = { $player } không thể được thăng chức thành nhà phát triển.
 demote-developer-unavailable = { $player } không thể bị giáng chức khỏi nhà phát triển.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Trong khi đang bản địa hoá, bạn không thể đưa bot lên trực tuyến.
+virtual-bots-bring-online = Đưa bot trực tuyến
+virtual-bots-brought-online = Bot ảo { $name } đã được đưa lên trực tuyến.
+virtual-bots-already-online = Bot ảo { $name } đã trực tuyến.
+virtual-bots-all-online = Tất cả bot ảo đã trực tuyến.

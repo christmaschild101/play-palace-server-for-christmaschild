@@ -3014,3 +3014,36 @@ def test_merge_managed_definitions_applies_tombstones_and_overrides():
     assert manager._bot_profiles_map["Alpha"] == "patron"
     assert manager._bot_profiles_map["NewBot"] == "host"
     assert manager._managed_names == {"NewBot"}
+
+
+def test_bring_bot_online_offline_and_instantiation(monkeypatch):
+    manager = _roster_manager(names=["Alpha", "Beta"])
+    # Alpha exists as an offline bot; Beta has not been instantiated yet.
+    manager._bots["Alpha"] = VirtualBot("Alpha", state=VirtualBotState.OFFLINE)
+    monkeypatch.setattr("server.core.virtual_bots.random.randint", lambda a, b: a)
+
+    # A not-yet-instantiated bot is created (with its roster profile) and brought online.
+    assert manager.bring_bot_online("Beta") is True
+    assert manager._bots["Beta"].state == VirtualBotState.ONLINE_IDLE
+    assert "Beta" in manager._server._users
+    assert manager._bot_profiles_map["Beta"] == "default"
+
+    # Already online -> rejected.
+    assert manager.bring_bot_online("Beta") is False
+
+    # Existing offline bot -> brought online.
+    assert manager.bring_bot_online("Alpha") is True
+    assert manager._bots["Alpha"].state == VirtualBotState.ONLINE_IDLE
+
+    # Unknown name -> rejected.
+    assert manager.bring_bot_online("Ghost") is False
+
+
+def test_bring_bot_online_username_taken():
+    manager = _roster_manager(names=["Alpha"])
+    # Username is in use by a real user; the bot must stay offline.
+    manager._server._users["Alpha"] = object()
+    manager._bots["Alpha"] = VirtualBot("Alpha", state=VirtualBotState.OFFLINE)
+
+    assert manager.bring_bot_online("Alpha") is False
+    assert manager._bots["Alpha"].state == VirtualBotState.OFFLINE

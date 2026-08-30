@@ -397,3 +397,10 @@ no-admins-to-promote-developer = Brak administratorów do awansu na programistę
 no-developers-to-demote = Brak programistów do degradacji.
 promote-developer-unavailable = { $player } nie może zostać awansowany na programistę.
 demote-developer-unavailable = { $player } nie może zostać zdegradowany z programisty.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Dopóki trwa lokalizacja, nie możesz włączyć botów.
+virtual-bots-bring-online = Włącz bota
+virtual-bots-brought-online = Wirtualny bot { $name } został włączony.
+virtual-bots-already-online = Wirtualny bot { $name } jest już włączony.
+virtual-bots-all-online = Wszystkie wirtualne boty są już włączone.

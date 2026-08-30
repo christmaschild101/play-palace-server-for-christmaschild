@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Nema administratora za unapređenje u programer
 no-developers-to-demote = Nema programera za smanjenje.
 promote-developer-unavailable = { $player } se ne može unaprijediti u programera.
 demote-developer-unavailable = { $player } se ne može smanjiti iz programera.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Dok je lokalizacija u tijeku, ne možete botove dovesti online.
+virtual-bots-bring-online = Dovedi bota online
+virtual-bots-brought-online = Virtualni bot { $name } doveden je online.
+virtual-bots-already-online = Virtualni bot { $name } već je online.
+virtual-bots-all-online = Svi virtualni botovi već su online.

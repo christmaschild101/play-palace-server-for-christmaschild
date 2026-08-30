@@ -418,3 +418,10 @@ no-admins-to-promote-developer = مدیری برای ارتقا به توسعه�
 no-developers-to-demote = توسعه‌دهنده‌ای برای تنزل موجود نیست.
 promote-developer-unavailable = { $player } نمی‌تواند به توسعه‌دهنده ارتقا یابد.
 demote-developer-unavailable = { $player } نمی‌تواند از توسعه‌دهنده تنزل یابد.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = در حالی که بومی‌سازی در حال انجام است، نمی‌توانید ربات‌ها را آنلاین کنید.
+virtual-bots-bring-online = آنلاین کردن ربات
+virtual-bots-brought-online = ربات مجازی { $name } آنلاین شد.
+virtual-bots-already-online = ربات مجازی { $name } قبلاً آنلاین است.
+virtual-bots-all-online = همه ربات‌های مجازی از قبل آنلاین هستند.

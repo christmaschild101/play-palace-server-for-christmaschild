@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Geliştiriciye terfi ettirilecek yönetici yok.
 no-developers-to-demote = Düşürülecek geliştirici yok.
 promote-developer-unavailable = { $player } geliştiriciye terfi ettirilemez.
 demote-developer-unavailable = { $player } geliştiriciden düşürülemez.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Yerelleştirme sürerken botları çevrimiçi duruma getiremezsiniz.
+virtual-bots-bring-online = Botu çevrimiçi yap
+virtual-bots-brought-online = Sanal bot { $name } çevrimiçi duruma getirildi.
+virtual-bots-already-online = Sanal bot { $name } zaten çevrimiçi.
+virtual-bots-all-online = Tüm sanal botlar zaten çevrimiçi.

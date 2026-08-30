@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Awekho okuphatha abatholakalayo ukuthi bakhuphu
 no-developers-to-demote = Awekho abathuthukisi abatholakalayo ukuze behliswe.
 promote-developer-unavailable = { $player } akakwazi ukukhuphuka abe ngumthuthukisi.
 demote-developer-unavailable = { $player } akakwazi ukwehla kusuka kumthuthukisi.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Ngenkathi ukufaka ulimi kusaqhubeka, awukwazi ukuletha amabhothi kwi-inthanethi.
+virtual-bots-bring-online = Lethela ibhothi kwi-inthanethi
+virtual-bots-brought-online = Ibhothi labantu abaningi { $name } selilethwe kwi-inthanethi.
+virtual-bots-already-online = Ibhothi labantu abaningi { $name } selivele likwi-inthanethi.
+virtual-bots-all-online = Wonke amabhothi abantu abaningi asebekwi-inthanethi.

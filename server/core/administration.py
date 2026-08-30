@@ -523,6 +523,10 @@ class AdministrationMixin:
                 id="clear",
             ),
             MenuItem(
+                text=Localization.get(user.locale, "virtual-bots-bring-online"),
+                id="online",
+            ),
+            MenuItem(
                 text=Localization.get(user.locale, "virtual-bots-status"),
                 id="status",
             ),
@@ -694,6 +698,29 @@ class AdministrationMixin:
             "menu": "delete_bot_confirm_menu",
             "bot_name": bot_name,
         }
+
+    def _show_bring_online_bot_menu(self, user: NetworkUser) -> None:
+        """Show list of offline virtual bots that can be brought online."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            _speak_activity(user, "virtual-bots-not-available")
+            self._show_virtual_bots_menu(user)
+            return
+        roster = manager.get_roster()
+        offline = [entry for entry in roster if not entry["online"]]
+        if not offline:
+            user.speak_l("virtual-bots-all-online", buffer="misc")
+            self._show_virtual_bots_menu(user)
+            return
+        items = [MenuItem(text=entry["name"], id=f"online_{entry['name']}") for entry in offline]
+        items.append(MenuItem(text=Localization.get(user.locale, "back"), id="back"))
+        user.show_menu(
+            "bring_online_bot_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {"menu": "bring_online_bot_menu"}
 
     # ==================== Menu Selection Handlers ====================
 
@@ -1064,6 +1091,8 @@ class AdministrationMixin:
         """Handle virtual bots menu selection."""
         if selection_id == "fill":
             await self._fill_virtual_bots(user)
+        elif selection_id == "online":
+            self._show_bring_online_bot_menu(user)
         elif selection_id == "clear":
             self._show_virtual_bots_clear_confirm_menu(user)
         elif selection_id == "status":
@@ -1172,6 +1201,16 @@ class AdministrationMixin:
             await self._delete_virtual_bot(user, bot_name)
         else:
             self._show_delete_bot_menu(user)
+
+    async def _handle_bring_bot_online_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle bring bot online menu selection."""
+        if selection_id == "back":
+            self._show_virtual_bots_menu(user)
+        elif selection_id.startswith("online_"):
+            bot_name = selection_id[7:]  # Remove "online_" prefix
+            await self._bring_one_bot_online(user, bot_name)
 
     # ==================== Admin Actions ====================
 
@@ -1726,6 +1765,10 @@ class AdministrationMixin:
     @require_developer
     async def _fill_virtual_bots(self, owner: NetworkUser) -> None:
         """Fill the server with virtual bots from config."""
+        if Localization.is_warmup_active():
+            owner.speak_l("virtual-bots-fill-localization-in-progress", buffer="misc")
+            self._show_virtual_bots_menu(owner)
+            return
         if not hasattr(self, "_virtual_bots") or not self._virtual_bots:
             owner.speak_l("virtual-bots-not-available", buffer="misc")
             self._show_virtual_bots_menu(owner)
@@ -1740,6 +1783,26 @@ class AdministrationMixin:
             owner.speak_l("virtual-bots-already-filled", buffer="misc")
 
         self._show_virtual_bots_menu(owner)
+
+    @require_developer
+    async def _bring_one_bot_online(self, owner: NetworkUser, bot_name: str) -> None:
+        """Bring a single virtual bot online."""
+        if Localization.is_warmup_active():
+            owner.speak_l("virtual-bots-fill-localization-in-progress", buffer="misc")
+            self._show_bring_online_bot_menu(owner)
+            return
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            owner.speak_l("virtual-bots-not-available", buffer="misc")
+            self._show_virtual_bots_menu(owner)
+            return
+        if not manager.bring_bot_online(bot_name):
+            owner.speak_l("virtual-bots-already-online", name=bot_name, buffer="misc")
+            self._show_bring_online_bot_menu(owner)
+            return
+        manager.save_state()
+        owner.speak_l("virtual-bots-brought-online", name=bot_name, buffer="misc")
+        self._show_bring_online_bot_menu(owner)
 
     @require_developer
     async def _clear_virtual_bots(self, owner: NetworkUser) -> None:

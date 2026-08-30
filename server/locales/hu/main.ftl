@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Nincs adminisztrátor a fejlesztővé lépteté
 no-developers-to-demote = Nincs fejlesztő a rang megvonáshoz.
 promote-developer-unavailable = { $player } nem léptethető fejlesztővé.
 demote-developer-unavailable = { $player } fejlesztői rangja nem vonható meg.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Amíg a lokalizáció folyamatban van, nem hozhatja online a botokat.
+virtual-bots-bring-online = Bot online állapotba hozása
+virtual-bots-brought-online = A(z) { $name } virtuális bot online állapotba került.
+virtual-bots-already-online = A(z) { $name } virtuális bot már online van.
+virtual-bots-all-online = Az összes virtuális bot már online van.

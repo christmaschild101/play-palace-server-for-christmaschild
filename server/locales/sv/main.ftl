@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Inga administratörer finns att befordra till u
 no-developers-to-demote = Inga utvecklare finns att degradera.
 promote-developer-unavailable = { $player } kan inte befordras till utvecklare.
 demote-developer-unavailable = { $player } kan inte degraderas från utvecklare.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Medan lokaliseringen pågår kan du inte ta in bottar online.
+virtual-bots-bring-online = Ta in en bot online
+virtual-bots-brought-online = Den virtuella botten { $name } är nu online.
+virtual-bots-already-online = Den virtuella botten { $name } är redan online.
+virtual-bots-all-online = Alla virtuella bottar är redan online.

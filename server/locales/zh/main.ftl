@@ -349,3 +349,10 @@ no-admins-to-promote-developer = 没有可升级为开发者的管理员。
 no-developers-to-demote = 没有可降级的开发者。
 promote-developer-unavailable = 无法将 { $player } 升级为开发者。
 demote-developer-unavailable = 无法将 { $player } 从开发者降级。
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = 在本地化进行中时，您无法让机器人上线。
+virtual-bots-bring-online = 让机器人上线
+virtual-bots-brought-online = 虚拟机器人 { $name } 已上线。
+virtual-bots-already-online = 虚拟机器人 { $name } 已经在线。
+virtual-bots-all-online = 所有虚拟机器人均已在线。

@@ -406,3 +406,10 @@ no-admins-to-promote-developer = ไม่มีผู้ดูแลที่�
 no-developers-to-demote = ไม่มีนักพัฒนาที่จะลดได้
 promote-developer-unavailable = ไม่สามารถเลื่อน { $player } เป็นนักพัฒนาได้
 demote-developer-unavailable = ไม่สามารถลด { $player } จากนักพัฒนาได้
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = ระหว่างกำลังแปลภาษา คุณไม่สามารถนำบอทขึ้นออนไลน์ได้
+virtual-bots-bring-online = นำบอทขึ้นออนไลน์
+virtual-bots-brought-online = นำบอทเสมือน { $name } ขึ้นออนไลน์แล้ว
+virtual-bots-already-online = บอทเสมือน { $name } ออนไลน์อยู่แล้ว
+virtual-bots-all-online = บอทเสมือนทั้งหมดออนไลน์อยู่แล้ว

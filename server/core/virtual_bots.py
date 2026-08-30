@@ -421,6 +421,39 @@ class VirtualBotManager:
             db.delete_virtual_bot(name)
         return True, tables_killed
 
+    def bring_bot_online(self, name: str) -> bool:
+        """Bring a single named virtual bot online.
+
+        The bot is created (with its roster profile) if it has not yet been
+        instantiated, then brought online with its presence announced. Returns
+        True if the bot ends up online, or False if the name is unknown, the
+        bot is already online, or its username is currently in use by a real
+        user.
+        """
+        if name not in self._config.names:
+            return False
+
+        bot = self._bots.get(name)
+        if bot and bot.state != VirtualBotState.OFFLINE:
+            return False
+
+        if bot is None:
+            profile = self._bot_profiles_map.get(name, self._config.default_profile)
+            groups = tuple(sorted(self._bot_memberships.get(name, set())))
+            bot = VirtualBot(
+                name=name,
+                state=VirtualBotState.OFFLINE,
+                profile=profile,
+                groups=groups,
+            )
+            self._bots[name] = bot
+
+        if bot.name in self._server._users:
+            return False
+
+        self._bring_bot_online(bot)
+        return bot.state != VirtualBotState.OFFLINE
+
     def _persist_definition(self, name: str, profile: str) -> None:
         """Save a bot definition (clearing any tombstone) to the database."""
         db = self._server._db

@@ -422,3 +422,10 @@ no-admins-to-promote-developer = Niciun administrator disponibil pentru promovar
 no-developers-to-demote = Niciun dezvoltator disponibil pentru retrogradare.
 promote-developer-unavailable = { $player } nu poate fi promovat la dezvoltator.
 demote-developer-unavailable = { $player } nu poate fi retrogradat din dezvoltator.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Cât timp localizarea este în curs, nu puteți aduce roboții online.
+virtual-bots-bring-online = Aduceți un bot online
+virtual-bots-brought-online = Botul virtual { $name } a fost adus online.
+virtual-bots-already-online = Botul virtual { $name } este deja online.
+virtual-bots-all-online = Toți roboții virtuali sunt deja online.

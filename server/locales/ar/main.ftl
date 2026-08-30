@@ -504,3 +504,10 @@ no-admins-to-promote-developer = لا يوجد مدراء متاحون للتر�
 no-developers-to-demote = لا يوجد مطورون متاحون للخفض.
 promote-developer-unavailable = لا يمكن ترقية { $player } إلى مطور.
 demote-developer-unavailable = لا يمكن خفض { $player } من مطور.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = أثناء عملية الترجمة، لا يمكنك جلب البوتات إلى الاتصال.
+virtual-bots-bring-online = جلب بوت إلى الاتصال
+virtual-bots-brought-online = تم جلب البوت الافتراضي { $name } إلى الاتصال.
+virtual-bots-already-online = البوت الافتراضي { $name } متصل بالفعل.
+virtual-bots-all-online = جميع البوتات الافتراضية متصلة بالفعل.

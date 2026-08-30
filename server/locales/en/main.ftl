@@ -462,6 +462,13 @@ virtual-bots-no-bots = There are no virtual bots to manage.
 virtual-bots-delete-confirm = Delete virtual bot { $name }? This will close any table it is in.
 virtual-bots-no-profiles = No profiles are available.
 
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = While localization is in progress, you cannot bring bots online.
+virtual-bots-bring-online = Bring Bot Online
+virtual-bots-brought-online = Virtual bot { $name } brought online.
+virtual-bots-already-online = Virtual bot { $name } is already online.
+virtual-bots-all-online = All virtual bots are already online.
+
 # Documents
 documents = Documents
 documents-menu-title = Documents System

@@ -2336,6 +2336,10 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 self._handle_delete_bot_confirm_selection,
                 (user, selection_id, state),
             ),
+            "bring_online_bot_menu": (
+                self._handle_bring_bot_online_selection,
+                (user, selection_id),
+            ),
             "reboot_server_confirm_menu": (
                 self._handle_reboot_server_confirm_selection,
                 (user, selection_id),

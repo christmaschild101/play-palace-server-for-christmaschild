@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Tidak ada admin untuk dinaikkan menjadi pengemb
 no-developers-to-demote = Tidak ada pengembang untuk diturunkan.
 promote-developer-unavailable = { $player } tidak dapat dinaikkan menjadi pengembang.
 demote-developer-unavailable = { $player } tidak dapat diturunkan dari pengembang.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Selama lokalisasi berlangsung, Anda tidak dapat membuat bot menjadi online.
+virtual-bots-bring-online = Buat bot online
+virtual-bots-brought-online = Bot virtual { $name } telah dibuat online.
+virtual-bots-already-online = Bot virtual { $name } sudah online.
+virtual-bots-all-online = Semua bot virtual sudah online.

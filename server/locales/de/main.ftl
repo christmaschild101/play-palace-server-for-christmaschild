@@ -418,3 +418,10 @@ no-admins-to-promote-developer = Keine Administratoren für die Beförderung zum
 no-developers-to-demote = Keine Entwickler für den Statusentzug verfügbar.
 promote-developer-unavailable = { $player } kann nicht zum Entwickler befördert werden.
 demote-developer-unavailable = { $player } kann der Entwicklerstatus nicht entzogen werden.
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = Solange die Lokalisierung läuft, können Sie keine Bots online schalten.
+virtual-bots-bring-online = Bot online schalten
+virtual-bots-brought-online = Virtueller Bot { $name } wurde online geschaltet.
+virtual-bots-already-online = Virtueller Bot { $name } ist bereits online.
+virtual-bots-all-online = Alle virtuellen Bots sind bereits online.

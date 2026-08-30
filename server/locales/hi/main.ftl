@@ -418,3 +418,10 @@ no-admins-to-promote-developer = डेवलपर बनाने के ल�
 no-developers-to-demote = हटाने के लिए कोई डेवलपर उपलब्ध नहीं है।
 promote-developer-unavailable = { $player } को डेवलपर नहीं बनाया जा सकता।
 demote-developer-unavailable = { $player } को डेवलपर से नहीं हटाया जा सकता।
+
+# Virtual bots (bring specific bots online)
+virtual-bots-fill-localization-in-progress = लोकलाइज़ेशन चल रहा है, तब आप बॉट्स को ऑनलाइन नहीं ला सकते।
+virtual-bots-bring-online = बॉट ऑनलाइन लाएँ
+virtual-bots-brought-online = वर्चुअल बॉट { $name } ऑनलाइन आ गया।
+virtual-bots-already-online = वर्चुअल बॉट { $name } पहले से ऑनलाइन है।
+virtual-bots-all-online = सभी वर्चुअल बॉट्स पहले से ऑनलाइन हैं।

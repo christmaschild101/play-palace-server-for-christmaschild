@@ -4,10 +4,13 @@ This document records changes to the PlayPalace server. New entries are added at
 
 ## 2026-08-30
 
-## 2026-08-30
+- Server startup is much faster: locale bundles are now **cached in compiled form** (the generated Python code objects), so subsequent restarts load all languages in under a second instead of recompiling every `.ftl` file from scratch. The cache is per-locale and version-aware — a changed translation, a new language, a Python upgrade, or a `fluent-compiler` upgrade only triggers a one-time recompile for what actually changed, and anything missing or corrupt falls back to the normal compile path automatically. The existing cache can still be disabled with `PLAYPALACE_DISABLE_LOCALE_CACHE=true`.
+
+## 2026-08-30 (earlier)
 
 - Fixed the game categories menu showing broken labels like `[dice]` and `[poker]` for Battle, Bunko, Citadels, Color Game, Dead Man's Deck, Dead Man's Poker, and Tien Len. These games now use the same localized category identifiers as every other game, so the menu is fully translated again and the error log stops filling with localization KeyErrors.
 - Added a server-side **bot presence & chat** system for virtual bots. When enabled, virtual bots emit real chat lines (greetings, in-game banter, "gg" after games, idle chatter) through the existing chat packet, plus more human-like session cadence (burst logins, AFK stretches, hesitation before actions). It is fully **opt-in per profile** — existing bots behave exactly as before until a profile opts in via the admin menu (Virtual Bots → Presence & Chat) or `config.toml`. Guardrails include a persisted kill switch, per-bot hourly and global per-minute chat caps, a minimum gap between bot messages, and quiet hours. All of it is server-side: no client changes and no new packet types.
+
 ## 2026-08-29
 
 - Developers and the server owner can now take a **specific virtual bot offline** from the admin menu (Virtual Bots → Take Bot Offline). The bot leaves any table it is in and its departure is announced to everyone, mirroring the existing "Bring Bot Online" action.

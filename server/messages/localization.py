@@ -1,16 +1,22 @@
 """Localization system using Mozilla Fluent."""
 
+import base64
 import hashlib
 import json
 import logging
+import marshal
 import os
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from babel.lists import format_list
 from fluent_compiler.bundle import FluentBundle
 from fluent_compiler.compiler import compile_messages
 from fluent_compiler.resource import FtlResource
+
+if TYPE_CHECKING:
+    from fluent_compiler.compiler import CompiledFtl
 
 
 LOG = logging.getLogger("playpalace.localization")
@@ -29,7 +35,7 @@ class Localization:
     _cache_dir: Path | None = None
     _cache_enabled: bool = True
     _warmup_active: bool = False
-    _CACHE_VERSION = "1"
+    _CACHE_VERSION = "2"
     _CACHE_DISABLE_ENV = "PLAYPALACE_DISABLE_LOCALE_CACHE"
     _CACHE_DIR_ENV = "PLAYPALACE_LOCALE_CACHE_DIR"
     _enabled_locales: set[str] | None = None  # None = all locales
@@ -144,6 +150,16 @@ class Localization:
         digest = hashlib.sha256()
         digest.update(cls._CACHE_VERSION.encode("utf-8"))
         digest.update(actual_locale.encode("utf-8"))
+        # Compiled code objects are only valid for the exact Python and
+        # fluent-compiler versions that produced them.
+        digest.update(sys.version_info.major.to_bytes(4, "big", signed=False))
+        digest.update(sys.version_info.minor.to_bytes(4, "big", signed=False))
+        try:
+            from importlib import metadata as _metadata
+
+            digest.update(_metadata.version("fluent-compiler").encode("utf-8"))
+        except Exception:  # noqa: BLE001 - best-effort version pinning
+            pass
 
         payloads: list[str] = []
         for ftl_file in ftl_files:
@@ -175,9 +191,10 @@ class Localization:
                 raise ValueError("Cache fingerprint mismatch")
             if payload.get("locale") != actual_locale:
                 raise ValueError("Cache locale mismatch")
-            payloads = payload["payloads"]
-            if not isinstance(payloads, list):
-                raise ValueError("Cache payloads missing")
+            if not isinstance(payload.get("code"), str):
+                raise ValueError("Cache code missing")
+            if not isinstance(payload.get("mapping"), dict):
+                raise ValueError("Cache mapping missing")
         except Exception:
             LOG.debug("Discarding corrupt locale cache for '%s'", actual_locale, exc_info=True)
             try:
@@ -186,7 +203,68 @@ class Localization:
                 pass
             return None
 
-        return cls._compile_bundle(actual_locale, payloads, fingerprint, write_cache=False)
+        try:
+            return cls._rebuild_bundle_from_cache(actual_locale, payload)
+        except Exception:
+            LOG.debug(
+                "Discarding unrebuildable locale cache for '%s'", actual_locale, exc_info=True
+            )
+            try:
+                cache_path.unlink()
+            except FileNotFoundError:
+                pass
+            return None
+
+    @classmethod
+    def _rebuild_bundle_from_cache(cls, actual_locale: str, payload: dict) -> FluentBundle:
+        """Rebuild a compiled bundle from cached code objects (no recompilation).
+
+        The cached ``code`` is a base64-encoded :mod:`marshal` dump of the
+        generated Python module that ``compile_messages`` produces. We rebuild
+        the exact module globals seed it expects — the fluent_compiler runtime
+        helpers, builtins, the babel locale, and the tiny plural-form closure —
+        then exec the code object and wire up the message-id -> function map.
+        Any failure here is caught by the caller and falls back to a normal
+        compile.
+        """
+        from fluent_compiler import runtime as _fc_runtime
+        import babel as _babel
+        import builtins as _builtins
+
+        code_bytes = base64.b64decode(payload["code"])
+        code_obj = marshal.loads(code_bytes)
+
+        # Same seed as fluent_compiler.compiler.messages_to_module builds:
+        # runtime helpers + builtins + locale + plural-form function.
+        module_globals: dict = {k: getattr(_fc_runtime, k) for k in _fc_runtime.__all__}
+        module_globals.update(_builtins.__dict__)
+        babel_locale = _babel.Locale.parse(actual_locale.replace("-", "_"))
+        module_globals["locale"] = babel_locale
+
+        plural_main = _babel.plural.to_python(babel_locale.plural_form)
+
+        def plural_form_for_number(number):
+            try:
+                return plural_main(number)
+            except TypeError:
+                # This function can legitimately be passed strings if we
+                # incorrectly guessed a CLDR category.
+                return None
+
+        module_globals["plural_form_for_number"] = plural_form_for_number
+        module_globals["__builtins__"] = _builtins.__dict__
+
+        exec(code_obj, module_globals)
+
+        message_functions = {
+            str(message_id): module_globals[name]
+            for message_id, name in payload["mapping"].items()
+        }
+        bundle = object.__new__(FluentBundle)
+        bundle.locale = actual_locale
+        bundle._compiled_messages = message_functions
+        bundle._compilation_errors = []
+        return bundle
 
     @classmethod
     def _compile_bundle(
@@ -205,7 +283,7 @@ class Localization:
         bundle._compiled_messages = compiled.message_functions
         bundle._compilation_errors = compiled.errors
         if write_cache:
-            cls._write_cache_entry(actual_locale, fingerprint, payloads)
+            cls._write_cache_entry(actual_locale, fingerprint, compiled)
         return bundle
 
     @classmethod
@@ -227,18 +305,29 @@ class Localization:
         return cls._cache_dir
 
     @classmethod
-    def _write_cache_entry(cls, actual_locale: str, fingerprint: str, payloads: list[str]) -> None:
+    def _write_cache_entry(
+        cls, actual_locale: str, fingerprint: str, compiled: "CompiledFtl"
+    ) -> None:
         """Persist compiled bundle artifacts for reuse."""
         cache_root = cls._resolve_cache_dir()
         if cache_root is None:
             return
         entry_dir = cache_root / actual_locale
         entry_dir.mkdir(parents=True, exist_ok=True)
+        module_ast = getattr(compiled, "module_ast", None)
+        if module_ast is None:
+            return  # Nothing to serialize; skip caching this locale.
+        code_bytes = marshal.dumps(compile(module_ast, "<string>", "exec"))
+        mapping = {
+            str(message_id): fn.__name__
+            for message_id, fn in compiled.message_functions.items()
+        }
         payload = {
             "version": cls._CACHE_VERSION,
             "fingerprint": fingerprint,
             "locale": actual_locale,
-            "payloads": payloads,
+            "code": base64.b64encode(code_bytes).decode("ascii"),
+            "mapping": mapping,
         }
         tmp_path = entry_dir / f"{fingerprint}.tmp"
         final_path = entry_dir / f"{fingerprint}.json"

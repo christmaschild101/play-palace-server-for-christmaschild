@@ -92,6 +92,105 @@ def test_localization_missing_key_falls_back_to_english(tmp_path):
     assert Localization.get("es", "hello") == "Hello"
 
 
+def test_localization_cache_rebuild_formats_identically(tmp_path, monkeypatch):
+    """A bundle rebuilt from the compiled-code cache formats messages the same
+    as a freshly compiled bundle, including variable substitution."""
+    locales_dir = tmp_path / "locales"
+    cache_dir = tmp_path / "cache"
+    monkeypatch.setenv("PLAYPALACE_LOCALE_CACHE_DIR", str(cache_dir))
+    monkeypatch.delenv("PLAYPALACE_DISABLE_LOCALE_CACHE", raising=False)
+
+    locale_dir = locales_dir / "en"
+    locale_dir.mkdir(parents=True, exist_ok=True)
+    (locale_dir / "main.ftl").write_text(
+        "hello = Hello { $name }!\ncount = { $n ->\n    [one] One item\n   *[other] { $n } items\n}\n",
+        encoding="utf-8",
+    )
+
+    # First init: fresh compile.
+    Localization.init(locales_dir)
+    assert Localization.get("en", "hello", name="Zed") == "Hello Zed!"
+    assert Localization.get("en", "count", n=3) == "3 items"
+    assert len(list((cache_dir / "en").glob("*.json"))) == 1
+
+    # Second init: bundle must be rebuilt from the compiled-code cache.
+    Localization.init(locales_dir)
+    assert Localization.get("en", "hello", name="Zed") == "Hello Zed!"
+    assert Localization.get("en", "count", n=1) == "One item"
+
+
+def test_localization_cache_falls_back_on_corrupt_entry(tmp_path, monkeypatch):
+    """A corrupt cache entry is discarded and the locale recompiles."""
+    locales_dir = tmp_path / "locales"
+    cache_dir = tmp_path / "cache"
+    monkeypatch.setenv("PLAYPALACE_LOCALE_CACHE_DIR", str(cache_dir))
+    monkeypatch.delenv("PLAYPALACE_DISABLE_LOCALE_CACHE", raising=False)
+
+    _write_locale(locales_dir, "Hi")
+    Localization.init(locales_dir)
+    assert Localization.get("en", "hello") == "Hi"
+    cache_file = next((cache_dir / "en").glob("*.json"))
+
+    cache_file.write_text("{not json at all", encoding="utf-8")
+    Localization.init(locales_dir)
+    assert Localization.get("en", "hello") == "Hi"
+    # Rebuilt and a valid single cache entry remains.
+    assert len(list((cache_dir / "en").glob("*.json"))) == 1
+
+
+def test_localization_cache_falls_back_on_corrupt_code(tmp_path, monkeypatch):
+    """A JSON-valid cache with garbage code bytes is discarded and recompiled."""
+    locales_dir = tmp_path / "locales"
+    cache_dir = tmp_path / "cache"
+    monkeypatch.setenv("PLAYPALACE_LOCALE_CACHE_DIR", str(cache_dir))
+    monkeypatch.delenv("PLAYPALACE_DISABLE_LOCALE_CACHE", raising=False)
+
+    _write_locale(locales_dir, "Hi")
+    Localization.init(locales_dir)
+    assert Localization.get("en", "hello") == "Hi"
+    cache_file = next((cache_dir / "en").glob("*.json"))
+
+    import json as _json
+
+    payload = _json.loads(cache_file.read_text(encoding="utf-8"))
+    payload["code"] = "bm90LWNvZGU="  # base64 of "not-code" -> marshal.loads fails
+    cache_file.write_text(_json.dumps(payload), encoding="utf-8")
+
+    Localization.init(locales_dir)
+    assert Localization.get("en", "hello") == "Hi"
+    assert len(list((cache_dir / "en").glob("*.json"))) == 1
+
+
+def test_localization_cache_fingerprint_tracks_python_version(tmp_path, monkeypatch):
+    """Changing the Python minor version invalidates the cache fingerprint."""
+    locales_dir = tmp_path / "locales"
+    cache_dir = tmp_path / "cache"
+    monkeypatch.setenv("PLAYPALACE_LOCALE_CACHE_DIR", str(cache_dir))
+    monkeypatch.delenv("PLAYPALACE_DISABLE_LOCALE_CACHE", raising=False)
+
+    from types import SimpleNamespace
+
+    import server.messages.localization as localization_module
+
+    _write_locale(locales_dir, "Hi")
+    Localization.init(locales_dir)
+    assert Localization.get("en", "hello") == "Hi"  # triggers compile + cache write
+    cache_file = next((cache_dir / "en").glob("*.json"))
+    first_name = cache_file.name
+
+    # Fake a different Python minor version and re-init: the fingerprint must
+    # differ so the stale cache is ignored and a fresh one is written.
+    fake_version = SimpleNamespace(major=3, minor=999)
+    monkeypatch.setattr(localization_module.sys, "version_info", fake_version)
+    _write_locale(locales_dir, "Hi")  # same content -> content digest identical
+    Localization.init(locales_dir)
+
+    assert Localization.get("en", "hello") == "Hi"
+    cache_files = list((cache_dir / "en").glob("*.json"))
+    assert len(cache_files) == 1
+    assert cache_files[0].name != first_name
+
+
 @pytest.mark.asyncio
 async def test_localization_background_warmup_logs(monkeypatch, capsys):
     calls: list[str] = []

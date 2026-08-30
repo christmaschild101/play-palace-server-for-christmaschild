@@ -168,6 +168,12 @@ class AdministrationMixin:
                     id="lookup_user",
                 )
             )
+            items.append(
+                MenuItem(
+                    text=Localization.get(user.locale, "reload-caches"),
+                    id="admin_reload_caches",
+                )
+            )
         # Only the server owner can change the server owner or manage developers
         if user.trust_level.value >= TrustLevel.SERVER_OWNER.value:
             items.append(
@@ -186,6 +192,12 @@ class AdministrationMixin:
                 MenuItem(
                     text=Localization.get(user.locale, "transfer-ownership"),
                     id="transfer_ownership",
+                )
+            )
+            items.append(
+                MenuItem(
+                    text=Localization.get(user.locale, "scheduled-actions"),
+                    id="scheduled_actions",
                 )
             )
         items.append(MenuItem(text=Localization.get(user.locale, "back"), id="back"))
@@ -604,6 +616,162 @@ class AdministrationMixin:
         )
         self._user_states[user.username] = {"menu": "lookup_user_editbox"}
 
+    def _show_reload_caches_confirm_menu(self, user: NetworkUser) -> None:
+        """Show confirmation menu for force-reloading server caches."""
+        question = Localization.get(user.locale, "confirm-reload-caches")
+        show_yes_no_menu(user, "reload_caches_confirm_menu", question)
+        self._user_states[user.username] = {"menu": "reload_caches_confirm_menu"}
+
+    def _show_scheduled_actions_menu(self, user: NetworkUser) -> None:
+        """Show the scheduled actions management menu."""
+        actions = self._scheduler.list_actions()
+        items = []
+        if not actions:
+            items.append(
+                MenuItem(
+                    text=Localization.get(user.locale, "scheduled-actions-none"),
+                    id="_none",
+                )
+            )
+        for action in actions:
+            label = self._scheduled_action_label(user, action)
+            items.append(MenuItem(text=label, id=f"sa_{action.id}"))
+        items.append(
+            MenuItem(text=Localization.get(user.locale, "scheduled-actions-add"), id="sa_add")
+        )
+        items.append(MenuItem(text=Localization.get(user.locale, "back"), id="back"))
+        user.show_menu(
+            "scheduled_actions_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {"menu": "scheduled_actions_menu"}
+
+    def _scheduled_action_label(self, user: NetworkUser, action) -> str:
+        """Build a localized label row for a scheduled action."""
+        type_name = Localization.get(
+            user.locale,
+            "scheduled-action-reboot"
+            if action.action_type == "reboot"
+            else "scheduled-action-broadcast",
+        )
+        when = (
+            Localization.get(
+                user.locale,
+                "repeating-every-minutes",
+                minutes=int(action.repeat_interval_seconds // 60),
+            )
+            if action.repeating
+            else Localization.get(user.locale, "one-shot")
+        )
+        run_text = Localization.get(
+            user.locale,
+            "scheduled-action-run-at",
+            time=action.run_at.strftime("%Y-%m-%d %H:%M"),
+        )
+        state_text = (
+            Localization.get(user.locale, "scheduled-action-enabled")
+            if action.enabled
+            else Localization.get(user.locale, "scheduled-action-disabled")
+        )
+        return f"#{action.id} {type_name} • {run_text} • {when} • {state_text}"
+
+    def _show_schedule_type_menu(self, user: NetworkUser) -> None:
+        """Choose the type of action to schedule."""
+        items = [
+            MenuItem(text=Localization.get(user.locale, "scheduled-action-reboot"), id="type_reboot"),
+            MenuItem(
+                text=Localization.get(user.locale, "scheduled-action-broadcast"),
+                id="type_broadcast",
+            ),
+            MenuItem(text=Localization.get(user.locale, "back"), id="back"),
+        ]
+        user.show_menu(
+            "schedule_type_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {"menu": "schedule_type_menu"}
+
+    def _show_schedule_message_editbox(self, user: NetworkUser) -> None:
+        """Show editbox for the announcement text."""
+        prompt = Localization.get(user.locale, "scheduled-actions-message-prompt")
+        user.show_editbox(
+            "schedule_message",
+            prompt,
+            default_value="",
+            multiline=False,
+            read_only=False,
+        )
+        self._user_states[user.username] = {"menu": "schedule_message_editbox"}
+
+    def _show_schedule_when_editbox(self, user: NetworkUser) -> None:
+        """Show editbox for how many minutes from now to run."""
+        prompt = Localization.get(user.locale, "scheduled-actions-when-prompt")
+        user.show_editbox(
+            "schedule_when",
+            prompt,
+            default_value="",
+            multiline=False,
+            read_only=False,
+        )
+        self._user_states[user.username] = {"menu": "schedule_when_editbox"}
+
+    def _show_schedule_repeat_editbox(self, user: NetworkUser) -> None:
+        """Show editbox for the repeat interval in minutes (0 = one-shot)."""
+        prompt = Localization.get(user.locale, "scheduled-actions-repeat-prompt")
+        user.show_editbox(
+            "schedule_repeat",
+            prompt,
+            default_value="0",
+            multiline=False,
+            read_only=False,
+        )
+        self._user_states[user.username] = {"menu": "schedule_repeat_editbox"}
+
+    def _show_schedule_confirm_menu(self, user: NetworkUser, summary: str) -> None:
+        """Show confirmation for the composed scheduled action."""
+        show_yes_no_menu(user, "schedule_confirm_menu", summary)
+        self._user_states[user.username] = {
+            "menu": "schedule_confirm_menu",
+            "schedule_summary": summary,
+        }
+
+    def _show_scheduled_action_actions_menu(self, user: NetworkUser, action_id: int) -> None:
+        """Show actions (enable/disable/delete) for one scheduled action."""
+        items = [
+            MenuItem(
+                text=Localization.get(user.locale, "scheduled-action-toggle"),
+                id=f"sa_toggle_{action_id}",
+            ),
+            MenuItem(
+                text=Localization.get(user.locale, "scheduled-action-delete"),
+                id=f"sa_delete_{action_id}",
+            ),
+            MenuItem(text=Localization.get(user.locale, "back"), id="back"),
+        ]
+        user.show_menu(
+            "scheduled_action_actions_menu",
+            items,
+            multiletter=True,
+            escape_behavior=EscapeBehavior.SELECT_LAST,
+        )
+        self._user_states[user.username] = {
+            "menu": "scheduled_action_actions_menu",
+            "scheduled_action_id": action_id,
+        }
+
+    def _show_schedule_delete_confirm_menu(self, user: NetworkUser, action_id: int) -> None:
+        """Show confirmation before deleting a scheduled action."""
+        question = Localization.get(user.locale, "scheduled-action-delete-confirm", id=action_id)
+        show_yes_no_menu(user, "schedule_delete_confirm_menu", question)
+        self._user_states[user.username] = {
+            "menu": "schedule_delete_confirm_menu",
+            "scheduled_action_id": action_id,
+        }
+
     def _show_ban_reason_editbox(
         self, user: NetworkUser, target_username: str, broadcast_scope: str
     ) -> None:
@@ -916,6 +1084,10 @@ class AdministrationMixin:
             self._show_broadcast_announcement_editbox(user)
         elif selection_id == "lookup_user":
             self._show_lookup_user_editbox(user)
+        elif selection_id == "admin_reload_caches":
+            self._show_reload_caches_confirm_menu(user)
+        elif selection_id == "scheduled_actions":
+            self._show_scheduled_actions_menu(user)
         elif selection_id == "reboot_server":
             self._show_reboot_server_confirm_menu(user)
         elif selection_id == "promote_developer":
@@ -1265,6 +1437,197 @@ class AdministrationMixin:
     ) -> None:
         """Handle server status menu selection (read-only, so just go back)."""
         self._show_admin_menu(user)
+
+    async def _handle_reload_caches_confirm_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle force-reload cache confirmation."""
+        if selection_id == "yes":
+            await self._reload_caches(user)
+        else:
+            self._show_admin_menu(user)
+
+    async def _reload_caches(self, user: NetworkUser) -> None:
+        """Force-reload localization bundles and documents from disk."""
+        from ..messages.localization import Localization as _Localization
+
+        locale_count = _Localization.reload(force=True)
+        doc_count = self._documents.load()
+        user.speak_l(
+            "reload-caches-done",
+            locales=locale_count,
+            documents=doc_count,
+            buffer="activity",
+        )
+        # Recompile any missing locale bundles in a background thread.
+        self._start_localization_warmup()
+        self._show_admin_menu(user)
+
+    async def _handle_scheduled_actions_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle the scheduled actions list menu."""
+        if selection_id == "back" or selection_id.startswith("sa_add"):
+            if selection_id == "sa_add":
+                self._show_schedule_type_menu(user)
+            else:
+                self._show_admin_menu(user)
+        elif selection_id.startswith("sa_"):
+            try:
+                action_id = int(selection_id[3:])
+            except ValueError:
+                self._show_scheduled_actions_menu(user)
+                return
+            self._show_scheduled_action_actions_menu(user, action_id)
+        else:
+            self._show_scheduled_actions_menu(user)
+
+    async def _handle_schedule_type_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle the schedule type menu."""
+        if selection_id == "back":
+            self._show_scheduled_actions_menu(user)
+            return
+        if selection_id == "type_reboot":
+            self._user_states[user.username]["schedule_type"] = "reboot"
+            self._show_schedule_when_editbox(user)
+        elif selection_id == "type_broadcast":
+            self._user_states[user.username]["schedule_type"] = "broadcast"
+            self._show_schedule_message_editbox(user)
+        else:
+            self._show_schedule_type_menu(user)
+
+    async def _handle_schedule_message_editbox(
+        self, user: NetworkUser, text: str, state: dict
+    ) -> None:
+        """Store the announcement text, then ask when to run."""
+        message = (text or "").strip()
+        if not message:
+            user.speak_l("scheduled-actions-empty-message", buffer="misc")
+            self._show_schedule_message_editbox(user)
+            return
+        state["schedule_message"] = message
+        self._show_schedule_when_editbox(user)
+
+    async def _handle_schedule_when_editbox(
+        self, user: NetworkUser, text: str, state: dict
+    ) -> None:
+        """Store minutes-from-now, then ask for the repeat interval."""
+        try:
+            minutes = int(text.strip())
+        except (TypeError, ValueError):
+            user.speak_l("scheduled-actions-invalid-number", buffer="misc")
+            self._show_schedule_when_editbox(user)
+            return
+        if minutes < 0:
+            user.speak_l("scheduled-actions-invalid-number", buffer="misc")
+            self._show_schedule_when_editbox(user)
+            return
+        state["schedule_minutes"] = minutes
+        self._show_schedule_repeat_editbox(user)
+
+    async def _handle_schedule_repeat_editbox(
+        self, user: NetworkUser, text: str, state: dict
+    ) -> None:
+        """Store repeat interval and show confirmation."""
+        try:
+            repeat_minutes = int(text.strip())
+        except (TypeError, ValueError):
+            user.speak_l("scheduled-actions-invalid-number", buffer="misc")
+            self._show_schedule_repeat_editbox(user)
+            return
+        if repeat_minutes < 0:
+            user.speak_l("scheduled-actions-invalid-number", buffer="misc")
+            self._show_schedule_repeat_editbox(user)
+            return
+        state["schedule_repeat_minutes"] = repeat_minutes
+        action_type = state.get("schedule_type")
+        minutes = state.get("schedule_minutes", 0)
+        summary = self._compose_schedule_summary(user, action_type, minutes, repeat_minutes)
+        self._show_schedule_confirm_menu(user, summary)
+
+    def _compose_schedule_summary(
+        self, user: NetworkUser, action_type: str | None, minutes: int, repeat_minutes: int
+    ) -> str:
+        """Build a localized confirmation summary for a new scheduled action."""
+        type_name = Localization.get(
+            user.locale,
+            "scheduled-action-reboot" if action_type == "reboot" else "scheduled-action-broadcast",
+        )
+        parts = [
+            Localization.get(user.locale, "scheduled-actions-summary-type", type=type_name),
+            Localization.get(
+                user.locale, "scheduled-actions-summary-when", minutes=minutes
+            ),
+        ]
+        if repeat_minutes and repeat_minutes > 0:
+            parts.append(
+                Localization.get(
+                    user.locale,
+                    "scheduled-actions-summary-repeat",
+                    minutes=repeat_minutes,
+                )
+            )
+        return "".join(parts)
+
+    async def _handle_schedule_confirm_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Create the scheduled action on confirmation."""
+        if selection_id != "yes":
+            self._show_scheduled_actions_menu(user)
+            return
+        action_type = state.get("schedule_type")
+        minutes = state.get("schedule_minutes", 0)
+        repeat_minutes = state.get("schedule_repeat_minutes", 0)
+        if action_type not in ("reboot", "broadcast"):
+            self._show_scheduled_actions_menu(user)
+            return
+        payload = {}
+        if action_type == "broadcast":
+            payload["message"] = state.get("schedule_message", "")
+        run_at = self._scheduler.run_at_from_minutes_from_now(minutes)
+        self._scheduler.create_action(
+            action_type=action_type,
+            run_at=run_at,
+            repeat_interval_seconds=repeat_minutes * 60,
+            payload=payload,
+            created_by=user.username,
+        )
+        user.speak_l("scheduled-actions-created", buffer="activity")
+        self._show_scheduled_actions_menu(user)
+
+    async def _handle_scheduled_action_actions_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Handle actions on one scheduled action (toggle/delete)."""
+        action_id = state.get("scheduled_action_id")
+        if action_id is None:
+            self._show_scheduled_actions_menu(user)
+            return
+        if selection_id.startswith(f"sa_toggle_{action_id}"):
+            actions = {a.id: a for a in self._scheduler.list_actions()}
+            action = actions.get(action_id)
+            if action:
+                self._scheduler.set_enabled(action_id, not action.enabled)
+            self._show_scheduled_actions_menu(user)
+        elif selection_id.startswith(f"sa_delete_{action_id}"):
+            self._show_schedule_delete_confirm_menu(user, action_id)
+        elif selection_id == "back":
+            self._show_scheduled_actions_menu(user)
+        else:
+            self._show_scheduled_actions_menu(user)
+
+    async def _handle_schedule_delete_confirm_selection(
+        self, user: NetworkUser, selection_id: str, state: dict
+    ) -> None:
+        """Handle deleting a scheduled action confirmation."""
+        action_id = state.get("scheduled_action_id")
+        if action_id is not None and selection_id == "yes":
+            self._scheduler.delete_action(action_id)
+            user.speak_l("scheduled-actions-deleted", buffer="activity")
+        self._show_scheduled_actions_menu(user)
 
     async def _handle_kick_user_selection(
         self, user: NetworkUser, selection_id: str
@@ -1948,12 +2311,31 @@ class AdministrationMixin:
     async def _reboot_server(self, admin: NetworkUser) -> None:
         """Warn all players, then reboot the server (git pull + restart).
 
+        Wraps :meth:`_execute_reboot` to surface helper-launch failures back to
+        the requesting admin. See :meth:`_execute_reboot` for details of the
+        reboot sequence itself.
+        """
+        try:
+            await self._execute_reboot()
+        except Exception as exc:  # noqa: BLE001 - helper spawn failure
+            LOG.warning("Failed to launch server reboot helper: %s", exc)
+            _speak_activity(admin, "server-reboot-failed")
+            self._show_admin_menu(admin)
+
+    async def _execute_reboot(self) -> None:
+        """Warn all players, then reboot the server (git pull + restart).
+
         Players receive a countdown warning, then are disconnected with an
         auto-reconnect request before the server shuts down gracefully. A
         detached helper (spawned via ``systemd-run``) waits for the server
         process to exit, pulls the latest code, and restarts the service.
-        Absolutely requires the helper to launch successfully; otherwise the
-        reboot is aborted and the server keeps running.
+        Absolutely requires the helper to launch successfully; otherwise a
+        :class:`RuntimeError` is raised and the server keeps running (callers
+        decide whether to surface a failure to a user or keep a scheduled
+        action eligible for retry).
+
+        Raises:
+            RuntimeError: If the deploy helper cannot be launched.
         """
         reboot_seconds = 10
         retry_after = 15
@@ -1982,10 +2364,7 @@ class AdministrationMixin:
             if rc != 0:
                 raise RuntimeError(f"systemd-run exited with code {rc}")
         except Exception as exc:  # noqa: BLE001
-            LOG.warning("Failed to launch server reboot helper: %s", exc)
-            _speak_activity(admin, "server-reboot-failed")
-            self._show_admin_menu(admin)
-            return
+            raise RuntimeError("Failed to launch server reboot helper") from exc
 
         # 3) Disconnect all clients with an auto-reconnect request (bots excluded)
         for username, user in list(self._users.items()):

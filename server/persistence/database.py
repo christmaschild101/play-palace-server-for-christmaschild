@@ -1477,3 +1477,131 @@ class Database:
             }
             for row in cursor.fetchall()
         ]
+
+    # ==================== Scheduled Actions ====================
+
+    def _ensure_scheduled_actions_table(self) -> None:
+        """Create scheduled_actions table if it doesn't exist."""
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS scheduled_actions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                action_type TEXT NOT NULL,
+                payload_json TEXT NOT NULL DEFAULT '{}',
+                run_at TEXT NOT NULL,
+                repeat_interval_seconds INTEGER NOT NULL DEFAULT 0,
+                enabled INTEGER NOT NULL DEFAULT 1,
+                created_by TEXT NOT NULL DEFAULT '',
+                last_run_at TEXT
+            )
+            """
+        )
+        self._get_conn().commit()
+
+    def save_scheduled_action(
+        self,
+        *,
+        action_type: str,
+        payload_json: str,
+        run_at: str,
+        repeat_interval_seconds: int = 0,
+        created_by: str = "",
+    ) -> int:
+        """Insert a new scheduled action and return its id."""
+        self._ensure_scheduled_actions_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            INSERT INTO scheduled_actions (
+                action_type, payload_json, run_at, repeat_interval_seconds,
+                enabled, created_by
+            )
+            VALUES (?, ?, ?, ?, 1, ?)
+            """,
+            (
+                action_type,
+                payload_json,
+                run_at,
+                repeat_interval_seconds,
+                created_by,
+            ),
+        )
+        self._get_conn().commit()
+        return int(cursor.lastrowid)
+
+    def list_scheduled_actions(self) -> list[dict]:
+        """Return all scheduled actions ordered by next run time."""
+        self._ensure_scheduled_actions_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            SELECT id, action_type, payload_json, run_at, repeat_interval_seconds,
+                   enabled, created_by, last_run_at
+            FROM scheduled_actions
+            ORDER BY run_at ASC, id ASC
+            """
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def get_due_scheduled_actions(self, now_utc_iso: str) -> list[dict]:
+        """Return enabled scheduled actions whose run_at has passed."""
+        self._ensure_scheduled_actions_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            SELECT id, action_type, payload_json, run_at, repeat_interval_seconds,
+                   enabled, created_by, last_run_at
+            FROM scheduled_actions
+            WHERE enabled = 1 AND run_at <= ?
+            ORDER BY run_at ASC, id ASC
+            """,
+            (now_utc_iso,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+    def update_scheduled_action(
+        self,
+        action_id: int,
+        *,
+        run_at: str | None = None,
+        repeat_interval_seconds: int | None = None,
+        enabled: int | None = None,
+        last_run_at: str | None = None,
+        payload_json: str | None = None,
+    ) -> None:
+        """Update selective fields of a scheduled action."""
+        self._ensure_scheduled_actions_table()
+        cursor = self._get_conn().cursor()
+        fields: list[str] = []
+        values: list = []
+        if run_at is not None:
+            fields.append("run_at = ?")
+            values.append(run_at)
+        if repeat_interval_seconds is not None:
+            fields.append("repeat_interval_seconds = ?")
+            values.append(repeat_interval_seconds)
+        if enabled is not None:
+            fields.append("enabled = ?")
+            values.append(enabled)
+        if last_run_at is not None:
+            fields.append("last_run_at = ?")
+            values.append(last_run_at)
+        if payload_json is not None:
+            fields.append("payload_json = ?")
+            values.append(payload_json)
+        if not fields:
+            return
+        values.append(action_id)
+        cursor.execute(
+            f"UPDATE scheduled_actions SET {', '.join(fields)} WHERE id = ?",
+            values,
+        )
+        self._get_conn().commit()
+
+    def delete_scheduled_action(self, action_id: int) -> None:
+        """Delete a scheduled action."""
+        self._ensure_scheduled_actions_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute("DELETE FROM scheduled_actions WHERE id = ?", (action_id,))
+        self._get_conn().commit()

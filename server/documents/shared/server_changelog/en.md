@@ -4,6 +4,10 @@ This document records changes to the PlayPalace server. New entries are added at
 
 ## 2026-08-30
 
+- Added two owner/developer server-management features, both driven from in-game menus (no client changes):
+  - **Reload Caches** (developer): force-reloads localization and documents from disk, rebuilding locale bundles from source and re-scanning documents without a server restart.
+  - **Scheduled Actions** (server owner): schedules one-shot or recurring reboots and broadcast announcements, persisted in the database so they survive restarts. A background scheduler executes due actions; scheduled reboots disconnect virtual bots first, matching the manual reboot flow.
+
 - Added four new server-side admin actions, all built as in-game menus (no client changes, no new packet types):
   - **Server Status** (admin): a read-only snapshot showing uptime, tick number, online/approved users, open tables, registered users, and the virtual-bot roster — so admins can gauge server health without leaving the game.
   - **Kick User** (admin): immediately disconnect a single online player without banning them (handy for stuck or AFK clients). You can't kick yourself or anyone of equal/higher rank, and it asks for confirmation first.

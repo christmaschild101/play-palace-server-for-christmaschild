@@ -102,6 +102,32 @@ class DummyDB:
             self.non_admin_users.append(username)
 
 
+class DummyScheduler:
+    def __init__(self):
+        self.actions = []
+        self.created = []
+        self.deleted = []
+        self.toggled = []
+
+    def list_actions(self):
+        return list(self.actions)
+
+    def create_action(self, **kwargs):
+        self.created.append(kwargs)
+        return 1
+
+    def delete_action(self, action_id):
+        self.deleted.append(action_id)
+
+    def set_enabled(self, action_id, enabled):
+        self.toggled.append((action_id, enabled))
+
+    def run_at_from_minutes_from_now(self, minutes):
+        from datetime import datetime, timedelta, timezone
+
+        return datetime.now(timezone.utc) + timedelta(minutes=minutes)
+
+
 class AdminHost(AdministrationMixin):
     def __init__(self, db=None):
         self._db = db or DummyDB()
@@ -112,7 +138,10 @@ class AdminHost(AdministrationMixin):
         self._virtual_bots = SimpleNamespace(
             get_status=lambda: {"total": 0, "online": 0, "offline": 0, "in_game": 0}
         )
+        self._scheduler = DummyScheduler()
+        self._documents = SimpleNamespace(load=lambda: 0)
         self.main_menu_calls = []
+        self.warmups = 0
 
     def _show_main_menu(self, user: DummyUser) -> None:
         self.main_menu_calls.append(user.username)
@@ -121,6 +150,10 @@ class AdminHost(AdministrationMixin):
         for username, u in self._users.items():
             if getattr(u, "approved", True):
                 yield username, u
+
+    def _start_localization_warmup(self) -> None:
+        self.warmups += 1
+
 
 
 @pytest.mark.asyncio
@@ -248,9 +281,11 @@ def test_show_admin_menu_includes_owner_actions():
         "virtual_bots",
         "broadcast_announcement",
         "lookup_user",
+        "admin_reload_caches",
         "promote_developer",
         "demote_developer",
         "transfer_ownership",
+        "scheduled_actions",
         "back",
     ]
 
@@ -670,6 +705,7 @@ def test_show_admin_menu_developer_sees_admin_management_but_not_owner_actions()
         "virtual_bots",
         "broadcast_announcement",
         "lookup_user",
+        "admin_reload_caches",
         "back",
     ]
 
@@ -1488,3 +1524,226 @@ async def test_reboot_without_bots_skips_warning(monkeypatch):
     assert all(
         m["menu_id"] != "reboot_server_bots_confirm_menu" for m in admin.menus
     )
+
+
+# ==================== Reload Caches ====================
+
+
+@pytest.mark.asyncio
+async def test_reload_caches_confirm_yes_reloads(monkeypatch):
+    host = AdminHost()
+    dev = DummyUser("dev", TrustLevel.DEVELOPER)
+    reloaded = []
+
+    def fake_reload(force=False):
+        reloaded.append(force)
+        return 30
+
+    from server.messages import localization as loc_module
+
+    monkeypatch.setattr(loc_module.Localization, "reload", staticmethod(fake_reload))
+    loads = []
+    monkeypatch.setattr(host._documents, "load", lambda: loads.append(1) or 7)
+
+    await host._handle_reload_caches_confirm_selection(dev, "yes")
+    assert reloaded == [True]
+    assert loads == [1]
+    assert host.warmups == 1
+    assert host._user_states["dev"]["menu"] == "admin_menu"
+
+
+@pytest.mark.asyncio
+async def test_reload_caches_confirm_no_cancels(monkeypatch):
+    host = AdminHost()
+    dev = DummyUser("dev", TrustLevel.DEVELOPER)
+    reloaded = []
+
+    def fake_reload(force=False):
+        reloaded.append(force)
+        return 30
+
+    from server.messages import localization as loc_module
+
+    monkeypatch.setattr(loc_module.Localization, "reload", staticmethod(fake_reload))
+
+    await host._handle_reload_caches_confirm_selection(dev, "no")
+    assert reloaded == []
+    assert host.warmups == 0
+
+
+def test_admin_menu_shows_reload_caches_for_developer_only():
+    host = AdminHost()
+    admin_user = DummyUser("admin", TrustLevel.ADMIN)
+    dev_user = DummyUser("dev", TrustLevel.DEVELOPER)
+
+    host._show_admin_menu(admin_user)
+    assert "admin_reload_caches" not in _get_menu_ids(admin_user)
+
+    host._show_admin_menu(dev_user)
+    assert "admin_reload_caches" in _get_menu_ids(dev_user)
+
+
+# ==================== Scheduled Actions ====================
+
+
+def _make_action(action_id=1, action_type="broadcast", repeating=False, enabled=True):
+    from datetime import datetime, timedelta, timezone
+
+    from server.core.scheduler import ScheduledAction
+
+    return ScheduledAction(
+        id=action_id,
+        action_type=action_type,
+        payload={"message": "hi"} if action_type == "broadcast" else {},
+        run_at=datetime.now(timezone.utc) + timedelta(minutes=5),
+        repeat_interval_seconds=600 if repeating else 0,
+        enabled=enabled,
+        created_by="owner",
+    )
+
+
+def test_scheduled_actions_menu_lists_and_adds():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    host._show_scheduled_actions_menu(owner)
+    ids = _get_menu_ids(owner)
+    assert ids[0] == "_none"
+    assert "sa_add" in ids
+    assert host._user_states["owner"]["menu"] == "scheduled_actions_menu"
+
+    host._scheduler.actions = [_make_action(1), _make_action(2, "reboot", repeating=True)]
+    owner.menus.clear()
+    host._show_scheduled_actions_menu(owner)
+    ids = _get_menu_ids(owner)
+    assert ids == ["sa_1", "sa_2", "sa_add", "back"]
+
+
+def test_admin_menu_shows_scheduled_actions_for_owner_only():
+    host = AdminHost()
+    dev = DummyUser("dev", TrustLevel.DEVELOPER)
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    host._show_admin_menu(dev)
+    assert "scheduled_actions" not in _get_menu_ids(dev)
+
+    host._show_admin_menu(owner)
+    assert "scheduled_actions" in _get_menu_ids(owner)
+
+
+@pytest.mark.asyncio
+async def test_schedule_type_broadcast_flow():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    state = host._user_states.setdefault("owner", {})
+
+    await host._handle_schedule_type_selection(owner, "type_broadcast")
+    assert state["schedule_type"] == "broadcast"
+
+    await host._handle_schedule_message_editbox(owner, "Hello all", state)
+    assert state["schedule_message"] == "Hello all"
+
+    await host._handle_schedule_when_editbox(owner, "30", state)
+    assert state["schedule_minutes"] == 30
+
+    await host._handle_schedule_repeat_editbox(owner, "60", state)
+    assert state["schedule_repeat_minutes"] == 60
+    assert owner.menus[-1]["menu_id"] == "schedule_confirm_menu"
+
+    await host._handle_schedule_confirm_selection(owner, "yes", state)
+    assert len(host._scheduler.created) == 1
+    created = host._scheduler.created[0]
+    assert created["action_type"] == "broadcast"
+    assert created["repeat_interval_seconds"] == 3600
+    assert created["payload"]["message"] == "Hello all"
+    assert created["created_by"] == "owner"
+
+
+@pytest.mark.asyncio
+async def test_schedule_type_reboot_flow():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    state = host._user_states.setdefault("owner", {})
+
+    await host._handle_schedule_type_selection(owner, "type_reboot")
+    assert state["schedule_type"] == "reboot"
+
+    await host._handle_schedule_when_editbox(owner, "10", state)
+    await host._handle_schedule_repeat_editbox(owner, "0", state)
+
+    await host._handle_schedule_confirm_selection(owner, "yes", state)
+    created = host._scheduler.created[0]
+    assert created["action_type"] == "reboot"
+    assert created["repeat_interval_seconds"] == 0
+
+
+@pytest.mark.asyncio
+async def test_schedule_invalid_numbers_rejected():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    state = host._user_states.setdefault("owner", {})
+    state["schedule_type"] = "broadcast"
+    state["schedule_message"] = "hi"
+
+    await host._handle_schedule_when_editbox(owner, "abc", state)
+    assert "schedule_minutes" not in state
+
+    await host._handle_schedule_when_editbox(owner, "-5", state)
+    assert "schedule_minutes" not in state
+
+
+@pytest.mark.asyncio
+async def test_schedule_empty_message_rejected():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    state = host._user_states.setdefault("owner", {})
+    state["schedule_type"] = "broadcast"
+
+    await host._handle_schedule_message_editbox(owner, "   ", state)
+    assert "schedule_message" not in state
+
+
+@pytest.mark.asyncio
+async def test_schedule_confirm_no_does_not_create():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    state = host._user_states.setdefault("owner", {})
+    state["schedule_type"] = "reboot"
+    state["schedule_minutes"] = 5
+    state["schedule_repeat_minutes"] = 0
+
+    await host._handle_schedule_confirm_selection(owner, "no", state)
+    assert host._scheduler.created == []
+
+
+@pytest.mark.asyncio
+async def test_scheduled_action_toggle_and_delete():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    host._scheduler.actions = [_make_action(3, enabled=True)]
+    state = host._user_states.setdefault("owner", {"scheduled_action_id": 3})
+
+    await host._handle_scheduled_action_actions_selection(owner, "sa_toggle_3", state)
+    assert host._scheduler.toggled == [(3, False)]
+
+    await host._handle_scheduled_action_actions_selection(owner, "sa_delete_3", state)
+    assert owner.menus[-1]["menu_id"] == "schedule_delete_confirm_menu"
+
+    await host._handle_schedule_delete_confirm_selection(owner, "yes", state)
+    assert host._scheduler.deleted == [3]
+
+
+@pytest.mark.asyncio
+async def test_scheduled_actions_menu_selection_routing():
+    host = AdminHost()
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_scheduled_actions_selection(owner, "sa_add")
+    assert owner.menus[-1]["menu_id"] == "schedule_type_menu"
+
+    await host._handle_scheduled_actions_selection(owner, "sa_7")
+    assert host._user_states["owner"]["scheduled_action_id"] == 7
+    assert owner.menus[-1]["menu_id"] == "scheduled_action_actions_menu"
+
+    await host._handle_scheduled_actions_selection(owner, "back")
+    assert host._user_states["owner"]["menu"] == "admin_menu"

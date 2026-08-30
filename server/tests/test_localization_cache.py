@@ -235,3 +235,37 @@ async def test_localization_preload_flag_blocks(monkeypatch):
     nonblocking_server = Server(host="::1", port=9004, preload_locales=False)
     await nonblocking_server._preload_locales_if_requested()
     assert calls == ["preload"]
+
+
+def test_reload_clears_bundles_and_counts_locales(tmp_path):
+    from server.messages.localization import Localization
+
+    (tmp_path / "en").mkdir()
+    (tmp_path / "pt").mkdir()
+    (tmp_path / "en" / "main.ftl").write_text("k = v\n", encoding="utf-8")
+    (tmp_path / "pt" / "main.ftl").write_text("k = v\n", encoding="utf-8")
+
+    Localization.init(tmp_path)
+    Localization._bundles["en"] = object()  # simula bundle carregado
+
+    count = Localization.reload()
+    assert count == 2
+    assert "en" not in Localization._bundles
+
+
+def test_reload_force_wipes_disk_cache(tmp_path, monkeypatch):
+    import json
+
+    from server.messages.localization import Localization
+
+    (tmp_path / "en").mkdir()
+    (tmp_path / "en" / "main.ftl").write_text("k = v\n", encoding="utf-8")
+    cache_dir = tmp_path / "cache" / "en"
+    cache_dir.mkdir(parents=True)
+    (cache_dir / "abc.json").write_text(json.dumps({"x": 1}), encoding="utf-8")
+
+    monkeypatch.setenv("PLAYPALACE_LOCALE_CACHE_DIR", str(tmp_path / "cache"))
+    Localization.init(tmp_path)
+    Localization.reload(force=True)
+
+    assert not (tmp_path / "cache" / "en" / "abc.json").exists()

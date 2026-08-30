@@ -698,3 +698,34 @@ demote-developer-unavailable = { $player } cannot be demoted from developer.
 cah-content-notice = This game contains highly immature content. It is not recommended for players under the age of 16 or those sensitive to certain topics.
 cah-keep-playing = Keep playing
 cah-go-back = Go back
+
+
+# ===== Reload caches =====
+reload-caches = Reload Caches
+confirm-reload-caches = Force-reload localization and documents from disk? This rebuilds locale bundles from source.
+reload-caches-done = Caches reloaded ({ $locales } locales, { $documents } documents).
+
+# ===== Scheduled actions =====
+scheduled-actions = Scheduled Actions
+scheduled-actions-none = (no scheduled actions)
+scheduled-actions-add = Add Action
+scheduled-action-reboot = Reboot Server
+scheduled-action-broadcast = Broadcast Announcement
+scheduled-action-run-at = runs { $time }
+scheduled-action-enabled = enabled
+scheduled-action-disabled = disabled
+repeating-every-minutes = repeating every { $minutes } minute(s)
+one-shot = one-shot
+scheduled-action-toggle = Toggle Enabled
+scheduled-action-delete = Delete
+scheduled-action-delete-confirm = Delete scheduled action #{ $id }? This cannot be undone.
+scheduled-actions-message-prompt = Announcement message (sent to everyone online):
+scheduled-actions-when-prompt = Run in how many minutes from now?
+scheduled-actions-repeat-prompt = Repeat every how many minutes? (0 = once)
+scheduled-actions-empty-message = The message cannot be empty.
+scheduled-actions-invalid-number = Please enter a valid whole number.
+scheduled-actions-summary-type = Type: { $type }. 
+scheduled-actions-summary-when = Run in { $minutes } minute(s). 
+scheduled-actions-summary-repeat = Repeat every { $minutes } minute(s).
+scheduled-actions-created = Scheduled action created.
+scheduled-actions-deleted = Scheduled action deleted.

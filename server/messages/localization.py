@@ -70,6 +70,37 @@ class Localization:
             cls._enabled_locales = None
 
     @classmethod
+    def reload(cls, *, force: bool = False) -> int:
+        """Reload locale bundles from disk, dropping cached compiled artifacts.
+
+        Clears the in-memory bundle cache (and, when ``force`` is True, the
+        on-disk compiled cache) so the next :meth:`_get_bundle`/warmup rebuilds
+        from source. Returns the number of locale directories reloaded.
+
+        Safe to call while the server is running: bundles are rebuilt lazily as
+        they are next requested. A following :meth:`preload_bundles` call will
+        rebuild every locale synchronously.
+
+        Args:
+            force: When True, also wipe the on-disk compiled cache so every
+                locale recompiles from its ``.ftl`` source.
+        """
+        cls._bundles = {}
+        cls._missing_key_fallback_warnings = set()
+        if force:
+            cache_root = cls._resolve_cache_dir()
+            if cache_root is not None:
+                import shutil
+
+                for entry in cache_root.iterdir():
+                    if entry.is_dir():
+                        shutil.rmtree(entry, ignore_errors=True)
+                cls._cache_dir = None
+        if cls._locales_dir is None:
+            return 0
+        return sum(1 for d in cls._locales_dir.iterdir() if d.is_dir())
+
+    @classmethod
     def preload_bundles(cls) -> None:
         """Pre-load all locale bundles at startup."""
         if cls._locales_dir is None:

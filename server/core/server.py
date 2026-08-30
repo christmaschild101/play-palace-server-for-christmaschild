@@ -35,6 +35,7 @@ from .administration import AdministrationMixin
 from .documents.browsing import DocumentBrowsingMixin, _DOCUMENTS_DIR
 from .documents.transcriber_role import TranscriberRoleMixin
 from .virtual_bots import VirtualBotManager
+from .scheduler import ScheduledActionManager
 from ..network.websocket_server import WebSocketServer, ClientConnection
 from ..persistence.database import Database
 from ..auth.auth import AuthManager, AuthResult
@@ -166,6 +167,7 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         self._documents = DocumentManager(_DOCUMENTS_DIR)
 
         self._virtual_bots = VirtualBotManager(self)
+        self._scheduler = ScheduledActionManager(self)
         self._localization_warmup_task: asyncio.Task | None = None
 
         self._started_at = time.monotonic()
@@ -208,6 +210,7 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 if candidate.exists():
                     provided_locales = candidate
             resolved_locales = provided_locales
+        self._resolved_locales_dir = resolved_locales
         Localization.init(resolved_locales, enabled_locales=self._enabled_locales)
 
     def request_shutdown(self) -> None:
@@ -292,6 +295,9 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         await self._tick_scheduler.start()
         # Tick interval message suppressed by default (configurable via config.toml).
 
+        # Start scheduled-actions loop
+        await self._scheduler.start()
+
         protocol = "wss" if self._ssl_cert else "ws"
         print(f"Server running on {protocol}://{self.host}:{self.port}")
         if self.host == "127.0.0.1":
@@ -322,6 +328,9 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         # Stop tick scheduler
         if self._tick_scheduler:
             await self._tick_scheduler.stop()
+
+        # Stop scheduled-actions loop
+        await self._scheduler.stop()
 
         # Stop WebSocket server
         if self._ws_server:
@@ -2381,6 +2390,30 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 self._handle_server_status_selection,
                 (user, selection_id),
             ),
+            "reload_caches_confirm_menu": (
+                self._handle_reload_caches_confirm_selection,
+                (user, selection_id),
+            ),
+            "scheduled_actions_menu": (
+                self._handle_scheduled_actions_selection,
+                (user, selection_id),
+            ),
+            "schedule_type_menu": (
+                self._handle_schedule_type_selection,
+                (user, selection_id),
+            ),
+            "schedule_confirm_menu": (
+                self._handle_schedule_confirm_selection,
+                (user, selection_id, state),
+            ),
+            "scheduled_action_actions_menu": (
+                self._handle_scheduled_action_actions_selection,
+                (user, selection_id, state),
+            ),
+            "schedule_delete_confirm_menu": (
+                self._handle_schedule_delete_confirm_selection,
+                (user, selection_id, state),
+            ),
             "promote_developer_menu": (
                 self._handle_promote_developer_selection,
                 (user, selection_id),
@@ -4375,6 +4408,21 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         if current_menu == "lookup_user_editbox":
             text = packet.get("text", "")
             await self._handle_lookup_user_editbox(user, text, state)
+            return
+
+        if current_menu == "schedule_message_editbox":
+            text = packet.get("text", "")
+            await self._handle_schedule_message_editbox(user, text, state)
+            return
+
+        if current_menu == "schedule_when_editbox":
+            text = packet.get("text", "")
+            await self._handle_schedule_when_editbox(user, text, state)
+            return
+
+        if current_menu == "schedule_repeat_editbox":
+            text = packet.get("text", "")
+            await self._handle_schedule_repeat_editbox(user, text, state)
             return
 
         if current_menu == "bot_name_editbox":

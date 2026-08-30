@@ -429,6 +429,10 @@ virtual-bots-bring-online = Доведи бота на мрежу
 virtual-bots-brought-online = Виртуални бот { $name } је доведен на мрежу.
 virtual-bots-already-online = Виртуални бот { $name } је већ на мрежи.
 virtual-bots-all-online = Сви виртуални ботови су већ на мрежи.
+virtual-bots-take-offline = Искључи бота
+virtual-bots-taken-offline = Виртуални бот { $name } је искључен.
+virtual-bots-already-offline = Виртуални бот { $name } је већ искључен.
+virtual-bots-all-offline = Сви виртуални ботови су већ искључени.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = Ова игра садржи веома незрео садржај. Не препоручује се играчима млађим од 16 година ни особама осетљивим на одређене теме.

@@ -425,6 +425,10 @@ virtual-bots-bring-online = Đưa bot trực tuyến
 virtual-bots-brought-online = Bot ảo { $name } đã được đưa lên trực tuyến.
 virtual-bots-already-online = Bot ảo { $name } đã trực tuyến.
 virtual-bots-all-online = Tất cả bot ảo đã trực tuyến.
+virtual-bots-take-offline = Đưa bot ngoại tuyến
+virtual-bots-taken-offline = Bot ảo { $name } đã ngoại tuyến.
+virtual-bots-already-offline = Bot ảo { $name } đã ngoại tuyến.
+virtual-bots-all-offline = Tất cả bot ảo đã ngoại tuyến.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = Trò chơi này chứa nội dung rất thiếu chín chắn. Không được khuyến nghị cho người chơi dưới 16 tuổi hoặc những người nhạy cảm với một số chủ đề.

@@ -3047,3 +3047,30 @@ def test_bring_bot_online_username_taken():
 
     assert manager.bring_bot_online("Alpha") is False
     assert manager._bots["Alpha"].state == VirtualBotState.OFFLINE
+
+
+def test_take_bot_offline_online_and_already_offline(monkeypatch):
+    manager = _roster_manager(names=["Alpha", "Beta"])
+    manager._bots["Alpha"] = VirtualBot("Alpha", state=VirtualBotState.ONLINE_IDLE)
+    manager._server._users["Alpha"] = object()
+    manager._bots["Beta"] = VirtualBot("Beta", state=VirtualBotState.OFFLINE)
+    monkeypatch.setattr("server.core.virtual_bots.random.randint", lambda a, b: a)
+
+    # An online bot is taken offline and removed from the server user registry.
+    assert manager.take_bot_offline("Alpha") is True
+    assert manager._bots["Alpha"].state == VirtualBotState.OFFLINE
+    assert "Alpha" not in manager._server._users
+
+    # Already offline -> rejected.
+    assert manager.take_bot_offline("Beta") is False
+    assert manager._bots["Beta"].state == VirtualBotState.OFFLINE
+
+    # Unknown name -> rejected.
+    assert manager.take_bot_offline("Ghost") is False
+
+
+def test_take_bot_offline_unknown_or_missing_bot():
+    manager = _roster_manager(names=["Alpha"])
+    # Never-instantiated bot (in roster but not in _bots) -> rejected.
+    assert manager.take_bot_offline("Alpha") is False
+    assert manager.take_bot_offline("Ghost") is False

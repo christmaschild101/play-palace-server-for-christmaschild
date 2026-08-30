@@ -429,6 +429,10 @@ virtual-bots-bring-online = Mettre un bot en ligne
 virtual-bots-brought-online = Le bot virtuel { $name } est maintenant en ligne.
 virtual-bots-already-online = Le bot virtuel { $name } est déjà en ligne.
 virtual-bots-all-online = Tous les bots virtuels sont déjà en ligne.
+virtual-bots-take-offline = Mettre un bot hors ligne
+virtual-bots-taken-offline = Le bot virtuel { $name } est hors ligne.
+virtual-bots-already-offline = Le bot virtuel { $name } est déjà hors ligne.
+virtual-bots-all-offline = Tous les bots virtuels sont déjà hors ligne.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = Ce jeu contient un contenu très immature. Il n'est pas recommandé aux joueurs de moins de 16 ans ni aux personnes sensibles à certains sujets.

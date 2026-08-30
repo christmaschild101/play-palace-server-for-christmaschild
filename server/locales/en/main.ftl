@@ -468,6 +468,10 @@ virtual-bots-bring-online = Bring Bot Online
 virtual-bots-brought-online = Virtual bot { $name } brought online.
 virtual-bots-already-online = Virtual bot { $name } is already online.
 virtual-bots-all-online = All virtual bots are already online.
+virtual-bots-take-offline = Take Bot Offline
+virtual-bots-taken-offline = Virtual bot { $name } taken offline.
+virtual-bots-already-offline = Virtual bot { $name } is already offline.
+virtual-bots-all-offline = All virtual bots are already offline.
 
 # Documents
 documents = Documents

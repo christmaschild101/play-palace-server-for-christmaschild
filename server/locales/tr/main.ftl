@@ -425,6 +425,10 @@ virtual-bots-bring-online = Botu çevrimiçi yap
 virtual-bots-brought-online = Sanal bot { $name } çevrimiçi duruma getirildi.
 virtual-bots-already-online = Sanal bot { $name } zaten çevrimiçi.
 virtual-bots-all-online = Tüm sanal botlar zaten çevrimiçi.
+virtual-bots-take-offline = Botu çevrimdışı yap
+virtual-bots-taken-offline = Sanal bot { $name } çevrimdışı yapıldı.
+virtual-bots-already-offline = Sanal bot { $name } zaten çevrimdışı.
+virtual-bots-all-offline = Tüm sanal botlar zaten çevrimdışı.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = Bu oyun çok olgunlaşmamış içerik içerir. 16 yaşın altındaki oyunculara veya belirli konulara duyarlı kişilere önerilmez.

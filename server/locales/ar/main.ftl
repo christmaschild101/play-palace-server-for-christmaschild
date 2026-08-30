@@ -511,6 +511,10 @@ virtual-bots-bring-online = جلب بوت إلى الاتصال
 virtual-bots-brought-online = تم جلب البوت الافتراضي { $name } إلى الاتصال.
 virtual-bots-already-online = البوت الافتراضي { $name } متصل بالفعل.
 virtual-bots-all-online = جميع البوتات الافتراضية متصلة بالفعل.
+virtual-bots-take-offline = إخراج البوت من الاتصال
+virtual-bots-taken-offline = تم إخراج البوت الافتراضي { $name } من الاتصال.
+virtual-bots-already-offline = البوت الافتراضي { $name } غير متصل بالفعل.
+virtual-bots-all-offline = جميع البوتات الافتراضية غير متصلة بالفعل.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = تحتوي هذه اللعبة على محتوى غير ناضج للغاية. لا يُنصح بها للاعبين دون سن 16 عامًا أو الحساسين لبعض المواضيع.

@@ -806,6 +806,7 @@ class BotManagerStub:
         self.profile_changes = []
         self.removed = []
         self.brought_online = []
+        self.taken_offline = []
         self.saved = 0
 
     def get_roster(self):
@@ -837,6 +838,10 @@ class BotManagerStub:
         self.brought_online.append(name)
         return True
 
+    def take_bot_offline(self, name):
+        self.taken_offline.append(name)
+        return True
+
     def save_state(self):
         self.saved += 1
 
@@ -861,7 +866,20 @@ def test_virtual_bots_menu_includes_management_items():
 
     host._show_virtual_bots_menu(owner)
     ids = _get_menu_ids(owner)
-    assert ids == ["fill", "clear", "online", "status", "guided", "groups", "profiles", "add", "edit", "delete", "back"]
+    assert ids == [
+        "fill",
+        "clear",
+        "online",
+        "offline",
+        "status",
+        "guided",
+        "groups",
+        "profiles",
+        "add",
+        "edit",
+        "delete",
+        "back",
+    ]
 
 
 @pytest.mark.asyncio
@@ -1042,3 +1060,61 @@ async def test_bring_bot_online_blocked_during_warmup(monkeypatch):
     assert host._virtual_bots.brought_online == []
     assert owner.spoken[-1][0] == "virtual-bots-fill-localization-in-progress"
     assert host._user_states["owner"]["menu"] == "bring_online_bot_menu"
+
+
+@pytest.mark.asyncio
+async def test_take_bot_offline_flow_lists_only_online(monkeypatch):
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub(
+        roster=[_roster_entry("Alpha", online=True), _roster_entry("Beta")]
+    )
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    monkeypatch.setattr(administration.Localization, "is_warmup_active", lambda: False)
+
+    # Only online bots appear in the take-offline list.
+    await host._handle_virtual_bots_selection(owner, "offline")
+    assert _get_menu_ids(owner) == ["offline_Alpha", "back"]
+
+    # Selecting an online bot takes it offline.
+    await host._handle_take_bot_offline_selection(owner, "offline_Alpha")
+    assert host._virtual_bots.taken_offline == ["Alpha"]
+    assert owner.spoken[-1][0] == "virtual-bots-taken-offline"
+    assert host._user_states["owner"]["menu"] == "take_offline_bot_menu"
+
+
+@pytest.mark.asyncio
+async def test_take_bot_offline_no_online_bots(monkeypatch):
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub(roster=[_roster_entry("Alpha")])
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    monkeypatch.setattr(administration.Localization, "is_warmup_active", lambda: False)
+
+    await host._handle_virtual_bots_selection(owner, "offline")
+
+    assert owner.spoken[-1][0] == "virtual-bots-all-offline"
+    assert host._user_states["owner"]["menu"] == "virtual_bots_menu"
+
+
+@pytest.mark.asyncio
+async def test_take_bot_offline_blocked_during_warmup(monkeypatch):
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub(roster=[_roster_entry("Alpha", online=True)])
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+    monkeypatch.setattr(administration.Localization, "is_warmup_active", lambda: True)
+
+    await host._handle_take_bot_offline_selection(owner, "offline_Alpha")
+
+    assert host._virtual_bots.taken_offline == []
+    assert owner.spoken[-1][0] == "virtual-bots-fill-localization-in-progress"
+    assert host._user_states["owner"]["menu"] == "take_offline_bot_menu"
+
+
+@pytest.mark.asyncio
+async def test_take_bot_offline_back_returns_to_virtual_bots_menu():
+    host = AdminHost()
+    host._virtual_bots = BotManagerStub(roster=[_roster_entry("Alpha", online=True)])
+    owner = DummyUser("owner", TrustLevel.SERVER_OWNER)
+
+    await host._handle_take_bot_offline_selection(owner, "back")
+
+    assert host._user_states["owner"]["menu"] == "virtual_bots_menu"

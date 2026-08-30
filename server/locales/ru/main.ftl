@@ -465,6 +465,10 @@ virtual-bots-bring-online = Вывести бота в сеть
 virtual-bots-brought-online = Виртуальный бот { $name } вышел в сеть.
 virtual-bots-already-online = Виртуальный бот { $name } уже в сети.
 virtual-bots-all-online = Все виртуальные боты уже в сети.
+virtual-bots-take-offline = Отключить бота
+virtual-bots-taken-offline = Виртуальный бот { $name } отключён.
+virtual-bots-already-offline = Виртуальный бот { $name } уже офлайн.
+virtual-bots-all-offline = Все виртуальные боты уже офлайн.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = Эта игра содержит очень незрелый контент. Она не рекомендуется игрокам младше 16 лет или людям, чувствительным к определённым темам.

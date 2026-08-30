@@ -454,6 +454,24 @@ class VirtualBotManager:
         self._bring_bot_online(bot)
         return bot.state != VirtualBotState.OFFLINE
 
+    def take_bot_offline(self, name: str) -> bool:
+        """Take a single named virtual bot offline.
+
+        The bot leaves any table it is in, its presence departure is
+        announced, and its state is reset with an offline cooldown. Returns
+        True if the bot ends up offline, or False if the name is unknown or
+        the bot is already offline.
+        """
+        if name not in self._config.names:
+            return False
+
+        bot = self._bots.get(name)
+        if not bot or bot.state == VirtualBotState.OFFLINE:
+            return False
+
+        self._take_bot_offline(bot)
+        return bot.state == VirtualBotState.OFFLINE
+
     def _persist_definition(self, name: str, profile: str) -> None:
         """Save a bot definition (clearing any tombstone) to the database."""
         db = self._server._db

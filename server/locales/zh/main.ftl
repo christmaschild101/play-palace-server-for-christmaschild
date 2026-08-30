@@ -356,6 +356,10 @@ virtual-bots-bring-online = 让机器人上线
 virtual-bots-brought-online = 虚拟机器人 { $name } 已上线。
 virtual-bots-already-online = 虚拟机器人 { $name } 已经在线。
 virtual-bots-all-online = 所有虚拟机器人均已在线。
+virtual-bots-take-offline = 让机器人下线
+virtual-bots-taken-offline = 虚拟机器人 { $name } 已下线。
+virtual-bots-already-offline = 虚拟机器人 { $name } 已离线。
+virtual-bots-all-offline = 所有虚拟机器人均已离线。
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = 此游戏包含非常不成熟的内容。不建议未满 16 岁的玩家或对某些话题敏感的人游玩。

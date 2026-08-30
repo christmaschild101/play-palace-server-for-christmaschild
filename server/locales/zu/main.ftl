@@ -425,6 +425,10 @@ virtual-bots-bring-online = Lethela ibhothi kwi-inthanethi
 virtual-bots-brought-online = Ibhothi labantu abaningi { $name } selilethwe kwi-inthanethi.
 virtual-bots-already-online = Ibhothi labantu abaningi { $name } selivele likwi-inthanethi.
 virtual-bots-all-online = Wonke amabhothi abantu abaningi asebekwi-inthanethi.
+virtual-bots-take-offline = Khipha ibhothi kwi-inthanethi
+virtual-bots-taken-offline = Ibhothi labantu abaningi { $name } likhishiwe kwi-inthanethi.
+virtual-bots-already-offline = Ibhothi labantu abaningi { $name } selivele lingekho kwi-inthanethi.
+virtual-bots-all-offline = Wonke amabhothi abantu abaningi asebekhishiwe kwi-inthanethi.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = Lo mdlalo uqukethe okuqukethwe okungavuthiwe kakhulu. Akunconywa kubadlali abangaphansi kweminyaka engu-16 noma kubantu abazwelayo ezihlokweni ezithile.

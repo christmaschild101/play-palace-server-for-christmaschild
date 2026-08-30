@@ -413,6 +413,10 @@ virtual-bots-bring-online = 봇 온라인으로 전환
 virtual-bots-brought-online = 가상 봇 { $name } 님이 온라인 상태가 되었습니다.
 virtual-bots-already-online = 가상 봇 { $name } 님은 이미 온라인 상태입니다.
 virtual-bots-all-online = 모든 가상 봇이 이미 온라인 상태입니다.
+virtual-bots-take-offline = 봇 오프라인 전환
+virtual-bots-taken-offline = 가상 봇 { $name } 님이 오프라인이 되었습니다.
+virtual-bots-already-offline = 가상 봇 { $name } 님은 이미 오프라인 상태입니다.
+virtual-bots-all-offline = 모든 가상 봇이 이미 오프라인 상태입니다.
 
 # Cards Against Humanity mature-content notice
 cah-content-notice = 이 게임에는 매우 미숙한 콘텐츠가 포함되어 있습니다. 16세 미만 플레이어나 특정 주제에 민감한 분에게는 권장되지 않습니다.

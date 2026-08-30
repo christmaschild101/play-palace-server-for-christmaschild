@@ -1958,9 +1958,9 @@ class AdministrationMixin:
         reboot_seconds = 10
         retry_after = 15
 
-        # 1) Warn all online approved players
+        # 1) Warn all online approved players (virtual bots have no connection to push to)
         for username, user in self._users.items():
-            if not user.approved:
+            if not user.approved or getattr(user, "is_virtual_bot", False):
                 continue
             _speak_activity(user, "server-reboot-warning", seconds=reboot_seconds)
             user.play_sound("accountactionnotify.ogg")
@@ -1987,9 +1987,9 @@ class AdministrationMixin:
             self._show_admin_menu(admin)
             return
 
-        # 3) Disconnect all clients with an auto-reconnect request
+        # 3) Disconnect all clients with an auto-reconnect request (bots excluded)
         for username, user in list(self._users.items()):
-            if not user.approved:
+            if not user.approved or getattr(user, "is_virtual_bot", False):
                 continue
             for msg in user.get_queued_messages():
                 await user.connection.send(msg)

@@ -713,3 +713,15 @@ scheduled-actions-summary-when = Run in { $minutes } minute(s).
 scheduled-actions-summary-repeat = Repeat every { $minutes } minute(s).
 scheduled-actions-created = Scheduled action created.
 scheduled-actions-deleted = Scheduled action deleted.
+
+pref-set-online-sound = Online sound: { $choice }
+pref-changed-online-sound = Online sound set to { $choice }.
+pref-set-offline-sound = Offline sound: { $choice }
+pref-changed-offline-sound = Offline sound set to { $choice }.
+pref-online-sound-default = Default
+pref-online-sound-chime = Chime
+pref-online-sound-alert = Alert
+pref-offline-sound-default = Default
+pref-offline-sound-chime = Chime
+pref-offline-sound-alert = Alert
+

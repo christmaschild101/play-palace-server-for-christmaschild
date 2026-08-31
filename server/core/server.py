@@ -990,8 +990,7 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
 
             # Only broadcast offline if user was approved and not banned
             if user and user.approved and user.trust_level != TrustLevel.BANNED:
-                is_admin = user.trust_level.value >= TrustLevel.ADMIN.value
-                offline_sound = "offlineadmin.ogg" if is_admin else "offline.ogg"
+                offline_sound = self._presence_sound_for(user, offline=True)
                 self._broadcast_presence_l("user-offline", username, offline_sound)
 
             # Clean up user state
@@ -1003,6 +1002,28 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         for username, user in self._users.items():
             if user.approved:
                 yield username, user
+
+    def _presence_sound_for(self, user: NetworkUser, *, offline: bool = False) -> str:
+        """Resolve the account online/offline sound for *user*.
+
+        Account-preference choice (``chime``/``alert``) overrides the default
+    role-based sound (``online.ogg``/``offline.ogg``, ``onlineadmin.ogg``/
+    ``offlineadmin.ogg``). Admins keep their distinct audio unless they
+    explicitly choose a non default choice.
+    """
+        pref = user.preferences.online_sound if not offline else user.preferences.offline_sound
+        is_admin = user.trust_level.value >= TrustLevel.ADMIN.value
+        default = (
+            ("offlineadmin.ogg" if is_admin else "offline.ogg")
+            if offline
+            else ("onlineadmin.ogg" if is_admin else "online.ogg")
+        )
+        if pref is MainSound.Default:
+            return default
+        if pref is MainSound.Chime:
+            return ("offlinechime.ogg" if offline else "onlinechime.ogg")
+        # MainSound.Alert (and any future value) uses the alerted variant
+        return ("offlinealert.ogg" if offline else "onlinealert.ogg")
 
     def _broadcast_presence_l(self, message_id: str, player_name: str, sound: str) -> None:
         """Broadcast a localized presence announcement to all approved online users with sound."""
@@ -1267,9 +1288,7 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
 
     def _broadcast_login_presence(self, user: NetworkUser) -> None:
         """Broadcast login presence and role announcements."""
-        online_sound = (
-            "onlineadmin.ogg" if user.trust_level.value >= TrustLevel.ADMIN.value else "online.ogg"
-        )
+        online_sound = self._presence_sound_for(user)
         self._broadcast_presence_l("user-online", user.username, online_sound)
 
         if user.trust_level.value >= TrustLevel.SERVER_OWNER.value:

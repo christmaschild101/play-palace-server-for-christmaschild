@@ -116,6 +116,21 @@ pref-set-play-turn-sound = Turn sound: { $status }
 pref-desc-play-turn-sound = Play a sound when it becomes your turn
 pref-changed-play-turn-sound = Turn sound { $status }.
 
+pref-set-online-sound = Online sound: { $choice }
+pref-desc-online-sound = Sound played when you log in
+pref-changed-online-sound = Online sound set to { $choice }.
+
+pref-set-offline-sound = Offline sound: { $choice }
+pref-desc-offline-sound = Sound played when you log out
+pref-changed-offline-sound = Offline sound set to { $choice }.
+
+pref-online-sound-default = Default
+pref-online-sound-chime = Chime
+pref-online-sound-alert = Alert
+pref-offline-sound-default = Default
+pref-offline-sound-chime = Chime
+pref-offline-sound-alert = Alert
+
 pref-set-brief-announcements = Brief announcements: { $status }
 pref-desc-brief-announcements = Use shorter announcements during gameplay instead of detailed commentary
 pref-changed-brief-announcements = Brief announcements { $status }.

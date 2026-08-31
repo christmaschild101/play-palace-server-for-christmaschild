@@ -4,6 +4,8 @@ This document records changes to the PlayPalace server. New entries are added at
 
 ## 2026-08-30
 
+- Added account-level online and offline sound preferences. Users can now pick the sound played when they log in and when they log out from a small built-in menu (Default, Chime, Alert) in the existing Sounds preferences category; the option is server-side only and needs no client changes. The previous role-based distinction (admins vs non-admins getting distinct audio) is preserved unless the user overrides it.
+
 - Added two owner/developer server-management features, both driven from in-game menus (no client changes):
   - **Reload Caches** (developer): force-reloads localization and documents from disk, rebuilding locale bundles from source and re-scanning documents without a server restart.
   - **Scheduled Actions** (server owner): schedules one-shot or recurring reboots and broadcast announcements, persisted in the database so they survive restarts. A background scheduler executes due actions; scheduled reboots disconnect virtual bots first, matching the manual reboot flow.

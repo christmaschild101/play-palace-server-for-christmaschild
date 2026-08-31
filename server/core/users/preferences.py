@@ -22,8 +22,21 @@ if TYPE_CHECKING:
 
 
 # ---------------------------------------------------------------------------
-# Dice keeping style enum (kept for type safety in game code)
+# Preference enums
 # ---------------------------------------------------------------------------
+
+
+class MainSound(Enum):
+    """Built in sound sets for account online/offline presence.
+
+    ``default`` resolves server side to the admin/non admin sound depended on
+    trust level, so a user's menu choice can override it per account while the
+    per role audio distinction is preserved.
+    """
+
+    Default = "default"  # server chooses online.ogg / onlineadmin.ogg
+    Chime = "chime"      # onlinechime.ogg
+    Alert = "alert"      # onlinealert.ogg
 
 
 class DiceKeepingStyle(Enum):
@@ -127,6 +140,40 @@ class UserPreferences:
             description="pref-desc-play-turn-sound",
             kind="bool",
             default=True,
+        )
+    )
+
+    online_sound: MainSound = pref_field(
+        PrefMeta(
+            category="sounds",
+            label="pref-set-online-sound",
+            change_msg="pref-changed-online-sound",
+            description="pref-desc-online-sound",
+            kind="menu",
+            default=MainSound.Default,
+            choices=[
+                ("default", "pref-online-sound-default"),
+                ("chime", "pref-online-sound-chime"),
+                ("alert", "pref-online-sound-alert"),
+            ],
+            enum_class=MainSound,
+        )
+    )
+
+    offline_sound: MainSound = pref_field(
+        PrefMeta(
+            category="sounds",
+            label="pref-set-offline-sound",
+            change_msg="pref-changed-offline-sound",
+            description="pref-desc-offline-sound",
+            kind="menu",
+            default=MainSound.Default,
+            choices=[
+                ("default", "pref-offline-sound-default"),
+                ("chime", "pref-offline-sound-chime"),
+                ("alert", "pref-offline-sound-alert"),
+            ],
+            enum_class=MainSound,
         )
     )
 

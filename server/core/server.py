@@ -178,6 +178,7 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         self._ws_max_message_size = DEFAULT_WS_MAX_MESSAGE_BYTES
         self._config_path = Path(config_path) if config_path else get_default_config_path()
         self._allow_insecure_ws = False
+        self._frozen = False
         self._block_new_accounts = False
         self._auto_approve_new_accounts = False
         self._preload_locales = preload_locales
@@ -1071,6 +1072,15 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             if user:
                 user.speak_l("internal-error")
 
+    def _can_act_while_frozen(self, client: ClientConnection) -> bool:
+        """Return whether a client may act while the server is frozen.
+
+        Admins, developers, and the server owner remain exempt so they can
+        reach the admin menu and unfreeze the server.
+        """
+        user = self._users.get(client.username)
+        return bool(user and user.trust_level.value >= TrustLevel.ADMIN.value)
+
     async def _dispatch_client_message(self, client: ClientConnection, packet: dict) -> None:
         """Dispatch an incoming client message to the appropriate handler."""
         try:
@@ -1095,6 +1105,12 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         elif packet_type == "ping":
             # Always allow ping to keep connection alive
             await self._handle_ping(client)
+        elif self._is_frozen() and not self._can_act_while_frozen(client):
+            # Freeze gate: while frozen, only admins/developers/owner may act.
+            user = self._users.get(client.username)
+            if user:
+                user.speak_l("server-frozen-notice")
+            return
         elif packet_type == "menu":
             # Allow menu selections for all authenticated users (including unapproved)
             await self._handle_menu(client, packet)
@@ -2387,6 +2403,10 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             ),
             "reboot_server_confirm_menu": (
                 self._handle_reboot_server_confirm_selection,
+                (user, selection_id),
+            ),
+            "freeze_confirm_menu": (
+                self._handle_freeze_confirm_selection,
                 (user, selection_id),
             ),
             "reboot_server_bots_confirm_menu": (

@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Bekukan server
+unfreeze-server = Cabut pembekuan server
+confirm-freeze-server = Apakah Anda yakin ingin membekukan server? Pemain tidak akan bisa melakukan apa pun sampai admin mencabut pembekuan.
+server-frozen = Server telah dibekukan oleh admin. Tidak ada tindakan yang dapat dilakukan sampai server dicairkan.
+server-unfrozen = Server telah dicairkan. Aktivitas normal dapat dilanjutkan.
+server-frozen-notice = Server saat ini dibekukan oleh admin. Mohon tunggu.

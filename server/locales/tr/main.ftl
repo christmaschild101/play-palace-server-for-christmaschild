@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Sunucuyu dondur
+unfreeze-server = Sunucunun dondurmasını kaldır
+confirm-freeze-server = Sunucuyu dondurmak istediğinize emin misiniz? Bir yönetici dondurmayı kaldırana kadar oyuncular hiçbir şey yapamaz.
+server-frozen = Sunucu bir yönetici tarafından donduruldu. Sunucu dondurması kaldırılana kadar hiçbir işlem yapılamaz.
+server-unfrozen = Sunucunun dondurması kaldırıldı. Normal etkinlik devam edebilir.
+server-frozen-notice = Sunucu şu anda bir yönetici tarafından donduruldu. Lütfen bekleyin.

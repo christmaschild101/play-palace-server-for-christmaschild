@@ -603,3 +603,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Zmrazit server
+unfreeze-server = Odmrazit server
+confirm-freeze-server = Opravdu chcete zmrazit server? Hráči nebudou moci nic dělat, dokud správce server neodmrazí.
+server-frozen = Server byl zmrazen správcem. Žádné akce nelze provádět, dokud není server odmrazen.
+server-unfrozen = Server byl odmrazen. Normální aktivita může pokračovat.
+server-frozen-notice = Server je právě zmrazen správcem. Počkejte prosím.

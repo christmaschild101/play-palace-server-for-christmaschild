@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Frys servern
+unfreeze-server = Tina upp servern
+confirm-freeze-server = Är du säker på att du vill frysa servern? Spelare kan inte göra något förrän en administratör tinar upp den.
+server-frozen = Servern har frysts av en administratör. Inga åtgärder kan utföras förrän servern tinas upp.
+server-unfrozen = Servern har tinats upp. Normal aktivitet kan återupptas.
+server-frozen-notice = Servern är för närvarande fryst av en administratör. Vänta.

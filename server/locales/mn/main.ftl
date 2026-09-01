@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Серверийг хөлдөөх
+unfreeze-server = Серверийг гэсгээх
+confirm-freeze-server = Та серверийг хөлдөөхдөө итгэлтэй байна уу? Админ үүнийг гэсгээх хүртэл тоглогчид юу ч хийж чадахгүй.
+server-frozen = Серверийг админ хөлдөөсөн. Сервер гэсгээх хүртэл ямар ч үйлдэл хийх боломжгүй.
+server-unfrozen = Сервер гэсгээгдсэн. Ердийн үйл ажиллагааг үргэлжлүүлж болно.
+server-frozen-notice = Сервер одоогоор админаар хөлдөөгдсөн байна. Түр хүлээнэ үү.

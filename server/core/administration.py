@@ -85,6 +85,15 @@ class AdministrationMixin:
     _db: "Database"
     _users: dict[str, NetworkUser]
     _user_states: dict[str, dict]
+    _frozen: bool = False
+
+    def _is_frozen(self) -> bool:
+        """Return whether the server is currently frozen by an admin."""
+        return self._frozen
+
+    def _set_frozen(self, frozen: bool) -> None:
+        """Set the server freeze state (in-memory; cleared on restart)."""
+        self._frozen = frozen
 
     def _show_main_menu(self, user: NetworkUser) -> None:
         """Show main menu - to be implemented by the main class."""
@@ -134,6 +143,13 @@ class AdministrationMixin:
             MenuItem(
                 text=Localization.get(user.locale, "admin-reboot-server"),
                 id="reboot_server",
+            ),
+            MenuItem(
+                text=Localization.get(
+                    user.locale,
+                    "unfreeze-server" if self._is_frozen() else "freeze-server",
+                ),
+                id="unfreeze_server" if self._is_frozen() else "freeze_server",
             ),
         ]
         # Developers and server owners can promote/demote admins and manage virtual bots
@@ -500,6 +516,12 @@ class AdministrationMixin:
         question = Localization.get(user.locale, "confirm-reboot-server")
         show_yes_no_menu(user, "reboot_server_confirm_menu", question)
         self._user_states[user.username] = {"menu": "reboot_server_confirm_menu"}
+
+    def _show_freeze_confirm_menu(self, user: NetworkUser) -> None:
+        """Show confirmation menu for freezing the server."""
+        question = Localization.get(user.locale, "confirm-freeze-server")
+        show_yes_no_menu(user, "freeze_confirm_menu", question)
+        self._user_states[user.username] = {"menu": "freeze_confirm_menu"}
 
     def _show_reboot_server_bots_confirm_menu(self, user: NetworkUser) -> None:
         """Warn the admin that virtual bots are connected before rebooting."""
@@ -1090,6 +1112,10 @@ class AdministrationMixin:
             self._show_scheduled_actions_menu(user)
         elif selection_id == "reboot_server":
             self._show_reboot_server_confirm_menu(user)
+        elif selection_id == "freeze_server":
+            self._show_freeze_confirm_menu(user)
+        elif selection_id == "unfreeze_server":
+            self._toggle_freeze(user)
         elif selection_id == "promote_developer":
             self._show_promote_developer_menu(user)
         elif selection_id == "demote_developer":
@@ -1416,6 +1442,33 @@ class AdministrationMixin:
             self._show_reboot_server_bots_confirm_menu(user)
         else:
             await self._reboot_server(user)
+
+    async def _handle_freeze_confirm_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle freeze server confirmation menu selection."""
+        if selection_id != "yes":
+            self._show_admin_menu(user)
+            return
+
+        self._toggle_freeze(user)
+
+    def _toggle_freeze(self, admin: NetworkUser) -> None:
+        """Freeze or unfreeze the server and broadcast the change to everyone.
+
+        The freeze state is in-memory only: a server restart automatically
+        unfreezes. While frozen, non-admin users are blocked from all actions
+        by the dispatch gate; the admin menu item flips to "Unfreeze server".
+        """
+        frozen = not self._is_frozen()
+        self._set_frozen(frozen)
+        message_id = "server-frozen" if frozen else "server-unfrozen"
+        for username, user in list(self._users.items()):
+            if not user.approved or getattr(user, "is_virtual_bot", False):
+                continue
+            _speak_activity(user, message_id)
+            user.play_sound("accountactionnotify.ogg")
+        self._show_admin_menu(admin)
 
     def _bots_connected(self) -> bool:
         """Return True if any virtual bots are currently online or in game."""

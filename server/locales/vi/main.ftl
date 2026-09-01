@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Đóng băng máy chủ
+unfreeze-server = Bỏ đóng băng máy chủ
+confirm-freeze-server = Bạn có chắc chắn muốn đóng băng máy chủ? Người chơi sẽ không thể làm gì cho đến khi quản trị viên bỏ đóng băng.
+server-frozen = Máy chủ đã bị quản trị viên đóng băng. Không thể thực hiện hành động nào cho đến khi máy chủ được bỏ đóng băng.
+server-unfrozen = Máy chủ đã được bỏ đóng băng. Hoạt động bình thường có thể tiếp tục.
+server-frozen-notice = Máy chủ hiện đang bị quản trị viên đóng băng. Vui lòng chờ.

@@ -651,3 +651,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = تجميد الخادم
+unfreeze-server = إلغاء تجميد الخادم
+confirm-freeze-server = هل أنت متأكد من رغبتك في تجميد الخادم؟ لن يتمكن اللاعبون من فعل أي شيء حتى يقوم المشرف بإلغاء التجميد.
+server-frozen = تم تجميد الخادم بواسطة مشرف. لا يمكن تنفيذ أي إجراءات حتى يتم إلغاء تجميد الخادم.
+server-unfrozen = تم إلغاء تجميد الخادم. يمكن استئناف النشاط الطبيعي.
+server-frozen-notice = الخادم مجمد حاليًا بواسطة مشرف. يرجى الانتظار.

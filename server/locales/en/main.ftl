@@ -648,6 +648,14 @@ confirm-reboot-server = Are you sure you want to reboot the server? All players 
 server-reboot-warning = Server is restarting in { $seconds } seconds.
 server-restarting = The server is restarting. You will be reconnected automatically.
 server-reboot-failed = The server could not be rebooted. Please try again.
+
+# Server freeze
+freeze-server = Freeze server
+unfreeze-server = Unfreeze server
+confirm-freeze-server = Are you sure you want to freeze the server? Players will not be able to do anything until an admin unfreezes it.
+server-frozen = The server has been frozen by an admin. No actions can be performed until an admin unfreezes the server.
+server-unfrozen = The server has been unfrozen. Normal activity may resume.
+server-frozen-notice = The server is currently frozen by an admin. Please wait.
 # Admin: server status
 server-status = Server Status
 server-status-title = -- Server Status --

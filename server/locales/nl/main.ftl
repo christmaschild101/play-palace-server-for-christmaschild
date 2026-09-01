@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Server bevriezen
+unfreeze-server = Server ontdooien
+confirm-freeze-server = Weet u zeker dat u de server wilt bevriezen? Spelers kunnen niets doen totdat een beheerder de server ontdooit.
+server-frozen = De server is bevroren door een beheerder. Er kunnen geen acties worden uitgevoerd totdat de server is ontdooid.
+server-unfrozen = De server is ontdooid. Normale activiteit kan worden hervat.
+server-frozen-notice = De server is momenteel bevroren door een beheerder. Even geduld alstublieft.

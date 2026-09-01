@@ -569,3 +569,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Замрзни сервер
+unfreeze-server = Одмрзни сервер
+confirm-freeze-server = Да ли сте сигурни да желите да замрзнете сервер? Играчи неће моћи ништа да раде док га администратор не одмрзне.
+server-frozen = Сервер је замрзнуо администратор. Ниједна радња се не може извршити док се сервер не одмрзне.
+server-unfrozen = Сервер је одмрзнут. Нормална активност може да се настави.
+server-frozen-notice = Сервер је тренутно замрзнут од стране администратора. Сачекајте.

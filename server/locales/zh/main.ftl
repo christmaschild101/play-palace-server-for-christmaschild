@@ -496,3 +496,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = 冻结服务器
+unfreeze-server = 解冻服务器
+confirm-freeze-server = 您确定要冻结服务器吗？在管理员解冻之前，玩家将无法进行任何操作。
+server-frozen = 服务器已被管理员冻结。在服务器解冻之前，无法执行任何操作。
+server-unfrozen = 服务器已解冻。可以恢复正常活动。
+server-frozen-notice = 服务器目前已被管理员冻结。请稍候。

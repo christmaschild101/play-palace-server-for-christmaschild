@@ -553,3 +553,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = 서버 동결
+unfreeze-server = 서버 동결 해제
+confirm-freeze-server = 정말 서버를 동결하시겠습니까? 관리자가 동결을 해제할 때까지 플레이어는 아무것도 할 수 없습니다.
+server-frozen = 관리자가 서버를 동결했습니다. 동결이 해제될 때까지 어떤 작업도 수행할 수 없습니다.
+server-unfrozen = 서버 동결이 해제되었습니다. 정상적인 활동을 재개할 수 있습니다.
+server-frozen-notice = 서버가 현재 관리자에 의해 동결되어 있습니다. 잠시 기다려 주세요.

@@ -553,3 +553,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = サーバーを凍結
+unfreeze-server = サーバーの凍結を解除
+confirm-freeze-server = 本当にサーバーを凍結しますか？管理者が凍結を解除するまで、プレイヤーは何もできなくなります。
+server-frozen = サーバーは管理者によって凍結されました。凍結が解除されるまでアクションは実行できません。
+server-unfrozen = サーバーの凍結が解除されました。通常のアクティビティを再開できます。
+server-frozen-notice = サーバーは現在管理者によって凍結されています。お待ちください。

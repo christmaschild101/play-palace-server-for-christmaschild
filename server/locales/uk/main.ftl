@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Заморозити сервер
+unfreeze-server = Розморозити сервер
+confirm-freeze-server = Ви впевнені, що хочете заморозити сервер? Гравці не зможуть нічого робити, доки адміністратор не розморозить його.
+server-frozen = Сервер було заморожено адміністратором. Жодні дії не можуть виконуватися, доки сервер не розморожено.
+server-unfrozen = Сервер було розморожено. Нормальна активність може відновитися.
+server-frozen-notice = Сервер наразі заморожено адміністратором. Будь ласка, зачекайте.

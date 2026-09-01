@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Szerver befagyasztása
+unfreeze-server = Szerver feloldása
+confirm-freeze-server = Biztosan befagyasztja a szervert? A játékosok semmit sem tehetnek, amíg egy adminisztrátor fel nem oldja.
+server-frozen = A szervert egy adminisztrátor befagyasztotta. Amíg fel nem oldják, semmilyen művelet nem hajtható végre.
+server-unfrozen = A szerver fel lett oldva. A normál tevékenység folytatódhat.
+server-frozen-notice = A szerver jelenleg egy adminisztrátor által befagyasztva. Kérjük, várjon.

@@ -553,3 +553,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = หยุดเซิร์ฟเวอร์ชั่วคราว
+unfreeze-server = ปลดล็อกเซิร์ฟเวอร์
+confirm-freeze-server = คุณแน่ใจหรือไม่ว่าต้องการหยุดเซิร์ฟเวอร์ชั่วคราว? ผู้เล่นจะไม่สามารถทำอะไรได้จนกว่าผู้ดูแลระบบจะปลดล็อก
+server-frozen = เซิร์ฟเวอร์ถูกหยุดชั่วคราวโดยผู้ดูแลระบบ ไม่สามารถดำเนินการใด ๆ ได้จนกว่าเซิร์ฟเวอร์จะถูกปลดล็อก
+server-unfrozen = เซิร์ฟเวอร์ถูกปลดล็อกแล้ว สามารถเริ่มกิจกรรมตามปกติได้
+server-frozen-notice = เซิร์ฟเวอร์ถูกหยุดชั่วคราวโดยผู้ดูแลระบบ กรุณารอ

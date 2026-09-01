@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Misa iseva
+unfreeze-server = Vula iseva
+confirm-freeze-server = Uqinisekile ukuthi ufuna ukumisa iseva? Abadlali ngeke bakwazi ukwenza lutho kuze kube umphathi evula.
+server-frozen = Iseva imisiwe umphathi. Azikho izenzo ezingenziwa kuze kube iseva ivuliwe.
+server-unfrozen = Iseva isivuliwe. Umsebenzi ojwayelekile ungaqhubeka.
+server-frozen-notice = Iseva okwamanje imisiwe umphathi. Sicela ulinde.

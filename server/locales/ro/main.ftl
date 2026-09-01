@@ -569,3 +569,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Îngheață serverul
+unfreeze-server = Dezgheață serverul
+confirm-freeze-server = Sigur doriți să înghețați serverul? Jucătorii nu vor putea face nimic până când un administrator îl va dezgheța.
+server-frozen = Serverul a fost înghețat de un administrator. Nicio acțiune nu poate fi efectuată până când serverul este dezghețat.
+server-unfrozen = Serverul a fost dezghețat. Activitatea normală poate fi reluată.
+server-frozen-notice = Serverul este momentan înghețat de un administrator. Vă rugăm să așteptați.

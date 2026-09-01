@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = सर्वर फ़्रीज़ करें
+unfreeze-server = सर्वर अनफ़्रीज़ करें
+confirm-freeze-server = क्या आप वाकई सर्वर फ़्रीज़ करना चाहते हैं? जब तक कोई व्यवस्थापक इसे अनफ़्रीज़ नहीं करता, खिलाड़ी कुछ भी नहीं कर सकेंगे।
+server-frozen = सर्वर को एक व्यवस्थापक द्वारा फ़्रीज़ किया गया है। जब तक सर्वर अनफ़्रीज़ नहीं होता, कोई कार्रवाई नहीं की जा सकती।
+server-unfrozen = सर्वर अनफ़्रीज़ हो गया है। सामान्य गतिविधि फिर से शुरू हो सकती है।
+server-frozen-notice = सर्वर फ़िलहाल एक व्यवस्थापक द्वारा फ़्रीज़ है। कृपया प्रतीक्षा करें।

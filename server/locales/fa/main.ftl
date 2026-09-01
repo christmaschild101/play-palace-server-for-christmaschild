@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = مسدود کردن سرور
+unfreeze-server = باز کردن سرور
+confirm-freeze-server = آیا از مسدود کردن سرور مطمئن هستید؟ بازیکنان تا زمانی که یک مدیر سرور را باز نکند نمی‌توانند کاری انجام دهند.
+server-frozen = سرور توسط یک مدیر مسدود شده است. تا زمانی که سرور باز نشود، هیچ عملی قابل انجام نیست.
+server-unfrozen = سرور باز شده است. فعالیت عادی می‌تواند از سر گرفته شود.
+server-frozen-notice = سرور در حال حاضر توسط یک مدیر مسدود شده است. لطفاً منتظر بمانید.

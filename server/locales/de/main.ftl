@@ -725,3 +725,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Server einfrieren
+unfreeze-server = Server auftauen
+confirm-freeze-server = Möchten Sie den Server wirklich einfrieren? Spieler können nichts tun, bis ein Administrator den Server wieder freigibt.
+server-frozen = Der Server wurde von einem Administrator eingefroren. Es können keine Aktionen durchgeführt werden, bis der Server wieder freigegeben wird.
+server-unfrozen = Der Server wurde freigegeben. Die normale Aktivität kann fortgesetzt werden.
+server-frozen-notice = Der Server ist derzeit von einem Administrator eingefroren. Bitte warten Sie.

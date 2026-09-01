@@ -262,6 +262,7 @@ def test_show_admin_menu_includes_owner_actions():
         "server_status",
         "kick_user",
         "reboot_server",
+        "freeze_server",
         "back",
     ]
     assert host._user_states["admin"]["menu"] == "admin_menu"
@@ -276,6 +277,7 @@ def test_show_admin_menu_includes_owner_actions():
         "server_status",
         "kick_user",
         "reboot_server",
+        "freeze_server",
         "promote_admin",
         "demote_admin",
         "virtual_bots",
@@ -700,6 +702,7 @@ def test_show_admin_menu_developer_sees_admin_management_but_not_owner_actions()
         "server_status",
         "kick_user",
         "reboot_server",
+        "freeze_server",
         "promote_admin",
         "demote_admin",
         "virtual_bots",

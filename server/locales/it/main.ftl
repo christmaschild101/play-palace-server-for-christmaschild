@@ -565,3 +565,10 @@ pref-offline-sound-default = Default
 pref-offline-sound-chime = Chime
 pref-offline-sound-alert = Alert
 
+# Server freeze
+freeze-server = Congela server
+unfreeze-server = Scongela server
+confirm-freeze-server = Sei sicuro di voler congelare il server? I giocatori non potranno fare nulla finché un amministratore non lo scongela.
+server-frozen = Il server è stato congelato da un amministratore. Nessuna azione può essere eseguita finché il server non viene scongelato.
+server-unfrozen = Il server è stato scongelato. L'attività normale può riprendere.
+server-frozen-notice = Il server è attualmente congelato da un amministratore. Attendere prego.

@@ -3751,6 +3751,8 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         aggregate = config.get("aggregate", "sum")
         format_key = config.get("format", "score")
         decimals = config.get("decimals", 0)
+        # Games where a lower score is better (e.g., Hearts) set reverse: True
+        sort_ascending = config.get("reverse", False)
 
         # Check if this is a ratio calculation or simple path
         is_ratio = "numerator" in config and "denominator" in config
@@ -3815,8 +3817,8 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
 
                 player_scores.append((player_id, data["name"], value))
 
-        # Sort descending
-        player_scores.sort(key=lambda x: x[2], reverse=True)
+        # Sort descending (ascending for games where lower is better)
+        player_scores.sort(key=lambda x: x[2], reverse=not sort_ascending)
 
         # Build menu items
         items = []

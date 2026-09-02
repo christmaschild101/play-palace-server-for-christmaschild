@@ -50,6 +50,20 @@ from .deadmansdeck.game import DeadMansDeckGame
 from .deadmanspoker.game import DeadMansPokerGame
 from .tienlen.game import TienLenGame
 
+# New games (2026 wave)
+from .shipcaptaincrew.game import ShipCaptainCrewGame
+from .tictactoe.game import TicTacToeGame
+from .go_fish.game import GoFishGame
+from .mancala.game import MancalaGame
+from .shutthebox.game import ShutTheBoxGame
+from .ceelo.game import CeeLoGame
+from .reversi.game import ReversiGame
+from .cantstop.game import CanTStopGame
+from .liarsdice.game import LiarsDiceGame
+from .hangman.game import HangmanGame
+from .hearts.game import HeartsGame
+from .monopoly.game import MonopolyGame
+
 __all__ = [
     "Game",
     "GameRegistry",
@@ -97,4 +111,16 @@ __all__ = [
     "DeadMansDeckGame",
     "DeadMansPokerGame",
     "TienLenGame",
+    "ShipCaptainCrewGame",
+    "TicTacToeGame",
+    "GoFishGame",
+    "MancalaGame",
+    "ShutTheBoxGame",
+    "CeeLoGame",
+    "ReversiGame",
+    "CanTStopGame",
+    "LiarsDiceGame",
+    "HangmanGame",
+    "HeartsGame",
+    "MonopolyGame",
 ]

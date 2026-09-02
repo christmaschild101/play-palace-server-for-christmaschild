@@ -245,6 +245,11 @@ leaderboard-type-games-played = Games Played
 leaderboard-type-avg-points-per-turn = Avg Points Per Turn
 leaderboard-type-best-single-turn = Best Single Turn
 leaderboard-type-score-per-round = Score Per Round
+leaderboard-type-most-money = Richest Finish
+leaderboard-type-lowest-points = Lowest Points
+leaderboard-type-total-winnings = Total Points Won
+leaderboard-type-dice-remaining = Avg Dice Left
+leaderboard-type-moon-shots = Moon Shots
 
 # Leaderboard headers
 leaderboard-wins-header = { $game } - Win Leaders

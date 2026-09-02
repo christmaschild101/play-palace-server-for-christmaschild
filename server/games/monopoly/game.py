@@ -19,6 +19,7 @@ from ...game_utils.actions import Action, ActionSet, EditboxInput, MenuInput, Vi
 from ...game_utils.bot_helper import BotHelper
 from ...game_utils.game_result import GameResult, PlayerResult
 from ...game_utils.game_status import GameStatus
+from ...game_utils.options import IntOption, option_field
 from ...messages.localization import Localization
 from server.core.ui.keybinds import KeybindState
 
@@ -217,8 +218,8 @@ class MonopolyGame(ActionGuardMixin, Game):
             player.properties = []
             player.houses = {}
             player.mortgaged = []
-        self.chance_deck = [dict(c) for c in CHANCE_CARDS]
-        self.chest_deck = [dict(c) for c in CHEST_CARDS]
+        self.chance_deck = [{"kind": k, "value": v} for k, v in CHANCE_CARDS]
+        self.chest_deck = [{"kind": k, "value": v} for k, v in CHEST_CARDS]
         random.shuffle(self.chance_deck)  # nosec B311
         random.shuffle(self.chest_deck)  # nosec B311
         self.set_turn_players(active)
@@ -729,6 +730,7 @@ class MonopolyGame(ActionGuardMixin, Game):
 
     def _close_auction(self, winner: MonopolyPlayer | None) -> None:
         space = self.auction_space
+        bid = self.auction_bid
         self.phase = "roll"
         self.auction_space = -1
         self.auction_bid = 0
@@ -736,8 +738,8 @@ class MonopolyGame(ActionGuardMixin, Game):
         self.auction_passed = []
 
         if winner is not None and not winner.bankrupt:
-            if winner.money >= self.auction_bid:
-                winner.money -= self.auction_bid
+            if winner.money >= bid:
+                winner.money -= bid
             else:
                 winner.money = 0
             winner.properties.append(space)
@@ -746,7 +748,7 @@ class MonopolyGame(ActionGuardMixin, Game):
                 "monopoly-auction-won",
                 player=winner.name,
                 space=self._space_name(space, "en"),
-                bid=self.auction_bid,
+                bid=bid,
             )
         else:
             self.broadcast_l("monopoly-auction-none", space=self._space_name(space, "en"))

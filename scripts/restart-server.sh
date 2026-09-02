@@ -17,11 +17,25 @@ APP_DIR="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 # Log directory for failed pulls; matches the server's var/ runtime dir.
 RESTART_LOG="$APP_DIR/var/restart.log"
 
-# 1) Wait for the running server process to exit.
-# The [ ] guards prevent pgrep from matching this script's own subshell.
-while pgrep -f "[/]playpalace/.venv/bin/python.*server/main.py" >/dev/null 2>&1; do
+# 1) Wait for the server unit's main process to exit.
+#    We wait on the unit's own MainPID (never a broad pgrep pattern), so
+#    stray or manually-started server instances can't deadlock the reboot.
+#    A hard cap guarantees we always reach the restart step below even if
+#    the unit state is somehow inconsistent.
+stop_wait_seconds=60
+waited=0
+while [ "$waited" -lt "$stop_wait_seconds" ]; do
+    main_pid="$(systemctl --user show -p MainPID --value playpalace 2>/dev/null || echo 0)"
+    if [ "${main_pid:-0}" = "0" ] || ! kill -0 "$main_pid" 2>/dev/null; then
+        break
+    fi
     sleep 1
+    waited=$((waited + 1))
 done
+if [ "$waited" -ge "$stop_wait_seconds" ]; then
+    echo "$(date -Is) restart-server.sh: timed out waiting for server to exit; proceeding." \
+        >> "$RESTART_LOG"
+fi
 
 cd "$APP_DIR"
 

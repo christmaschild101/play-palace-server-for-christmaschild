@@ -94,3 +94,19 @@ def test_banned_user_has_no_offline_broadcast():
 def test_server_presence_sound_for_exists():
     # Ensure the real helper exists and matches the inlined shape.
     assert callable(getattr(Server, "_presence_sound_for", None))
+
+
+def test_real_server_method_resolves_online_sound():
+    """Regression: Server._presence_sound_for must run without NameError.
+
+    Previously server.py referenced MainSound without importing it, so the
+    login/disconnect presence broadcast crashed and users never received
+    their post-login menus.
+    """
+    user = DummyUser("alice", trust=TrustLevel.USER, online_sound=MainSound.Chime)
+    assert Server._presence_sound_for(None, user) == "onlinechime.ogg"  # self unused by helper
+
+
+def test_real_server_method_resolves_offline_alert():
+    user = DummyUser("bob", trust=TrustLevel.ADMIN, offline_sound=MainSound.Alert)
+    assert Server._presence_sound_for(None, user, offline=True) == "offlinealert.ogg"  # self unused

@@ -42,7 +42,7 @@ from ..auth.auth import AuthManager, AuthResult
 from .tables.manager import TableManager
 from .users.network_user import NetworkUser
 from .users.base import MenuItem, EscapeBehavior, TrustLevel
-from .users.preferences import UserPreferences, DiceKeepingStyle, PREF_CATEGORIES, PrefMeta
+from .users.preferences import DiceKeepingStyle, MainSound, PREF_CATEGORIES, PrefMeta, UserPreferences
 from ..games.registry import GameRegistry, get_game_class
 from ..messages.localization import Localization
 from .ui.common_flows import show_yes_no_menu

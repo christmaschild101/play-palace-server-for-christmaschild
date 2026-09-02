@@ -9,6 +9,7 @@ import pytest
 
 from server.core.server import Server
 from server.core.users.base import TrustLevel
+from server.core.users.preferences import UserPreferences
 
 
 class DummyUser:
@@ -22,6 +23,7 @@ class DummyUser:
         self.menus: list[str] = []
         self.sounds: list[str] = []
         self.sent: list[dict] = []
+        self.preferences = UserPreferences()
 
     def speak_l(self, message_id: str, buffer: str = "misc", **kwargs):
         self.spoken.append((message_id, kwargs))

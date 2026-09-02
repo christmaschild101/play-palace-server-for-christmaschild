@@ -87,6 +87,22 @@ class LobbyActionsMixin:
         self.on_start()
         self.validate_actions()
 
+        # Presence: server-side virtual bots react to humans at the table.
+        self._notify_virtual_bots_game_started()
+
+    def _notify_virtual_bots_game_started(self) -> None:
+        """Let the server's virtual bots react when this game begins.
+
+        Presence-only: the manager no-ops when the presence engine is off or
+        no bots are seated, and the engine stays silent without human players.
+        """
+        table = getattr(self, "_table", None)
+        virtual_bots = getattr(getattr(table, "_server", None), "_virtual_bots", None)
+        if virtual_bots is None:
+            return
+        human_names = [p.name for p in self.players if not getattr(p, "is_bot", False)]
+        virtual_bots.notify_game_started(table, human_names)
+
     def _bot_input_add_bot(self, player: "Player") -> str | None:
         """Get bot name for add_bot action."""
         return next(

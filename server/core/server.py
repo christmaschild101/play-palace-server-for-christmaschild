@@ -1343,6 +1343,8 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             game.broadcast_l("player-took-over", player=user.username)
             game.broadcast_sound("join.ogg")
             game.rebuild_all_menus()
+            # Presence: bots at the table may welcome the player back.
+            self._virtual_bots.notify_human_took_over(table, user.username)
 
         self._user_states[username] = {
             "menu": "in_game",
@@ -3019,6 +3021,8 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             game.broadcast_l("table-joined", player=user.username)
             game.broadcast_sound("join.ogg")
             game.rebuild_all_menus()
+            # Presence: bots at the table may greet the new player.
+            self._virtual_bots.notify_human_joined_table(table, user.username)
         else:
             # Join as spectator
             table.add_member(user.username, user, as_spectator=True)
@@ -3080,6 +3084,8 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                         "menu": "in_game",
                         "table_id": table_id,
                     }
+                    # Presence: bots at the table may welcome the player back.
+                    self._virtual_bots.notify_human_took_over(table, user.username)
                     return
                 else:
                     # No matching player - join as spectator instead
@@ -3108,6 +3114,8 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
             game.broadcast_sound("join.ogg")
             game.rebuild_all_menus()
             self._user_states[user.username] = {"menu": "in_game", "table_id": table_id}
+            # Presence: bots at the table may greet the new player.
+            self._virtual_bots.notify_human_joined_table(table, user.username)
 
         elif selection_id == "join_spectator":
             table.add_member(user.username, user, as_spectator=True)

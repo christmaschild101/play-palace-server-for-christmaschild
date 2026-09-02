@@ -105,6 +105,17 @@ class VirtualBotProfileOverride:
     waiting_max_ticks: int | None = None
     # Presence opt-in for this profile (chat + session cadence)
     presence_enabled: bool | None = None
+    # Per-profile chat line pools (layer on top of [virtual_bots.presence])
+    chat_lines_greeting: list[str] | None = None
+    chat_lines_ingame: list[str] | None = None
+    chat_lines_postgame: list[str] | None = None
+    chat_lines_idle: list[str] | None = None
+    chat_lines_join: list[str] | None = None
+    chat_lines_takeover: list[str] | None = None
+    chat_lines_gamestart: list[str] | None = None
+    chat_lines_gameend: list[str] | None = None
+    # Per-profile game pools: game type -> category -> lines
+    game_pools: dict[str, dict[str, list[str] | str]] | None = None
 
 
 @dataclass
@@ -279,6 +290,8 @@ class VirtualBotManager:
         for list_field in (
             "chat_lines_greeting", "chat_lines_ingame",
             "chat_lines_postgame", "chat_lines_idle",
+            "chat_lines_join", "chat_lines_takeover",
+            "chat_lines_gamestart", "chat_lines_gameend",
         ):
             if isinstance(kwargs.get(list_field), str):
                 kwargs[list_field] = [kwargs[list_field]]
@@ -305,12 +318,81 @@ class VirtualBotManager:
             return override.presence_enabled
         return self._config.presence_enabled
 
+    @staticmethod
+    def _coerce_chat_lines(value: Any) -> list[str] | None:
+        """Coerce a TOML value into a list of chat lines (or None)."""
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, list):
+            return [str(line) for line in value]
+        return None
+
+    def profile_chat_lines(self, profile: str, category: str) -> list[str] | None:
+        """Return a profile's per-category chat pool override, if any."""
+        from .bot_presence import POOL_FIELD_BY_CATEGORY
+
+        override = self._profiles.get(profile)
+        if override is None:
+            return None
+        field = POOL_FIELD_BY_CATEGORY.get(category)
+        if not field:
+            return None
+        value = getattr(override, field, None)
+        if isinstance(value, str):
+            return [value]
+        return value
+
+    @staticmethod
+    def _coerce_game_pools(
+        value: Any,
+    ) -> dict[str, dict[str, list[str] | str]] | None:
+        """Coerce a TOML ``game_pools`` value into the expected shape."""
+        if not isinstance(value, dict):
+            return None
+        result: dict[str, dict[str, list[str] | str]] = {}
+        for game_type, pools in value.items():
+            if not isinstance(pools, dict):
+                continue
+            result[str(game_type)] = {
+                str(category): lines for category, lines in pools.items()
+            }
+        return result if result else None
+
+    def profile_game_chat_lines(
+        self, profile: str, game_type: str, category: str
+    ) -> list[str] | None:
+        """Return a profile's per-game chat pool override, if any."""
+        override = self._profiles.get(profile)
+        if override is None or not game_type:
+            return None
+        pools = getattr(override, "game_pools", None) or {}
+        category_pool = pools.get(game_type)
+        if not isinstance(category_pool, dict):
+            return None
+        value = category_pool.get(category)
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, list) and value:
+            return [str(line) for line in value]
+        return None
+
     def online_bot_names(self) -> list[str]:
         """Names of bots currently not OFFLINE (eligible for presence activity)."""
         return [
             name for name, bot in self._bots.items()
             if bot.state != VirtualBotState.OFFLINE
         ]
+
+    def bot_game_type(self, bot_name: str) -> str:
+        """Game type of the table this bot is currently seated at (or "")."""
+        bot = self._bots.get(bot_name)
+        if not bot or not bot.table_id:
+            return ""
+        tables = getattr(getattr(self._server, "_tables", None), "get_table", None)
+        if tables is None:
+            return ""
+        table = tables(bot.table_id)
+        return getattr(table, "game_type", "") or ""
 
     def bot_chat_category(self, bot_name: str) -> str:
         """Pick a chat category from the bot's current state."""
@@ -353,7 +435,7 @@ class VirtualBotManager:
         """Admin-facing presence status (delegates to the engine)."""
         if not self._presence:
             return {"enabled": False, "kill_switch": False, "chats_sent": 0, "chats_blocked": 0}
-        return self._presence.get_status()
+        return self._presence.get_status(self._tick_counter)
 
     def set_presence_kill_switch(self, value: bool) -> None:
         """Instantly pause/resume all bot chatter; persisted in DB."""
@@ -635,6 +717,31 @@ class VirtualBotManager:
                 waiting_min_ticks=overrides.get("waiting_min_ticks"),
                 waiting_max_ticks=overrides.get("waiting_max_ticks"),
                 presence_enabled=overrides.get("presence_enabled"),
+                chat_lines_greeting=self._coerce_chat_lines(
+                    overrides.get("chat_lines_greeting")
+                ),
+                chat_lines_ingame=self._coerce_chat_lines(
+                    overrides.get("chat_lines_ingame")
+                ),
+                chat_lines_postgame=self._coerce_chat_lines(
+                    overrides.get("chat_lines_postgame")
+                ),
+                chat_lines_idle=self._coerce_chat_lines(
+                    overrides.get("chat_lines_idle")
+                ),
+                chat_lines_join=self._coerce_chat_lines(
+                    overrides.get("chat_lines_join")
+                ),
+                chat_lines_takeover=self._coerce_chat_lines(
+                    overrides.get("chat_lines_takeover")
+                ),
+                chat_lines_gamestart=self._coerce_chat_lines(
+                    overrides.get("chat_lines_gamestart")
+                ),
+                chat_lines_gameend=self._coerce_chat_lines(
+                    overrides.get("chat_lines_gameend")
+                ),
+                game_pools=self._coerce_game_pools(overrides.get("game_pools")),
             )
         return profiles
 
@@ -1407,6 +1514,19 @@ class VirtualBotManager:
                 self._get_config_value(bot, "max_offline_ticks"),
             )
             return
+
+        # Session cadence: presence may defer the login so arrivals cluster
+        # into bursts instead of trickling in one at a time. Presence-disabled
+        # or unshaped configs always admit (returns True).
+        presence = self._presence
+        if presence is not None and not presence.should_bot_log_in(
+            bot.name, self._tick_counter
+        ):
+            bot.cooldown_ticks = random.randint(  # nosec B311
+                self._get_config_value(bot, "min_offline_ticks"),
+                self._get_config_value(bot, "max_offline_ticks"),
+            )
+            return
         self._bring_bot_online(bot)
 
     def _process_online_idle_bot(self, bot: VirtualBot) -> None:
@@ -1477,8 +1597,6 @@ class VirtualBotManager:
                     player = game.get_player_by_name(bot.name)
                     if player:
                         game.execute_action(player, "start_game")
-                        if self._presence:
-                            self._presence.on_game_start(bot.name, self._tick_counter)
 
     def _process_leaving_game_bot(self, bot: VirtualBot) -> None:
         """Process a bot that is leaving a game (staggered departure)."""
@@ -1886,14 +2004,87 @@ class VirtualBotManager:
 
         return True
 
-    def on_game_ended(self, table_id: str) -> None:
-        """
-        Called when a game ends. Triggers bots to start leaving.
+    # ==================== Player-aware chatter (presence hooks) ====================
 
-        This is called from the server when a table's game finishes.
+    def _table_bot_candidates(self, table) -> list[str]:
+        """Names of online bots seated at *table* (eligible to react to humans)."""
+        table_id = getattr(table, "table_id", None)
+        if not table_id:
+            return []
+        return [
+            name
+            for name, bot in self._bots.items()
+            if bot.table_id == table_id
+            and bot.state in (VirtualBotState.IN_GAME, VirtualBotState.LEAVING_GAME)
+        ]
+
+    def notify_human_joined_table(self, table, human_name: str) -> None:
+        """A human joined *table*; let an online bot there greet them (presence)."""
+        presence = self._presence
+        if presence is None:
+            return
+        candidates = self._table_bot_candidates(table)
+        if not candidates:
+            return
+        presence.on_human_joined_table(
+            getattr(table, "table_id", ""),
+            human_name,
+            candidates,
+            self._tick_counter,
+            game_type=getattr(table, "game_type", ""),
+        )
+
+    def notify_human_took_over(self, table, human_name: str) -> None:
+        """A human took over a bot seat at *table*; bots may acknowledge it."""
+        presence = self._presence
+        if presence is None:
+            return
+        candidates = self._table_bot_candidates(table)
+        if not candidates:
+            return
+        presence.on_human_took_over(
+            getattr(table, "table_id", ""),
+            human_name,
+            candidates,
+            self._tick_counter,
+            game_type=getattr(table, "game_type", ""),
+        )
+
+    def notify_game_started(self, table, human_names: list[str]) -> None:
+        """A game with human players started; bots may wish them luck."""
+        presence = self._presence
+        if presence is None or not human_names:
+            return
+        candidates = self._table_bot_candidates(table)
+        if not candidates:
+            return
+        presence.on_game_started(
+            getattr(table, "table_id", ""),
+            human_names,
+            candidates,
+            self._tick_counter,
+            game_type=getattr(table, "game_type", ""),
+        )
+
+    def notify_game_ended(
+        self, table, human_names: list[str], winner_name: str | None = None
+    ) -> None:
+        """A game with human players finished; bots may offer post-game banter.
+
+        ``winner_name`` is the recorded winner (player or team name) from the
+        game result; bots celebrate them instead of a random participant.
         """
-        for bot in self._bots.values():
-            if bot.table_id == table_id and bot.state == VirtualBotState.IN_GAME:
-                if self._presence:
-                    self._presence.on_game_end(bot.name, self._tick_counter)
-                self._start_leaving_game(bot)
+        presence = self._presence
+        if presence is None or not human_names:
+            return
+        candidates = self._table_bot_candidates(table)
+        if not candidates:
+            return
+        presence.on_game_ended(
+            getattr(table, "table_id", ""),
+            human_names,
+            candidates,
+            self._tick_counter,
+            game_type=getattr(table, "game_type", ""),
+            winner_name=winner_name or "",
+        )

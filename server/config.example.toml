@@ -138,9 +138,17 @@ quiet_hours_start = 23   # hour of day (0-23), inclusive
 quiet_hours_end = 7      # hour of day (0-23), exclusive
 quiet_multiplier = 0.2   # activity multiplier during quiet hours
 
-# Session cadence shaping
+# Session cadence shaping: offline bots cluster their logins into short burst
+# windows instead of trickling in one at a time. Active only while the master
+# presence switch (enabled = true above) is on; otherwise bots log in as before.
+# How it works: when a burst window is open every offline bot whose cooldown
+# expires comes online together; the window stays open for burst_window_ticks,
+# then a quiet stretch of burst_quiet_ticks is enforced before another burst can
+# start. Each quiet stretch can start a new burst with burst_login_chance.
 session_shape_enabled = true
-burst_login_chance = 0.15
+burst_login_chance = 0.15   # chance a cycle boundary opens a burst window
+burst_window_ticks = 1200   # how long a burst stays open (1 min at 50ms)
+burst_quiet_ticks = 12000   # enforced pause between burst windows (10 min)
 hesitation_factor = 1.5  # human-like pause multiplier before actions
 afk_chance = 0.05
 # (afk_min_ticks/afk_max_ticks default to 1200/6000 ticks = 1-5 min)
@@ -151,10 +159,57 @@ chat_lines_ingame = ["nice move", "close one", "good luck all", "this is tense"]
 chat_lines_postgame = ["gg", "good game", "well played", "rematch sometime?"]
 chat_lines_idle = ["anyone up for a game?", "quiet in here", "brb coffee", "table open?"]
 
+# Player-aware reaction pools: bots react to humans at their tables.
+# The {player} placeholder is replaced with the human's username before
+# broadcast. Any of these pools can also be overridden per profile under
+# [virtual_bots.profiles.<name>] (single strings are accepted too).
+chat_lines_join = [
+    "hey {player}, welcome to the table",
+    "oh nice, {player} joined us",
+    "sit down {player}, we were just about to start",
+]
+chat_lines_takeover = ["welcome back {player}", "ah, {player} returned", "good to have you back {player}"]
+chat_lines_gamestart = ["good luck {player}", "let's see what {player}'s got", "glhf {player}"]
+chat_lines_gameend = ["gg {player}", "nice win {player}", "rematch sometime, {player}?"]
+
+# Minimum gap (ticks; server tick = 50ms) between event-driven reactions at
+# the same table. Prevents chatter storms when a table churns (join -> start ->
+# end in quick succession). Set to 0 to disable.
+table_event_cooldown_ticks = 3000
+
+# Per-game line pools: bots use game-specific banter when chatting at a table
+# of that game type. Structure is game_type -> category -> lines; categories
+# are the same pool keys as above (join, takeover, gamestart, gameend, ingame,
+# greeting, postgame, idle). Anything not listed here falls back to the generic
+# pools. Per-profile game pools override these.
+#
+# [[pools for the three most popular games to get you started]]
+[virtual_bots.presence.game_pools.scopa]
+join = [
+    "hey {player}, grab a seat - the deck's fresh",
+    "welcome {player}, hope you brought your sette bello",
+]
+gamestart = ["may the coin cards favor {player}", "let's see {player} sweep some sevens"]
+gameend = ["bella {player}!", "the sette bello goes to {player}", "great scopa, {player}"]
+
+[virtual_bots.presence.game_pools.chess]
+join = ["welcome {player} - white or black?", "ah, {player} joins the board"]
+gamestart = ["good luck {player}, may your opening be sound"]
+gameend = ["gg {player}, that endgame was sharp", "beautiful game, {player}"]
+
+[virtual_bots.presence.game_pools.backgammon]
+join = ["{player} rolls in! grab a spot", "welcome {player}, the dice are hot"]
+gamestart = ["good luck {player} - may the dice be kind", "let's see {player} run the board"]
+gameend = ["gg {player}, the dice had it out for you", "well played {player}"]
+
 [virtual_bots.profiles.default]
 # Profiles inherit any keys omitted here from the top-level [virtual_bots] block
 min_bots_per_table = 0  # 0 means no lower bound
 max_bots_per_table = 0  # 0 means no upper bound
+# Presence chat pools are inherited from [virtual_bots.presence], but any pool
+# can be overridden per profile, e.g.:
+# chat_lines_join = ["huh, {player}? never heard of them"]
+# chat_lines_gamestart = "good luck {player} :)"
 
 [virtual_bots.profiles.host]
 # Host bots fill empty tables (0 seated) and lean toward creating games

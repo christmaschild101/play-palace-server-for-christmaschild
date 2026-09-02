@@ -3102,3 +3102,266 @@ def test_disconnect_all_bots_takes_bots_offline_but_preserves_roster():
     server._users["BotC"] = object()
     assert manager.disconnect_all_bots() == 0
     assert server._users.get("BotC") is not None
+
+
+# ---------------------------------------------------------------------------
+# Player-aware chatter wiring (game start/end hook points)
+# ---------------------------------------------------------------------------
+
+
+def test_game_start_hook_notifies_virtual_bots():
+    """Starting a game surfaces the human players to the bot manager."""
+    from server.game_utils.lobby_actions_mixin import LobbyActionsMixin
+
+    calls = []
+
+    class SpyBots:
+        def notify_game_started(self, table, human_names):
+            calls.append((table, human_names))
+
+    class StubGame(LobbyActionsMixin):
+        def __init__(self):
+            self._table = SimpleNamespace(
+                _server=SimpleNamespace(_virtual_bots=SpyBots())
+            )
+            self.players = [
+                SimpleNamespace(name="BotA", is_bot=True),
+                SimpleNamespace(name="Bob", is_bot=False),
+            ]
+
+        def prestart_validate(self):
+            return []
+
+        def broadcast_l(self, *args, **kwargs):
+            pass
+
+        def on_start(self):
+            pass
+
+        def validate_actions(self):
+            pass
+
+    game = StubGame()
+    game._action_start_game(SimpleNamespace(name="Bob"), "start")
+
+    assert calls == [(game._table, ["Bob"])]
+
+
+def test_game_start_hook_ignores_bot_only_tables():
+    """No humans at the table means no player-aware chatter needed."""
+    from server.game_utils.lobby_actions_mixin import LobbyActionsMixin
+
+    calls = []
+
+    class SpyBots:
+        def notify_game_started(self, table, human_names):
+            calls.append(human_names)
+
+    class StubGame(LobbyActionsMixin):
+        def __init__(self):
+            self._table = SimpleNamespace(
+                _server=SimpleNamespace(_virtual_bots=SpyBots())
+            )
+            self.players = [SimpleNamespace(name="BotA", is_bot=True)]
+
+        def prestart_validate(self):
+            return []
+
+        def broadcast_l(self, *args, **kwargs):
+            pass
+
+        def on_start(self):
+            pass
+
+        def validate_actions(self):
+            pass
+
+    StubGame()._action_start_game(SimpleNamespace(name="BotA"), "start")
+
+    assert calls == []
+
+
+def test_game_end_hook_notifies_virtual_bots():
+    """Finishing a game surfaces human participants to the bot manager."""
+    from server.game_utils.game_result_mixin import GameResultMixin
+
+    calls = []
+
+    class SpyBots:
+        def notify_game_ended(self, table, human_names, winner_name=None):
+            calls.append((table, human_names, winner_name))
+
+    class StubEnd(GameResultMixin):
+        def __init__(self):
+            self._table = SimpleNamespace(
+                _server=SimpleNamespace(_virtual_bots=SpyBots())
+            )
+            self.players = [
+                SimpleNamespace(name="BotA", is_bot=True),
+                SimpleNamespace(name="Alice", is_bot=False),
+            ]
+
+    end = StubEnd()
+    end._notify_virtual_bots_game_ended()
+
+    assert calls == [(end._table, ["Alice"], None)]
+
+
+def test_game_end_hook_passes_winner_name():
+    """The recorded winner from the game result reaches the bot manager."""
+    from server.game_utils.game_result_mixin import GameResultMixin
+
+    calls = []
+
+    class SpyBots:
+        def notify_game_ended(self, table, human_names, winner_name=None):
+            calls.append((table, human_names, winner_name))
+
+    class StubEnd(GameResultMixin):
+        def __init__(self):
+            self._table = SimpleNamespace(
+                _server=SimpleNamespace(_virtual_bots=SpyBots())
+            )
+            self.players = [
+                SimpleNamespace(name="BotA", is_bot=True),
+                SimpleNamespace(name="Alice", is_bot=False),
+            ]
+
+    result = SimpleNamespace(custom_data={"winner_name": "Alice"})
+    end = StubEnd()
+    end._notify_virtual_bots_game_ended(result)
+
+    assert calls == [(end._table, ["Alice"], "Alice")]
+
+
+def test_game_end_hook_resolves_winning_team_to_human():
+    """A team-name winner resolves to a human on that team."""
+    from server.game_utils.game_result_mixin import GameResultMixin
+    from server.game_utils.teams import Team, TeamManager
+
+    calls = []
+
+    class SpyBots:
+        def notify_game_ended(self, table, human_names, winner_name=None):
+            calls.append(winner_name)
+
+    class StubEnd(GameResultMixin):
+        def __init__(self):
+            self._table = SimpleNamespace(
+                _server=SimpleNamespace(_virtual_bots=SpyBots())
+            )
+            self.players = [
+                SimpleNamespace(name="BotA", is_bot=True),
+                SimpleNamespace(name="Alice", is_bot=False),
+                SimpleNamespace(name="Bob", is_bot=False),
+            ]
+            self._team_manager = TeamManager(
+                team_mode="2v2",
+                teams=[
+                    Team(index=0, members=["Alice", "BotA"]),
+                    Team(index=1, members=["Bob"]),
+                ],
+            )
+
+    result = SimpleNamespace(custom_data={"winner_name": "Team 1"})
+    StubEnd()._notify_virtual_bots_game_ended(result)
+
+    # Team 1 holds Alice (human) and BotA (bot) -> congratulate Alice.
+    assert calls == ["Alice"]
+
+
+def test_game_end_hook_picks_random_human_on_winning_team(monkeypatch):
+    """Several humans on the winning team: one of them is chosen."""
+    from server.game_utils.game_result_mixin import GameResultMixin
+    from server.game_utils.teams import Team, TeamManager
+
+    calls = []
+
+    class SpyBots:
+        def notify_game_ended(self, table, human_names, winner_name=None):
+            calls.append(winner_name)
+
+    class StubEnd(GameResultMixin):
+        def __init__(self):
+            self._table = SimpleNamespace(
+                _server=SimpleNamespace(_virtual_bots=SpyBots())
+            )
+            self.players = [
+                SimpleNamespace(name="BotA", is_bot=True),
+                SimpleNamespace(name="Alice", is_bot=False),
+                SimpleNamespace(name="Bob", is_bot=False),
+            ]
+            self._team_manager = TeamManager(
+                team_mode="2v2",
+                teams=[
+                    Team(index=0, members=["Alice", "Bob"]),
+                    Team(index=1, members=["BotA"]),
+                ],
+            )
+
+    monkeypatch.setattr(
+        "server.game_utils.game_result_mixin.random.choice", lambda seq: seq[-1]
+    )
+    result = SimpleNamespace(custom_data={"winner_name": "Team 1"})
+    StubEnd()._notify_virtual_bots_game_ended(result)
+
+    assert calls == ["Bob"]
+
+
+def test_game_end_hook_keeps_all_bot_winning_team_name():
+    """An all-bot winning team keeps the team name instead of a random human."""
+    from server.game_utils.game_result_mixin import GameResultMixin
+    from server.game_utils.teams import Team, TeamManager
+
+    calls = []
+
+    class SpyBots:
+        def notify_game_ended(self, table, human_names, winner_name=None):
+            calls.append((table, human_names, winner_name))
+
+    class StubEnd(GameResultMixin):
+        def __init__(self):
+            self._table = SimpleNamespace(
+                _server=SimpleNamespace(_virtual_bots=SpyBots())
+            )
+            self.players = [
+                SimpleNamespace(name="BotA", is_bot=True),
+                SimpleNamespace(name="Alice", is_bot=False),
+            ]
+            self._team_manager = TeamManager(
+                team_mode="2v2",
+                teams=[
+                    Team(index=0, members=["BotA", "BotB"]),
+                    Team(index=1, members=["Alice"]),
+                ],
+            )
+
+    result = SimpleNamespace(custom_data={"winner_name": "Team 1"})
+    end = StubEnd()
+    end._notify_virtual_bots_game_ended(result)
+
+    # Team 1 is all bots (BotA/BotB); the human Alice is on the losing team,
+    # so the recorded winner name is kept rather than praising a random loser.
+    assert calls == [(end._table, ["Alice"], "Team 1")]
+
+
+def test_game_end_hook_skips_without_server_bots():
+    """No server behind the table means no virtual-bot notification."""
+    from server.game_utils.game_result_mixin import GameResultMixin
+
+    calls = []
+
+    class NoServerTable:
+        _server = None
+
+    class StubEnd(GameResultMixin):
+        def __init__(self):
+            self._table = NoServerTable()
+            self.players = [SimpleNamespace(name="Alice", is_bot=False)]
+
+        def notify_game_ended(self, table, human_names):
+            calls.append(human_names)
+
+    StubEnd()._notify_virtual_bots_game_ended()
+
+    assert calls == []

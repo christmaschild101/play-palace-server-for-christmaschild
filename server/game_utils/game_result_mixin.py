@@ -1,5 +1,6 @@
 """Mixin providing game result handling and persistence."""
 
+import random
 from typing import TYPE_CHECKING, Any
 
 from .game_status import GameStatus
@@ -53,10 +54,62 @@ class GameResultMixin:
         if show_end_screen:
             self._show_end_screen(result)
 
+        # Presence: server-side virtual bots offer post-game banter.
+        self._notify_virtual_bots_game_ended(result)
+
         # Auto-destroy if no humans remain (bot-only games, but not virtual bot games)
         has_humans = any(not p.is_bot or getattr(p, "is_virtual_bot", False) for p in self.players)
         if not has_humans:
             self.destroy()
+
+    def _notify_virtual_bots_game_ended(
+        self, result: GameResult | None = None
+    ) -> None:
+        """Let the server's virtual bots react when this game finishes.
+
+        Presence-only: the manager no-ops when the presence engine is off or
+        no bots are seated, and the engine stays silent without human players.
+        When the result names a winner, that name is passed along so bot
+        banter celebrates the actual winner instead of a random participant.
+        """
+        table = getattr(self, "_table", None)
+        virtual_bots = getattr(getattr(table, "_server", None), "_virtual_bots", None)
+        if virtual_bots is None:
+            return
+        human_names = [p.name for p in self.players if not getattr(p, "is_bot", False)]
+        winner_name = None
+        if result is not None:
+            recorded = (getattr(result, "custom_data", None) or {}).get("winner_name")
+            if recorded:
+                winner_name = self._resolve_game_winner(recorded, human_names)
+        virtual_bots.notify_game_ended(table, human_names, winner_name=winner_name)
+
+    def _resolve_game_winner(
+        self, winner_name: str, human_names: list[str]
+    ) -> str:
+        """Map a recorded winner to a human participant where possible.
+
+        ``winner_name`` is a player name in most games but a team name
+        ("Team 1") in team games, and the banter ``{player}`` placeholder
+        wants a person. Preference order:
+
+        1. The winner is already a human participant - use it.
+        2. The winner is a team - pick a human on that team (random when
+           several humans are on it).
+        3. Anything else (bot winner, all-bot winning team) - keep the
+           recorded name rather than congratulating a random human.
+        """
+        if winner_name in human_names:
+            return winner_name
+        team_manager = getattr(self, "_team_manager", None)
+        if team_manager is not None and team_manager.teams:
+            for team in team_manager.teams:
+                if team_manager.get_team_name(team) == winner_name:
+                    humans = [member for member in team.members if member in human_names]
+                    if humans:
+                        return random.choice(sorted(humans))  # nosec B311
+                    break
+        return winner_name
 
     def build_game_result(self) -> GameResult:
         """Build the game result. Override in subclasses for custom data.

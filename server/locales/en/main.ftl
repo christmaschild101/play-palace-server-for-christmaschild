@@ -250,6 +250,9 @@ leaderboard-type-lowest-points = Lowest Points
 leaderboard-type-total-winnings = Total Points Won
 leaderboard-type-dice-remaining = Avg Dice Left
 leaderboard-type-moon-shots = Moon Shots
+leaderboard-type-properties-owned = Most Properties
+leaderboard-type-houses-built = Most Houses Built
+leaderboard-type-rent-collected = Most Rent Collected
 
 # Leaderboard headers
 leaderboard-wins-header = { $game } - Win Leaders

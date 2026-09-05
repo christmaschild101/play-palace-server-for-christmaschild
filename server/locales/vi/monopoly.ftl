@@ -142,3 +142,7 @@ monopoly-set-max-rounds = Max rounds: { $rounds }
 monopoly-desc-max-rounds = End after this many full circuits (0 = until one player remains)
 monopoly-enter-max-rounds = Enter max rounds (0 = classic):
 monopoly-option-changed-max-rounds = Max rounds set to { $rounds }.
+
+# Trade status announcements
+monopoly-trade-started = { $player } has started a trade with { $target }.
+monopoly-trade-stopped = { $player } stopped working on a trade.

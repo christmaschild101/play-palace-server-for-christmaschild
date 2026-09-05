@@ -561,6 +561,87 @@ class TestMonopolyUnit:
         assert alice.money == 1500 - 100
         assert bob.money == 1500 + 100
 
+    # --- Trade start / stop announcements ---
+
+    def _speak_texts(self, user):
+        return [m.data["text"] for m in user.messages if m.type == "speak"]
+
+    def _count_speaks(self, user, phrase):
+        return sum(1 for text in self._speak_texts(user) if phrase in text)
+
+    def test_trade_start_broadcast(self):
+        game = MonopolyGame()
+        alice_user = MockUser("Alice")
+        bob_user = MockUser("Bob")
+        carol_user = MockUser("Carol")
+        alice = game.add_player("Alice", alice_user)
+        game.add_player("Bob", bob_user)
+        game.add_player("Carol", carol_user)
+        self._start_rolled_game(game)
+        alice.properties = [1]
+        game._action_trade_property(alice, "1", "trade_property")
+        game._action_trade_cash(alice, "0", "trade_cash")
+        game._action_trade_target(alice, "Bob", "trade_target")
+        # Everyone at the table (Alice included) learns a trade has begun.
+        for user in (alice_user, bob_user, carol_user):
+            assert self._count_speaks(user, "Alice has started a trade with Bob.") == 1
+
+    def test_trade_start_not_repeated_for_same_target(self):
+        game = MonopolyGame()
+        bob_user = MockUser("Bob")
+        alice = game.add_player("Alice", MockUser("Alice"))
+        game.add_player("Bob", bob_user)
+        self._start_rolled_game(game)
+        alice.properties = [1]
+        game._action_trade_property(alice, "1", "trade_property")
+        game._action_trade_cash(alice, "0", "trade_cash")
+        game._action_trade_target(alice, "Bob", "trade_target")
+        game._action_trade_target(alice, "Bob", "trade_target")  # re-pick, same target
+        assert self._count_speaks(bob_user, "Alice has started a trade with Bob.") == 1
+
+    def test_trade_start_not_sent_for_invalid_target(self):
+        game = MonopolyGame()
+        bob_user = MockUser("Bob")
+        alice = game.add_player("Alice", MockUser("Alice"))
+        game.add_player("Bob", bob_user)
+        self._start_rolled_game(game)
+        alice.properties = [1]
+        game._action_trade_property(alice, "1", "trade_property")
+        game._action_trade_cash(alice, "0", "trade_cash")
+        game._action_trade_target(alice, "Alice", "trade_target")  # self
+        game._action_trade_target(alice, "Nobody", "trade_target")  # not at the table
+        assert alice.trade_target_id == ""
+        assert self._count_speaks(bob_user, "started a trade with") == 0
+
+    def test_trade_stop_broadcast_on_cancel(self):
+        game = MonopolyGame()
+        alice_user = MockUser("Alice")
+        bob_user = MockUser("Bob")
+        alice = game.add_player("Alice", alice_user)
+        game.add_player("Bob", bob_user)
+        self._start_rolled_game(game)
+        alice.properties = [1]
+        game._action_trade_property(alice, "1", "trade_property")
+        game._action_trade_cash(alice, "0", "trade_cash")
+        game._action_trade_target(alice, "Bob", "trade_target")
+        game._action_trade_cancel(alice, "trade_cancel")
+        assert alice.trade_target_id == ""
+        for user in (alice_user, bob_user):
+            assert self._count_speaks(user, "Alice stopped working on a trade.") == 1
+
+    def test_trade_cancel_before_target_keeps_table_silent(self):
+        game = MonopolyGame()
+        bob_user = MockUser("Bob")
+        alice = game.add_player("Alice", MockUser("Alice"))
+        game.add_player("Bob", bob_user)
+        self._start_rolled_game(game)
+        alice.properties = [1]
+        game._action_trade_property(alice, "1", "trade_property")
+        game._action_trade_cash(alice, "0", "trade_cash")
+        game._action_trade_cancel(alice, "trade_cancel")
+        assert self._count_speaks(bob_user, "started a trade with") == 0
+        assert self._count_speaks(bob_user, "stopped working on a trade") == 0
+
     # --- Bot AI ---
 
     def test_bot_even_build_choice(self):

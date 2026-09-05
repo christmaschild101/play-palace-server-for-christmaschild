@@ -1302,9 +1302,16 @@ class MonopolyGame(ActionGuardMixin, Game):
         target = self.get_player_by_name(input_value)
         if target is None or target is player or target.bankrupt:
             return
+        previous_target = mp.trade_target_id
         mp.trade_target_id = target.id
         mp.trade_receive_property = None
         mp.trade_receive_cash = None
+        if previous_target != target.id:
+            self.broadcast_l(
+                "monopoly-trade-started",
+                player=player.name,
+                target=target.name,
+            )
         self.update_player_menu(player)
 
     def _action_trade_get_property(self, player: Player, input_value: str, action_id: str) -> None:
@@ -1395,7 +1402,10 @@ class MonopolyGame(ActionGuardMixin, Game):
             return
         if self._trade_step_state(player) == 1:
             return
+        had_target = bool(mp.trade_target_id)
         self._reset_trade_draft(player)
+        if had_target:
+            self.broadcast_l("monopoly-trade-stopped", player=player.name)
         user = self.get_user(player)
         if user:
             user.speak_l("monopoly-trade-draft-cancelled", buffer="table")

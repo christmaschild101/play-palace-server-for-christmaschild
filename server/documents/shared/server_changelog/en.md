@@ -2,6 +2,10 @@
 
 This document records changes to the PlayPalace server. New entries are added at the top under the date the change ships.
 
+## 2026-09-05
+
+- In Monopoly, when a player begins a two-way trade with another player (the moment they pick who they're trading with), the whole table is now told "**{player} has started a trade with {target}**" so nobody mistakes a silent trade draft for the player going idle. Re-picking the same target without clearing the draft doesn't repeat the notice, and if the player cancels the draft after choosing a target, the table hears that they **stopped working on a trade**.
+
 ## 2026-09-04
 
 - All approved players now have an **"Online users"** entry in the main lobby menu. Selecting it opens a read-only list of everyone currently online, showing how long each user has been connected, what they're doing (game or not), their language, and which client they're using — **Desktop** or **Web** (plus the platform, e.g. Windows or a browser). Previously this list was only reachable through the undocumented Shift+F2 shortcut; the shortcut still works, including while sitting at a table.

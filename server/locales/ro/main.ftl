@@ -16,6 +16,7 @@ tables-menu-title = Mese disponibile
 # Menu items
 play = Joacă
 view-active-tables = Vezi mesele active
+online-users = Utilizatori online
 options = Opțiuni
 logout = Deconectare
 back = Înapoi

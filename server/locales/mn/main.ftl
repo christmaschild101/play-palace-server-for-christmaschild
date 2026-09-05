@@ -16,6 +16,7 @@ tables-menu-title = Боломжтой ширээнүүд
 # Menu items
 play = Тоглох
 view-active-tables = Идэвхтэй ширээнүүдийг харах
+online-users = Онлайн хэрэглэгчид
 options = Тохиргоо
 logout = Гарах
 back = Буцах

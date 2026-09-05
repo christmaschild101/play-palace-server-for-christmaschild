@@ -17,6 +17,7 @@ tables-menu-title = 利用可能なテーブル
 # メニュー項目
 play = プレイ
 view-active-tables = アクティブなテーブルを表示
+online-users = オンラインのユーザー
 options = オプション
 logout = ログアウト
 back = 戻る

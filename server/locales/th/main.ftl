@@ -16,6 +16,7 @@ tables-menu-title = โต๊ะที่มีอยู่
 # Menu items
 play = เล่น
 view-active-tables = ดูโต๊ะที่ใช้งาน
+online-users = ผู้ใช้ออนไลน์
 options = ตั้งค่า
 logout = ออกจากระบบ
 back = กลับ

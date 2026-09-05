@@ -16,6 +16,7 @@ tables-menu-title = Elérhető asztalok
 # Menu items
 play = Játék
 view-active-tables = Aktív asztalok megtekintése
+online-users = Online felhasználók
 options = Beállítások
 logout = Kijelentkezés
 back = Vissza

@@ -16,6 +16,7 @@ tables-menu-title = میزهای موجود
 # Menu items
 play = بازی
 view-active-tables = مشاهده میزهای فعال
+online-users = کاربران آنلاین
 options = تنظیمات
 logout = خروج
 back = بازگشت

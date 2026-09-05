@@ -16,6 +16,7 @@ tables-menu-title = Tavoli disponibili
 # Menu items
 play = Gioca
 view-active-tables = Visualizza tavoli attivi
+online-users = Utenti online
 options = Opzioni
 logout = Esci
 back = Indietro

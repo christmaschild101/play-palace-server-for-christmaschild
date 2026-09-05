@@ -1614,6 +1614,9 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                     text=Localization.get(user.locale, "view-active-tables"),
                     id="active_tables",
                 ),
+                MenuItem(
+                    text=Localization.get(user.locale, "online-users"), id="online_users"
+                ),
                 MenuItem(text=Localization.get(user.locale, "saved-tables"), id="saved_tables"),
                 MenuItem(text=Localization.get(user.locale, "leaderboards"), id="leaderboards"),
                 MenuItem(text=Localization.get(user.locale, "my-stats"), id="my_stats"),
@@ -2508,6 +2511,10 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 return
             if not self._show_active_tables_menu(user):
                 return  # No tables — user stays on main menu
+        elif selection_id == "online_users":
+            if not self._ensure_user_approved(user):
+                return
+            self._show_online_users_menu(user)
         elif selection_id == "saved_tables":
             if not self._ensure_user_approved(user):
                 return

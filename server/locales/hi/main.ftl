@@ -16,6 +16,7 @@ tables-menu-title = उपलब्ध टेबल
 # Menu items
 play = खेलें
 view-active-tables = सक्रिय टेबल देखें
+online-users = ऑनलाइन उपयोगकर्ता
 options = विकल्प
 logout = लॉगआउट
 back = वापस

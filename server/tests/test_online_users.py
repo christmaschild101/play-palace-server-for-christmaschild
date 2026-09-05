@@ -77,3 +77,60 @@ def test_online_users_menu_plays_players_music() -> None:
         message.type == "play_music" and message.data.get("name") == "playersmus.ogg"
         for message in viewer.messages
     )
+
+
+def test_main_menu_includes_online_users_item() -> None:
+    """Approved users get an "Online users" entry in the main menu."""
+    server = _make_server()
+    viewer = MockUser("Viewer")
+    server._users = {"Viewer": viewer}
+
+    server._show_main_menu(viewer)
+
+    texts = _menu_texts(viewer, "main_menu")
+    assert "Online users" in texts
+
+
+def test_main_menu_omits_online_users_for_unapproved() -> None:
+    """Unapproved users keep the limited menu without the online users entry."""
+    server = _make_server()
+    viewer = MockUser("Viewer", approved=False)
+    server._users = {"Viewer": viewer}
+
+    server._show_main_menu(viewer)
+
+    texts = _menu_texts(viewer, "main_menu")
+    assert "Online users" not in texts
+
+
+def test_online_users_menu_shows_client_type_and_platform() -> None:
+    """Each online user row shows the client type (and platform when known)."""
+    server = _make_server()
+    viewer = MockUser("Viewer")
+    alice = MockUser("Alice")
+    alice.set_client_type("Desktop")
+    alice.set_platform("Windows 11")
+    bob = MockUser("Bob")
+    bob.set_client_type("Web")
+    server._users = {"Viewer": viewer, "Alice": alice, "Bob": bob}
+
+    server._show_online_users_menu(viewer)
+
+    texts = _menu_texts(viewer, "online_users")
+    alice_line = next(t for t in texts if t.startswith("Alice "))
+    bob_line = next(t for t in texts if t.startswith("Bob "))
+    assert "Desktop (Windows 11)" in alice_line
+    assert "Web" in bob_line
+
+
+@pytest.mark.asyncio
+async def test_main_menu_online_users_selection_opens_list() -> None:
+    """Selecting the main-menu entry opens the online users menu."""
+    server = _make_server()
+    viewer = MockUser("Viewer")
+    server._users = {"Viewer": viewer}
+
+    await server._handle_main_menu_selection(viewer, "online_users")
+
+    assert "online_users" in viewer.menus
+    assert server._user_states["Viewer"]["menu"] == "online_users"

@@ -17,6 +17,7 @@ tables-menu-title = Mesas Disponíveis
 # Itens de menu
 play = Jogar
 view-active-tables = Ver mesas ativas
+online-users = Usuários online
 options = Opções
 logout = Sair
 back = Voltar

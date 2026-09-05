@@ -2,6 +2,10 @@
 
 This document records changes to the PlayPalace server. New entries are added at the top under the date the change ships.
 
+## 2026-09-04
+
+- All approved players now have an **"Online users"** entry in the main lobby menu. Selecting it opens a read-only list of everyone currently online, showing how long each user has been connected, what they're doing (game or not), their language, and which client they're using — **Desktop** or **Web** (plus the platform, e.g. Windows or a browser). Previously this list was only reachable through the undocumented Shift+F2 shortcut; the shortcut still works, including while sitting at a table.
+
 ## 2026-08-31
 
 - Admins can now **Freeze the server** from the admin menu (with a confirmation prompt). While frozen, regular players stay connected but can't do anything — menu selections, chat, editbox inputs, keybinds, and in-game actions are all blocked, and any in-progress game pauses mid-turn. Admins, developers, and the server owner are unaffected and can unfreeze instantly from the same admin menu item (which flips to "Unfreeze server"). Everyone gets a localized "server frozen / unfrozen" announcement with a sound, and a frozen player who tries to act sees a brief "server is frozen" notice. The freeze state is in-memory only, so a server restart automatically unfreezes.

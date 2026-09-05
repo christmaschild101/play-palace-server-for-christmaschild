@@ -17,6 +17,7 @@ tables-menu-title = Tables disponibles
 # Éléments de menu
 play = Jouer
 view-active-tables = Voir les tables actives
+online-users = Utilisateurs en ligne
 options = Options
 logout = Déconnexion
 back = Retour

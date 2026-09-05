@@ -17,6 +17,7 @@ tables-menu-title = Verfügbare Tische
 # Menüeinträge
 play = Spielen
 view-active-tables = Aktive Tische anzeigen
+online-users = Online-Benutzer
 options = Optionen
 logout = Abmelden
 back = Zurück

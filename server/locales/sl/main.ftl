@@ -16,6 +16,7 @@ tables-menu-title = Razpoložljive mize
 # Menu items
 play = Igraj
 view-active-tables = Prikaži aktivne mize
+online-users = Online uporabniki
 options = Nastavitve
 logout = Odjava
 back = Nazaj

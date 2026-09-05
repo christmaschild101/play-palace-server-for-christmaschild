@@ -16,6 +16,7 @@ tables-menu-title = Amatafula Atholakalayo
 # Menu items
 play = Dlala
 view-active-tables = Bheka amatafula asebenzayo
+online-users = Abasebenzisi abaku-inthanethi
 options = Izinketho
 logout = Phuma
 back = Emuva

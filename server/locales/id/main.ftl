@@ -16,6 +16,7 @@ tables-menu-title = Meja Tersedia
 # Menu items
 play = Main
 view-active-tables = Lihat meja aktif
+online-users = Pengguna online
 options = Pilihan
 logout = Keluar
 back = Kembali

@@ -16,6 +16,7 @@ tables-menu-title = Tillgängliga bord
 # Menu items
 play = Spela
 view-active-tables = Visa aktiva bord
+online-users = Onlineanvändare
 options = Inställningar
 logout = Logga ut
 back = Tillbaka

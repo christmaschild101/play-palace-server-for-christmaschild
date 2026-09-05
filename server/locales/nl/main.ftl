@@ -16,6 +16,7 @@ tables-menu-title = Beschikbare Tafels
 # Menu items
 play = Speel
 view-active-tables = Bekijk actieve tafels
+online-users = Online gebruikers
 options = Opties
 logout = Uitloggen
 back = Terug

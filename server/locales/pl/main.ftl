@@ -15,6 +15,7 @@ categories-menu-title = Kategorie gier
 tables-menu-title = Dostępne stoły
 play = Play
 view-active-tables = Pokaż aktywne stoły
+online-users = Użytkownicy online
 options = Opcje
 logout = Wyloguj się
 back = Wróć

@@ -16,6 +16,7 @@ tables-menu-title = Mevcut Masalar
 # Menü öğeleri
 play = Oyna
 view-active-tables = Aktif masaları görüntüle
+online-users = Çevrimiçi kullanıcılar
 options = Seçenekler
 logout = Çıkış yap
 back = Geri

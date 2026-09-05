@@ -17,6 +17,7 @@ tables-menu-title = Dostupni stolovi
 # Stavke menija
 play = Igraj
 view-active-tables = Prikaži aktivne stolove
+online-users = Online korisnici
 options = Podešavanja
 logout = Odjavi se
 back = Nazad

@@ -18,6 +18,7 @@ tables-menu-title = Available Tables
 # Menu items
 play = Play
 view-active-tables = View active tables
+online-users = Online users
 options = Options
 logout = Logout
 back = Back

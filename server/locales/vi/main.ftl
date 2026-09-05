@@ -17,6 +17,7 @@ tables-menu-title = Danh sách Bàn
 # Các mục trong menu
 play = Chơi
 view-active-tables = Xem các bàn đang hoạt động
+online-users = Người dùng trực tuyến
 options = Tùy chọn
 logout = Đăng xuất
 back = Quay lại

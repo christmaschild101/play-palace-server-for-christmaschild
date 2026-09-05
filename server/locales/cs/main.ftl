@@ -16,6 +16,7 @@ tables-menu-title = Dostupné stoly
 # Položky menu
 play = Hrát
 view-active-tables = Zobrazit aktivní stoly
+online-users = Online uživatelé
 options = Možnosti
 logout = Odhlásit se
 back = Zpět

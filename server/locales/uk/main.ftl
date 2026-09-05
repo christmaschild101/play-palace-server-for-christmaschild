@@ -16,6 +16,7 @@ tables-menu-title = Доступні столи
 # Menu items
 play = Грати
 view-active-tables = Переглянути активні столи
+online-users = Користувачі онлайн
 options = Налаштування
 logout = Вийти
 back = Назад

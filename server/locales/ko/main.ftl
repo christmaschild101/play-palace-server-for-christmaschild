@@ -16,6 +16,7 @@ tables-menu-title = 사용 가능한 테이블
 # Menu items
 play = 플레이
 view-active-tables = 활성 테이블 보기
+online-users = 온라인 사용자
 options = 옵션
 logout = 로그아웃
 back = 뒤로

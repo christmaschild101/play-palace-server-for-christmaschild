@@ -16,6 +16,7 @@ tables-menu-title = الطاولات المتاحة
 # عناصر القائمة
 play = العب
 view-active-tables = عرض الطاولات النشطة
+online-users = المستخدمون المتصلون
 options = الخيارات
 logout = تسجيل الخروج
 back = رجوع

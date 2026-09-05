@@ -17,6 +17,7 @@ tables-menu-title = 可用桌台
 # 菜单项目
 play = 开始游戏
 view-active-tables = 查看活跃桌台
+online-users = 在线用户
 options = 设置
 logout = 退出登录
 back = 返回

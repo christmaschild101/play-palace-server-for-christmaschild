@@ -17,6 +17,7 @@ tables-menu-title = Доступные столы
 # Menu items
 play = Играть
 view-active-tables = Список активных столов
+online-users = Пользователи онлайн
 options = Настройки
 logout = Выйти
 back = Назад

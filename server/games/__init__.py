@@ -63,6 +63,7 @@ from .liarsdice.game import LiarsDiceGame
 from .hangman.game import HangmanGame
 from .hearts.game import HeartsGame
 from .monopoly.game import MonopolyGame
+from .motostrike.game import MotoStrikeGame
 
 __all__ = [
     "Game",
@@ -123,4 +124,5 @@ __all__ = [
     "HangmanGame",
     "HeartsGame",
     "MonopolyGame",
+    "MotoStrikeGame",
 ]

@@ -253,6 +253,8 @@ leaderboard-type-moon-shots = Moon Shots
 leaderboard-type-properties-owned = Most Properties
 leaderboard-type-houses-built = Most Houses Built
 leaderboard-type-rent-collected = Most Rent Collected
+leaderboard-type-best-finish = Best Race Finish
+leaderboard-type-avg-finish = Average Race Finish
 
 # Leaderboard headers
 leaderboard-wins-header = { $game } - Win Leaders

@@ -144,7 +144,7 @@ class ShutTheBoxGame(ActionGuardMixin, RoundBasedGameMixin, Game):
 
         max_tile = max(stb.tiles)
         use_one_die = self.options.single_die_rule and max_tile <= 6
-        self.play_standard_dice_roll_sound()
+        self.play_standard_dice_roll_sound(sound_template="game_shutthebox/roll{variant}.ogg", variant_count=3)
         stb.dice = [random.randint(1, 6) for _ in range(1 if use_one_die else 2)]  # nosec B311
         total = sum(stb.dice)
         self.broadcast_personal_l(
@@ -155,7 +155,7 @@ class ShutTheBoxGame(ActionGuardMixin, RoundBasedGameMixin, Game):
         )
 
         if not self._combos(stb, total):
-            self.play_sound("game_pig/lose.ogg")
+            self.play_sound("game_shutthebox/bust.ogg")
             score = self._open_sum(stb)
             self.broadcast_l("shutthebox-bust", player=player.name, score=score)
             self._bank(stb, score)
@@ -181,7 +181,7 @@ class ShutTheBoxGame(ActionGuardMixin, RoundBasedGameMixin, Game):
         for tile in chosen:
             stb.tiles.remove(tile)
 
-        self.play_sound("game_dominos/play.ogg")
+        self.play_sound("game_shutthebox/flip.ogg")
         self.broadcast_l(
             "shutthebox-closed",
             player=player.name,
@@ -190,7 +190,7 @@ class ShutTheBoxGame(ActionGuardMixin, RoundBasedGameMixin, Game):
 
         if not stb.tiles:
             # Shut the box!
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_shutthebox/shut.ogg")
             self.broadcast_l("shutthebox-shutout", player=player.name)
             self.finish_game()
             return
@@ -202,7 +202,7 @@ class ShutTheBoxGame(ActionGuardMixin, RoundBasedGameMixin, Game):
         """Stop early and bank the current open sum."""
         stb: ShutTheBoxPlayer = player  # type: ignore
         score = self._open_sum(stb)
-        self.play_sound("game_farkle/bank1.ogg")
+        self.play_sound("game_shutthebox/bank.ogg")
         self.broadcast_l("shutthebox-stopped", player=player.name, score=score)
         self._bank(stb, score)
 
@@ -391,7 +391,7 @@ class ShutTheBoxGame(ActionGuardMixin, RoundBasedGameMixin, Game):
             active = self.get_active_players()
             low = min((p.total_score for p in active), default=0)
             winners = [p.name for p in active if p.total_score == low]
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_shutthebox/win.ogg")
             if len(winners) == 1:
                 self.broadcast_l("shutthebox-winner", player=winners[0], score=low)
             else:

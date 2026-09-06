@@ -111,7 +111,7 @@ class LiarsDiceGame(ActionGuardMixin, Game):
         for player in self.players:
             player.pending_qty = None
         self.set_turn_players(self.get_active_players())
-        self.play_standard_dice_roll_sound()
+        self.play_standard_dice_roll_sound(sound_template="game_liarsdice/roll{variant}.ogg", variant_count=3)
         self._announce_round_start()
 
     def on_tick(self) -> None:
@@ -157,7 +157,7 @@ class LiarsDiceGame(ActionGuardMixin, Game):
         self.bid_face = 0
         self.bidder_id = ""
         self.set_turn_players(order)
-        self.play_standard_dice_roll_sound()
+        self.play_standard_dice_roll_sound(sound_template="game_liarsdice/roll{variant}.ogg", variant_count=3)
         self._announce_round_start()
 
     # ==========================================================================
@@ -184,7 +184,7 @@ class LiarsDiceGame(ActionGuardMixin, Game):
         self.bid_qty = qty
         self.bid_face = face
         self.bidder_id = player.id
-        self.play_sound("game_farkle/takepoint.ogg")
+        self.play_sound("game_liarsdice/bid.ogg")
         self.broadcast_l("liarsdice-bid", player=player.name, qty=qty, face=face)
         self.pending_qty_clear()
         self.advance_turn()
@@ -211,7 +211,7 @@ class LiarsDiceGame(ActionGuardMixin, Game):
         truth = actual >= self.bid_qty
         loser = challenger if truth else bidder
 
-        self.play_sound("game_chess/capture1.ogg")
+        self.play_sound("game_liarsdice/reveal.ogg")
         if truth:
             self.broadcast_l(
                 "liarsdice-challenge-true",
@@ -238,7 +238,7 @@ class LiarsDiceGame(ActionGuardMixin, Game):
         loser.dice.pop()
         if not loser.dice:
             loser.eliminated = True
-            self.play_sound("game_pig/lose.ogg")
+            self.play_sound("game_liarsdice/lose-die.ogg")
             self.broadcast_l("liarsdice-eliminated", player=loser.name)
         else:
             self.broadcast_l("liarsdice-lost-die", player=loser.name, dice=len(loser.dice))
@@ -246,7 +246,7 @@ class LiarsDiceGame(ActionGuardMixin, Game):
         remaining = self.get_active_players()
         if len(remaining) == 1:
             winner = remaining[0]
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_liarsdice/win.ogg")
             self.broadcast_l("liarsdice-winner", player=winner.name)
             self.finish_game()
             return

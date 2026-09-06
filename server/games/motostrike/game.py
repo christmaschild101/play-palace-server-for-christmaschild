@@ -143,7 +143,7 @@ class MotoStrikeGame(Game):
         self._team_manager.team_mode = "individual"
         self._team_manager.setup_teams([p.name for p in self.players if not p.is_spectator])
 
-        self.play_music("game_pig/mus.ogg")
+        self.play_music("game_motostrike/mus.ogg")
 
         # Fresh deck
         self.deck = Deck()
@@ -172,7 +172,7 @@ class MotoStrikeGame(Game):
             self.turn_index = random.randrange(len(active))  # nosec B311
 
         self.broadcast_l("motostrike-race-start", meters=self.options.track_length)
-        self.play_sound("game_pig/roundstart.ogg")
+        self.play_sound("game_motostrike/race-start.ogg")
         self.intro_wait_ticks = 4 * 20
 
     def on_tick(self) -> None:
@@ -218,7 +218,7 @@ class MotoStrikeGame(Game):
             player.police_chase_turns -= 1
             if player.police_chase_turns == 0:
                 player.immobilized = True
-                self.play_sound("game_chess/moveking.ogg")
+                self.play_sound("game_motostrike/chase-lose.ogg")
                 self.broadcast_l("motostrike-chase-immobilized", target=player.name)
             else:
                 self.broadcast_l(
@@ -239,7 +239,9 @@ class MotoStrikeGame(Game):
     def _end_race(self, winner: MotoStrikePlayer, *, by_elimination: bool) -> None:
         """Finish the race with the given winner."""
         self.race_winner_id = winner.id
-        self.play_sound("game_pig/wingame.ogg")
+        self.play_sound(
+            "game_motostrike/eliminate.ogg" if by_elimination else "game_motostrike/win.ogg"
+        )
         if by_elimination:
             self.broadcast_l("motostrike-winner-elimination", winner=winner.name)
         else:
@@ -670,7 +672,7 @@ class MotoStrikeGame(Game):
             return
         card = player.hand.pop(slot)
         self.discard_pile.append(card)
-        self.play_sound(f"game_cards/discard{random.randint(1, 3)}.ogg")  # nosec B311
+        self.play_sound(f"game_motostrike/discard{random.randint(1, 3)}.ogg")  # nosec B311
         self.broadcast_l(
             "motostrike-discards", player=player.name, card=self._card_en(card)
         )
@@ -708,7 +710,7 @@ class MotoStrikeGame(Game):
         player.hand.pop(slot)
         self.discard_pile.append(card)
         player.distance += meters
-        self.play_sound(f"game_cards/play{random.randint(1, 4)}.ogg")  # nosec B311
+        self.play_sound(f"game_motostrike/ride{random.randint(1, 3)}.ogg")  # nosec B311
         self.broadcast_l(
             "motostrike-rides", player=player.name, distance=meters, total=player.distance
         )
@@ -723,7 +725,7 @@ class MotoStrikeGame(Game):
         if player.police_chase_turns > 0:
             player.police_chase_turns = 0
             escaped = True
-            self.play_sound("game_chess/moveknight.ogg")
+            self.play_sound("game_motostrike/chase-escape.ogg")
             self.broadcast_l("motostrike-chase-escaped", target=player.name)
 
         meters = MANEUVER_VALUES.get(card.value, 0)
@@ -732,7 +734,7 @@ class MotoStrikeGame(Game):
             player.distance += meters
             moved = True
 
-        self.play_sound(f"game_cards/play{random.randint(1, 4)}.ogg")  # nosec B311
+        self.play_sound("game_motostrike/turn.ogg")
         if moved:
             self.broadcast_l(
                 "motostrike-maneuvers",
@@ -755,7 +757,12 @@ class MotoStrikeGame(Game):
             player.wheel_damaged = False
         elif card.value == "escape":
             player.immobilized = False
-        self.play_sound(f"game_cards/play{random.randint(1, 4)}.ogg")  # nosec B311
+        recovery_sounds = {
+            "rebalance": "game_motostrike/rebalance.ogg",
+            "repair": "game_motostrike/repair.ogg",
+            "escape": "game_motostrike/chase-escape.ogg",
+        }
+        self.play_sound(recovery_sounds.get(card.value, "game_motostrike/rebalance.ogg"))
         self.broadcast_l(
             "motostrike-recovers", player=player.name, card=self._card_en(card)
         )
@@ -779,7 +786,7 @@ class MotoStrikeGame(Game):
 
         if self._has_card(target, "emergency_swerve"):
             self._consume_shield(target, "emergency_swerve")
-            self.play_sound("game_chess/moveknight.ogg")
+            self.play_sound("game_motostrike/swerve.ogg")
             self.broadcast_l(
                 "motostrike-trap-blocked",
                 player=player.name,
@@ -789,7 +796,7 @@ class MotoStrikeGame(Game):
             self._finish_play(player, played_maneuver=False)
             return
 
-        self.play_sound("game_battleship/hit.ogg")
+        self.play_sound("game_motostrike/wreck.ogg")
         if card.value == "mud_trap":
             target.stuck = True
             self.broadcast_l("motostrike-mud-hit", player=player.name, target=target.name)
@@ -814,7 +821,7 @@ class MotoStrikeGame(Game):
             player.hand.pop(slot)
             self.discard_pile.append(card)
             target.distance = max(0, target.distance - SMOKE_KNOCKBACK)
-            self.play_sound("game_battleship/fire.ogg")
+            self.play_sound("game_motostrike/smoke.ogg")
             self.broadcast_l(
                 "motostrike-smoke-hit",
                 player=player.name,
@@ -830,7 +837,7 @@ class MotoStrikeGame(Game):
                 return
             player.hand.pop(slot)
             self.discard_pile.append(card)
-            self.play_sound("game_battleship/hit.ogg")
+            self.play_sound("game_motostrike/shock.ogg")
             if target.hand:
                 dropped = random.choice(target.hand)  # nosec B311
                 target.hand.remove(dropped)
@@ -855,7 +862,7 @@ class MotoStrikeGame(Game):
             player.hand.pop(slot)
             self.discard_pile.append(card)
             target.police_chase_turns = CHASE_WINDOW
-            self.play_sound("game_chess/moveking.ogg")
+            self.play_sound("game_motostrike/chase-start.ogg")
             self.broadcast_l(
                 "motostrike-chase-started",
                 player=player.name,
@@ -883,15 +890,15 @@ class MotoStrikeGame(Game):
 
         if self._has_card(target, "kick_shield"):
             self._consume_shield(target, "kick_shield")
-            self.play_sound("game_chess/moveknight.ogg")
+            self.play_sound("game_motostrike/swap-shield.ogg")
             self.broadcast_l(
                 "motostrike-kick-blocked", player=player.name, target=target.name
             )
             self._finish_play(player, played_maneuver=False)
             return
 
-        self.play_sound("game_battleship/fire.ogg")
         if card.value == "quick_kick":
+            self.play_sound("game_motostrike/kick.ogg")
             target.distance = max(0, target.distance - QUICK_KICK_KNOCKBACK)
             self.broadcast_l(
                 "motostrike-quick-kick",
@@ -903,7 +910,7 @@ class MotoStrikeGame(Game):
         else:  # deadly_kick
             target.eliminated = True
             target.police_chase_turns = 0
-            self.play_sound("game_pig/lose.ogg")
+            self.play_sound("game_motostrike/deadly-kick.ogg")
             self.broadcast_l(
                 "motostrike-deadly-kick", player=player.name, target=target.name
             )
@@ -995,7 +1002,7 @@ class MotoStrikeGame(Game):
                 self.deck.add_all(self.discard_pile)
                 self.discard_pile = []
                 self.deck.shuffle()
-                self.play_sound(f"game_cards/shuffle{random.randint(1, 3)}.ogg")  # nosec B311
+                self.play_sound(f"game_motostrike/shuffle{random.randint(1, 2)}.ogg")  # nosec B311
                 self.broadcast_l("motostrike-deck-reshuffled")
             else:
                 return None
@@ -1011,7 +1018,7 @@ class MotoStrikeGame(Game):
             player.hand.append(card)
             drew += 1
         if drew > 0:
-            self.play_sound(f"game_cards/draw{random.randint(1, 4)}.ogg")  # nosec B311
+            self.play_sound(f"game_motostrike/draw{random.randint(1, 3)}.ogg")  # nosec B311
 
     # ==========================================================================
     # Status actions

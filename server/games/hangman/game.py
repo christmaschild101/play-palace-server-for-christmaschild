@@ -178,8 +178,8 @@ class HangmanGame(ActionGuardMixin, Game):
             player=keeper.name,
             letters=len(self.word),
         )
-        self.play_sound("game_cards/shuffle1.ogg")
-        self.play_music("game_pig/mus.ogg")
+        self.play_sound("game_hangman/word-set.ogg")
+        self.play_music("game_hangman/mus.ogg")
         self._announce_next_turn()
 
     def _announce_next_turn(self) -> None:
@@ -231,14 +231,14 @@ class HangmanGame(ActionGuardMixin, Game):
                     ch if ch == letter else cur
                     for ch, cur in zip(self.word, self.revealed)
                 ]
-                self.play_sound("game_cards/draw1.ogg")
+                self.play_sound("game_hangman/correct.ogg")
                 self.broadcast_l("hangman-correct", player=player.name, letter=letter)
                 if "_" not in self.revealed:
                     self._word_completed(player)
                     return
             else:
                 player.wrong += 1
-                self.play_sound("game_pig/lose.ogg")
+                self.play_sound("game_hangman/wrong.ogg")
                 guessed_text = Localization.format_list_and(self._locale_for(player), self.guessed)
                 self.broadcast_l(
                     "hangman-wrong",
@@ -250,18 +250,18 @@ class HangmanGame(ActionGuardMixin, Game):
                 if player.wrong >= self.options.max_wrong:
                     player.out = True
                     self.broadcast_l("hangman-out", player=player.name)
-                    self.play_sound("game_chess/capture2.ogg")
+                    self.play_sound("game_hangman/out.ogg")
             self._advance_turn()
             return
 
         # Whole-word guess
         if guess == self.word:
-            self.play_sound("game_cards/play1.ogg")
+            self.play_sound("game_hangman/word-guess.ogg")
             self.broadcast_l("hangman-solved", player=player.name, word=self.word)
             self._word_completed(player)
         else:
             player.wrong += 1
-            self.play_sound("game_pig/lose.ogg")
+            self.play_sound("game_hangman/wrong.ogg")
             self.broadcast_l(
                 "hangman-wrong-word",
                 player=player.name,
@@ -278,7 +278,7 @@ class HangmanGame(ActionGuardMixin, Game):
         """A guesser completed the word: they score a point."""
         player.score += 1
         player.out = True  # Can't guess again this round
-        self.play_sound("game_pig/win.ogg")
+        self.play_sound("game_hangman/solve.ogg")
         self.broadcast_l("hangman-word-finished", player=player.name, word=self.word)
         self._end_round()
 
@@ -287,7 +287,7 @@ class HangmanGame(ActionGuardMixin, Game):
         keeper = self._keeper()
         if keeper:
             keeper.score += 1
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_hangman/keeper-point.ogg")
             self.broadcast_l("hangman-keeper-wins", player=keeper.name, word=self.word)
         self._end_round()
 
@@ -298,7 +298,7 @@ class HangmanGame(ActionGuardMixin, Game):
             scores = {p.name: p.score for p in active}
             high = max(scores.values()) if scores else 0
             winners = [name for name, s in scores.items() if s == high]
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_hangman/match-win.ogg")
             if len(winners) == 1:
                 self.broadcast_l("hangman-winner", player=winners[0], score=high)
             else:

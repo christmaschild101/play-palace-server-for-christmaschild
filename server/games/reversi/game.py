@@ -88,7 +88,7 @@ class ReversiGame(GridGameMixin, ActionGuardMixin, Game):
         self.board[_idx(4, 4)] = "W"
         self.set_turn_players(self.get_active_players())
         self._init_grid()
-        self.play_sound("game_squares/start.ogg")
+        self.play_sound("game_reversi/start.ogg")
         self._announce_turn()
         self.rebuild_all_menus()
 
@@ -202,10 +202,10 @@ class ReversiGame(GridGameMixin, ActionGuardMixin, Game):
 
         flips = self._apply_move(index, marker)
         coord = self._grid_cell_coordinate(row, col)
-        self.play_sound("game_chess/movepawn1.ogg")
+        self.play_sound("game_reversi/place.ogg")
         self.broadcast_l("reversi-move", player=player.name, coord=coord, mark=marker)
         if flips:
-            self.schedule_sound("game_chess/capture1.ogg", delay_ticks=4)
+            self.schedule_sound("game_reversi/place.ogg", delay_ticks=4)
             self.broadcast_l("reversi-flips", player=player.name, count=flips)
         self.update_player_menu(player, selection_id=grid_cell_id(row, col))
 
@@ -222,7 +222,7 @@ class ReversiGame(GridGameMixin, ActionGuardMixin, Game):
             if skipped:
                 self.broadcast_l("reversi-pass", player=skipped.name)
             self.turn_index = (self.turn_index + 1) % len(self.turn_player_ids)
-        self.play_sound("game_chess/pickup.ogg")
+        self.play_sound("game_reversi/pass.ogg")
         self._announce_turn()
         self.rebuild_all_menus()
 
@@ -230,7 +230,7 @@ class ReversiGame(GridGameMixin, ActionGuardMixin, Game):
         """Count discs and finish."""
         black = self._count_discs("B")
         white = self._count_discs("W")
-        self.play_sound("game_pig/win.ogg")
+        self.play_sound("game_reversi/win.ogg")
         if black > white:
             winner = self.get_player_by_id(self.turn_player_ids[0])
             self.broadcast_l("reversi-winner", player=winner.name if winner else "?", score=black)

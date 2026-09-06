@@ -143,7 +143,7 @@ class ShipCaptainCrewGame(ActionGuardMixin, RoundBasedGameMixin, Game):
                 new_values.append(random.randint(1, 6))  # nosec B311
         sc_player.dice = new_values
 
-        self.play_standard_dice_roll_sound()
+        self.play_standard_dice_roll_sound(sound_template="game_shipcaptaincrew/roll{variant}.ogg", variant_count=3)
         self.broadcast_personal_l(
             player,
             "shipcaptaincrew-you-rolled",
@@ -156,13 +156,13 @@ class ShipCaptainCrewGame(ActionGuardMixin, RoundBasedGameMixin, Game):
         new_count = len(self._kept_indices(sc_player))
         if new_count > previous_count:
             if previous_count == 0:
-                self.play_sound("game_farkle/takepoint.ogg")
+                self.play_sound("game_shipcaptaincrew/keep.ogg")
                 self.broadcast_l("shipcaptaincrew-ship-found", player=player.name)
             elif previous_count == 1:
-                self.play_sound("game_farkle/takepoint.ogg")
+                self.play_sound("game_shipcaptaincrew/keep.ogg")
                 self.broadcast_l("shipcaptaincrew-captain-found", player=player.name)
             elif previous_count == 2:
-                self.play_sound("game_farkle/takepoint.ogg")
+                self.play_sound("game_shipcaptaincrew/keep.ogg")
                 self.broadcast_l("shipcaptaincrew-crew-found", player=player.name)
 
         if sc_player.rolls_left <= 0:
@@ -174,9 +174,9 @@ class ShipCaptainCrewGame(ActionGuardMixin, RoundBasedGameMixin, Game):
         score = self._turn_score(sc_player)
 
         if score > 0:
-            self.play_sound("game_farkle/bank1.ogg")
+            self.play_sound("game_shipcaptaincrew/bank.ogg")
         else:
-            self.play_sound("game_pig/lose.ogg")
+            self.play_sound("game_shipcaptaincrew/bust.ogg")
 
         sc_player.turn_score = score
         sc_player.total_score += score
@@ -190,7 +190,7 @@ class ShipCaptainCrewGame(ActionGuardMixin, RoundBasedGameMixin, Game):
         )
 
         if self.options.rounds == 0 and sc_player.total_score >= self.options.target_score:
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_shipcaptaincrew/win.ogg")
             self.broadcast_l(
                 "shipcaptaincrew-winner",
                 player=player.name,
@@ -292,7 +292,7 @@ class ShipCaptainCrewGame(ActionGuardMixin, RoundBasedGameMixin, Game):
             scores = [(p.name, p.total_score) for p in self.get_active_players()]
             high_score = max(s for _, s in scores)
             winners = [name for name, s in scores if s == high_score]
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_shipcaptaincrew/win.ogg")
             if len(winners) == 1:
                 self.broadcast_l(
                     "shipcaptaincrew-winner",

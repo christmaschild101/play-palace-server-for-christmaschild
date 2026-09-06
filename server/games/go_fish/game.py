@@ -101,7 +101,7 @@ class GoFishGame(ActionGuardMixin, Game):
             player.books = 0
             player.asking_rank = None
 
-        self.play_sound("game_cards/shuffle1.ogg")
+        self.play_sound("game_go_fish/shuffle.ogg")
         self.broadcast_l("gofish-dealt", cards=hand_size)
         self._announce_turn()
 
@@ -169,7 +169,7 @@ class GoFishGame(ActionGuardMixin, Game):
                 player.books += 1
                 count -= 4
                 made = True
-                self.play_sound("game_cards/discard1.ogg")
+                self.play_sound("game_go_fish/book.ogg")
                 self._broadcast_ranked("gofish-book", rank, player=player.name)
         return made
 
@@ -177,7 +177,7 @@ class GoFishGame(ActionGuardMixin, Game):
         """Execute the ask: transfer cards, else go fish."""
         given = [c for c in target.hand if c.rank == rank]
         if given:
-            self.play_sound("game_cards/play1.ogg")
+            self.play_sound("game_go_fish/give.ogg")
             self._broadcast_ranked(
                 "gofish-gave", rank, asker=player.name, target=target.name, count=len(given)
             )
@@ -194,7 +194,7 @@ class GoFishGame(ActionGuardMixin, Game):
             return
 
         # Go fish
-        self.play_sound("game_cards/draw1.ogg")
+        self.play_sound("game_go_fish/gofish.ogg")
         self.broadcast_l("gofish-go-fish", player=player.name, target=target.name)
         if self.deck.is_empty():
             self._finish_game()
@@ -218,7 +218,7 @@ class GoFishGame(ActionGuardMixin, Game):
         """Return True and finish the game if it should end now."""
         active = self.get_active_players()
         if player.books >= self.options.books_to_win:
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_go_fish/win.ogg")
             self.broadcast_l("gofish-winner-books", player=player.name, books=player.books)
             self.finish_game()
             return True
@@ -235,7 +235,7 @@ class GoFishGame(ActionGuardMixin, Game):
         active = self.get_active_players()
         high = max((p.books for p in active), default=0)
         winners = [p.name for p in active if p.books == high]
-        self.play_sound("game_pig/win.ogg")
+        self.play_sound("game_go_fish/win.ogg")
         if len(winners) == 1:
             self.broadcast_l("gofish-winner", player=winners[0], books=high)
         else:

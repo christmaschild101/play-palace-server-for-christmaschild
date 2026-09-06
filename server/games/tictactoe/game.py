@@ -83,7 +83,7 @@ class TicTacToeGame(GridGameMixin, ActionGuardMixin, Game):
         self.board = [""] * 9
         self.set_turn_players(self.get_active_players())
         self._init_grid()
-        self.play_sound("game_squares/start.ogg")
+        self.play_sound("game_tictactoe/start.ogg")
         self._announce_turn()
         self.rebuild_all_menus()
 
@@ -133,13 +133,13 @@ class TicTacToeGame(GridGameMixin, ActionGuardMixin, Game):
         marker = self._marker_for_player(player)
         self.board[index] = marker
         coord = self._grid_cell_coordinate(row, col)
-        self.play_sound(random.choice(["game_chess/movepawn1.ogg", "game_chess/movepawn2.ogg"]))  # nosec B311
+        self.play_sound("game_tictactoe/place-x.ogg" if marker == "X" else "game_tictactoe/place-o.ogg")
         self.broadcast_l("tictactoe-move", player=player.name, coord=coord, mark=marker)
         self.update_player_menu(player, selection_id=grid_cell_id(row, col))
 
         winner = self._winner_of(self.board)
         if winner:
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_tictactoe/win.ogg")
             self.broadcast_l("tictactoe-winner", player=player.name, mark=winner)
             self.finish_game()
             return

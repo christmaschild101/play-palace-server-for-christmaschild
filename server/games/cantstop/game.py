@@ -94,7 +94,7 @@ class CanTStopGame(PushYourLuckBotMixin, ActionGuardMixin, Game):
         self.game_active = True
         self.set_turn_players(self.get_active_players())
         self.turn = 0
-        self.play_sound("game_squares/start.ogg")
+        self.play_sound("game_cantstop/start.ogg")
         self._start_player_turn()
 
     def get_active_players(self) -> list[CanTStopPlayer]:  # type: ignore[override]
@@ -167,7 +167,7 @@ class CanTStopGame(PushYourLuckBotMixin, ActionGuardMixin, Game):
         if cs.dice:
             return
 
-        self.play_standard_dice_roll_sound()
+        self.play_standard_dice_roll_sound(sound_template="game_cantstop/roll{variant}.ogg", variant_count=3)
         cs.dice = [random.randint(1, 6) for _ in range(4)]  # nosec B311
         self.broadcast_personal_l(
             player,
@@ -178,7 +178,7 @@ class CanTStopGame(PushYourLuckBotMixin, ActionGuardMixin, Game):
 
         if not self._valid_partitions(cs):
             # Bust
-            self.play_sound("game_pig/lose.ogg")
+            self.play_sound("game_cantstop/bust.ogg")
             self.broadcast_l("cantstop-bust", player=player.name)
             cs.markers = [0] * 11
             cs.dice = []
@@ -204,10 +204,10 @@ class CanTStopGame(PushYourLuckBotMixin, ActionGuardMixin, Game):
         for value in sums:
             cs.markers[self._track_index(value)] += 1
             if self._height(cs, value) >= self.track_height:
-                self.play_sound("game_farkle/takepoint.ogg")
+                self.play_sound("game_cantstop/top.ogg")
                 self.broadcast_l("cantstop-top", player=player.name, value=value)
 
-        self.play_sound("game_squares/token1.ogg")
+        self.play_sound("game_cantstop/advance.ogg")
         self.broadcast_l(
             "cantstop-advanced",
             player=player.name,
@@ -216,7 +216,7 @@ class CanTStopGame(PushYourLuckBotMixin, ActionGuardMixin, Game):
         cs.dice = []
 
         if self._winning_tracks(cs) >= self.options.win_tracks:
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_cantstop/win.ogg")
             self.broadcast_l(
                 "cantstop-winner",
                 player=player.name,
@@ -234,7 +234,7 @@ class CanTStopGame(PushYourLuckBotMixin, ActionGuardMixin, Game):
             return
         for i in range(11):
             cs.progress[i] = min(self.track_height, cs.progress[i] + cs.markers[i])
-        self.play_sound("game_farkle/bank1.ogg")
+        self.play_sound("game_cantstop/bank.ogg")
         self.broadcast_l(
             "cantstop-banked",
             player=player.name,

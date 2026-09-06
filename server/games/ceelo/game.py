@@ -156,6 +156,7 @@ class CeeLoGame(ActionGuardMixin, RoundBasedGameMixin, Game):
                 player.dice = dice
                 player.combo_rank = rank
                 player.combo_key = key
+                self.play_standard_dice_roll_sound(sound_template="game_ceelo/roll{variant}.ogg", variant_count=3)
                 return
 
     # ==========================================================================
@@ -190,13 +191,13 @@ class CeeLoGame(ActionGuardMixin, RoundBasedGameMixin, Game):
     def play_combo_sound(self, player: CeeLoPlayer) -> None:
         """Play a sound matching the roll's strength."""
         if player.combo_rank == 0:
-            self.play_sound("game_farkle/hotdice.ogg")
+            self.play_sound("game_ceelo/best.ogg")
         elif player.combo_rank == 1:
-            self.play_sound("game_farkle/3kind.ogg")
+            self.play_sound("game_ceelo/pair.ogg")
         elif player.combo_rank == 2:
-            self.play_sound("game_farkle/takepoint.ogg")
+            self.play_sound("game_ceelo/point.ogg")
         else:
-            self.play_sound("game_pig/lose.ogg")
+            self.play_sound("game_ceelo/no-combo.ogg")
 
     def end_turn(self, jolt_min: int = 10, jolt_max: int = 20) -> None:
         """End the current player's turn through the round-based flow."""
@@ -280,7 +281,7 @@ class CeeLoGame(ActionGuardMixin, RoundBasedGameMixin, Game):
 
         if len(winners) == 1:
             winner = winners[0]
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_ceelo/win.ogg")
             self.broadcast_l("ceelo-round-winner", player=winner.name, points=self.options.ante)
             winner.total_points += self.options.ante
         else:
@@ -293,7 +294,7 @@ class CeeLoGame(ActionGuardMixin, RoundBasedGameMixin, Game):
                 "ceelo-tie-result",
                 winner=", ".join(p.name for p in winners),
             )
-            self.play_sound("game_farkle/3kind.ogg")
+            self.play_sound("game_ceelo/tie.ogg")
             # Resolve recursively until unique
             self._on_round_end()
             return
@@ -303,7 +304,7 @@ class CeeLoGame(ActionGuardMixin, RoundBasedGameMixin, Game):
             scores = [(p.name, p.total_points) for p in self.get_active_players()]
             high = max(s for _, s in scores)
             final_winners = [name for name, s in scores if s == high]
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_ceelo/win.ogg")
             if len(final_winners) == 1:
                 self.broadcast_l("ceelo-winner", player=final_winners[0], score=high)
             else:

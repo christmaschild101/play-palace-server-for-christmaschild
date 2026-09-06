@@ -87,7 +87,7 @@ class MancalaGame(ActionGuardMixin, Game):
         self.board = [stones] * 6 + [0] + [stones] * 6 + [0]
         self.set_turn_players(self.get_active_players())
         self.turn = 0
-        self.play_sound("game_squares/start.ogg")
+        self.play_sound("game_mancala/start.ogg")
         self._announce_turn()
 
     def on_tick(self) -> None:
@@ -147,7 +147,7 @@ class MancalaGame(ActionGuardMixin, Game):
         if self.board[pit] == 0:
             return
 
-        self.play_sound("game_dominos/play.ogg")
+        self.play_sound("game_mancala/sow.ogg")
         my_store = self._my_store(player)
         opp_store = self._opp_store(player)
         stones = self.board[pit]
@@ -173,7 +173,7 @@ class MancalaGame(ActionGuardMixin, Game):
                 self.board[opp] = 0
                 self.board[idx] = 0
                 self.board[my_store] += captured
-                self.play_sound("game_chess/capture1.ogg")
+                self.play_sound("game_mancala/capture.ogg")
                 self.broadcast_l("mancala-capture", player=player.name, stones=captured)
 
         if self._side_is_empty(0) or self._side_is_empty(7):
@@ -181,7 +181,7 @@ class MancalaGame(ActionGuardMixin, Game):
             return
 
         if bonus:
-            self.play_sound("game_farkle/takepoint.ogg")
+            self.play_sound("game_mancala/extra-turn.ogg")
             self.broadcast_l("mancala-bonus", player=player.name)
             self.rebuild_all_menus()
         else:
@@ -201,7 +201,7 @@ class MancalaGame(ActionGuardMixin, Game):
         high = max(scores.values()) if scores else 0
         winners = [name for name, s in scores.items() if s == high]
 
-        self.play_sound("game_pig/win.ogg")
+        self.play_sound("game_mancala/win.ogg")
         if len(winners) == 1:
             self.broadcast_l("mancala-winner", player=winners[0], score=high)
         else:

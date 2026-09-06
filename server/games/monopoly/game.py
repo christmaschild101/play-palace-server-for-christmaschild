@@ -401,8 +401,8 @@ class MonopolyGame(ActionGuardMixin, Game):
         self.bot_last_offer_round = 0
         self.set_turn_players(active)
         self.phase = "roll"
-        self.play_music("game_pig/mus.ogg")
-        self.play_sound("game_squares/start.ogg")
+        self.play_music("game_monopoly/mus.ogg")
+        self.play_sound("game_monopoly/start.ogg")
         self.broadcast_l("monopoly-start")
         self.announce_turn()
         self.rebuild_all_menus()
@@ -515,7 +515,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         # A pending offer from the bankrupt player is void.
         if self.pending_offer and self.pending_offer["from_id"] == player.id:
             self.pending_offer = None
-        self.play_sound("game_pig/lose.ogg")
+        self.play_sound("game_monopoly/bankrupt.ogg")
         if creditor and not creditor.bankrupt:
             self.broadcast_l(
                 "monopoly-bankrupt-to",
@@ -660,7 +660,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         if space == 20:
             if self.options.free_parking_jackpot and self.jackpot > 0:
                 player.money += self.jackpot
-                self.play_sound("game_farkle/bank1.ogg")
+                self.play_sound("game_monopoly/jackpot.ogg")
                 self.broadcast_l(
                     "monopoly-jackpot-won",
                     player=player.name,
@@ -687,7 +687,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         player.in_jail = True
         player.jail_turns = 0
         player.position = 10
-        self.play_sound("game_chess/capture2.ogg")
+        self.play_sound("game_monopoly/go-jail.ogg")
         self.broadcast_l("monopoly-sent-jail", player=player.name)
 
     # ==========================================================================
@@ -703,7 +703,7 @@ class MonopolyGame(ActionGuardMixin, Game):
             deck=deck_text,
             card=self._card_name(card, "en"),
         )
-        self.play_sound("game_cards/draw1.ogg")
+        self.play_sound("game_monopoly/card-draw.ogg")
 
         if kind == "collect":
             self._collect(player, value)
@@ -846,7 +846,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         self.last_dice = [d1, d2]
         doubles = d1 == d2
         self.last_doubles = doubles
-        self.play_standard_dice_roll_sound()
+        self.play_standard_dice_roll_sound(sound_template="game_monopoly/roll{variant}.ogg", variant_count=3)
         self.broadcast_l("monopoly-rolled", player=player.name, dice=f"{d1}, {d2}")
 
         if mp.in_jail:
@@ -929,7 +929,7 @@ class MonopolyGame(ActionGuardMixin, Game):
             return
         mp.in_jail = False
         mp.jail_turns = 0
-        self.play_sound("game_farkle/bank2.ogg")
+        self.play_sound("game_monopoly/bail.ogg")
         self.broadcast_l("monopoly-jail-bail-paid", player=player.name, bail=self._money(BAIL))
         self.rebuild_all_menus()
 
@@ -944,7 +944,7 @@ class MonopolyGame(ActionGuardMixin, Game):
             mp.jail_free_decks.pop()
         mp.in_jail = False
         mp.jail_turns = 0
-        self.play_sound("game_cards/discard1.ogg")
+        self.play_sound("game_monopoly/jail-card.ogg")
         self.broadcast_l("monopoly-jail-card-used", player=player.name)
         self.rebuild_all_menus()
 
@@ -964,7 +964,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         if mp.money >= price:
             mp.money -= price
             mp.properties.append(space)
-            self.play_sound("game_farkle/bank1.ogg")
+            self.play_sound("game_monopoly/buy.ogg")
             self.broadcast_l(
                 "monopoly-bought",
                 player=player.name,
@@ -1028,7 +1028,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         self.auction_bid = bid
         self.auction_leader_id = player.id
         self.auction_passed = []
-        self.play_sound("game_farkle/takepoint.ogg")
+        self.play_sound("game_monopoly/auction-bid.ogg")
         self.broadcast_l("monopoly-bid", player=player.name, bid=self._money(bid))
         self._advance_auction()
 
@@ -1081,7 +1081,7 @@ class MonopolyGame(ActionGuardMixin, Game):
             else:
                 winner.money = 0
             winner.properties.append(space)
-            self.play_sound("game_farkle/bank1.ogg")
+            self.play_sound("game_monopoly/auction-win.ogg")
             self.broadcast_l(
                 "monopoly-auction-won",
                 player=winner.name,
@@ -1141,7 +1141,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         mp.money -= cost
         mp.houses[space] = mp.houses.get(space, 0) + 1
         mp.houses_built += 1
-        self.play_sound("game_dominos/play.ogg")
+        self.play_sound("game_monopoly/build.ogg")
         self.broadcast_l(
             "monopoly-built",
             player=player.name,
@@ -1171,7 +1171,7 @@ class MonopolyGame(ActionGuardMixin, Game):
             del mp.houses[space]
         value = cost // 2
         mp.money += value
-        self.play_sound("game_farkle/bank2.ogg")
+        self.play_sound("game_monopoly/sell.ogg")
         self.broadcast_l(
             "monopoly-sold-house",
             player=player.name,
@@ -1196,7 +1196,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         mp.mortgaged.append(space)
         value = self._mortgage_value(space)
         mp.money += value
-        self.play_sound("game_farkle/bank2.ogg")
+        self.play_sound("game_monopoly/mortgage.ogg")
         self.broadcast_l(
             "monopoly-mortgaged",
             player=player.name,
@@ -1221,7 +1221,7 @@ class MonopolyGame(ActionGuardMixin, Game):
             return
         mp.money -= cost
         mp.mortgaged.remove(space)
-        self.play_sound("game_farkle/bank1.ogg")
+        self.play_sound("game_monopoly/unmortgage.ogg")
         self.broadcast_l(
             "monopoly-unmortgaged",
             player=player.name,
@@ -1386,7 +1386,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         self._reset_trade_draft(player)
         give_desc = self._offer_side_desc(give_space, give_cash, "en")
         recv_desc = self._offer_side_desc(receive_space, receive_cash, "en")
-        self.play_sound("game_cards/discard1.ogg")
+        self.play_sound("game_monopoly/trade-post.ogg")
         self.broadcast_l(
             "monopoly-trade-offer",
             player=player.name,
@@ -1451,7 +1451,7 @@ class MonopolyGame(ActionGuardMixin, Game):
         from_p.money += recv_cash
         give_desc = self._offer_side_desc(give_space, give_cash, "en")
         recv_desc = self._offer_side_desc(recv_space, recv_cash, "en")
-        self.play_sound("game_cards/discard1.ogg")
+        self.play_sound("game_monopoly/trade-done.ogg")
         self.broadcast_l(
             "monopoly-trade-accepted",
             player=from_p.name,
@@ -2058,12 +2058,12 @@ class MonopolyGame(ActionGuardMixin, Game):
         if len(alive) <= 1 and len(self.players) > 1:
             if alive:
                 winner = alive[0]
-                self.play_sound("game_pig/win.ogg")
+                self.play_sound("game_monopoly/win.ogg")
                 self.broadcast_l("monopoly-winner", player=winner.name)
                 self.finish_game()
             elif len(self.players) == 1:
                 winner = self.players[0]
-                self.play_sound("game_pig/win.ogg")
+                self.play_sound("game_monopoly/win.ogg")
                 self.broadcast_l("monopoly-winner", player=winner.name)
                 self.finish_game()
 
@@ -2073,7 +2073,7 @@ class MonopolyGame(ActionGuardMixin, Game):
             alive = self._alive()
             if len(alive) > 1:
                 rich = max(alive, key=lambda p: p.money)
-                self.play_sound("game_pig/win.ogg")
+                self.play_sound("game_monopoly/win.ogg")
                 self.broadcast_l(
                     "monopoly-winner-money",
                     player=rich.name,

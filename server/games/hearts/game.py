@@ -141,7 +141,7 @@ class HeartsGame(ActionGuardMixin, Game):
         for player in self.players:
             player.total = 0
             player.moons = 0
-        self.play_music("game_pig/mus.ogg")
+        self.play_music("game_hearts/mus.ogg")
         self._start_hand()
 
     def on_tick(self) -> None:
@@ -191,7 +191,7 @@ class HeartsGame(ActionGuardMixin, Game):
         # Rotate turn order so the leader plays first this hand
         self.set_turn_players(self._rotation_starting_at(leader))
 
-        self.play_sound("game_cards/shuffle1.ogg")
+        self.play_sound("game_hearts/deal.ogg")
         self.broadcast_l("hearts-hand-start", round=self.round)
 
         if self.options.pass_mode == "none":
@@ -252,7 +252,7 @@ class HeartsGame(ActionGuardMixin, Game):
         self.phase = "play"
         self.trick = []
         self.trick_players = []
-        self.play_sound("game_cards/small_shuffle.ogg")
+        self.play_sound("game_hearts/pass-done.ogg")
         self.broadcast_l("hearts-pass-complete")
         self._announce_trick()
 
@@ -315,7 +315,7 @@ class HeartsGame(ActionGuardMixin, Game):
             player=player.name,
             card=card_name(card, locale),
         )
-        self.play_sound("game_cards/play1.ogg")
+        self.play_sound("game_hearts/play.ogg")
 
         if len(self.trick) == 4:
             self._resolve_trick()
@@ -336,7 +336,7 @@ class HeartsGame(ActionGuardMixin, Game):
         winner = self.get_player_by_id(winner_id)
         if winner:
             winner.taken.extend(self.trick)
-            self.play_sound("game_chess/capture2.ogg")
+            self.play_sound("game_hearts/trick.ogg")
             self.broadcast_l("hearts-trick-won", player=winner.name)
 
         self.round_tricks += 1
@@ -382,7 +382,7 @@ class HeartsGame(ActionGuardMixin, Game):
         if shooter is not None:
             shooter.total += -26
             shooter.moons += 1
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_hearts/moon.ogg")
             self.broadcast_l("hearts-moon", player=shooter.name)
         else:
             for p in active:
@@ -394,7 +394,7 @@ class HeartsGame(ActionGuardMixin, Game):
             # Game over: lowest total wins
             low = min(p.total for p in active)
             winners = [p.name for p in active if p.total == low]
-            self.play_sound("game_pig/win.ogg")
+            self.play_sound("game_hearts/game-win.ogg")
             if len(winners) == 1:
                 self.broadcast_l("hearts-winner", player=winners[0], score=low)
             else:
@@ -430,7 +430,7 @@ class HeartsGame(ActionGuardMixin, Game):
             return
         if any(c.id == card_id for c in hp.hand):
             hp.pass_picks.append(card_id)
-            self.play_sound("game_cards/discard1.ogg")
+            self.play_sound("game_hearts/pass-card.ogg")
             if len(hp.pass_picks) == 3:
                 self.broadcast_l("hearts-picked-three", player=player.name)
                 if all(len(p.pass_picks) == 3 for p in self.get_active_players()):

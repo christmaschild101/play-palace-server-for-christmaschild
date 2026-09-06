@@ -190,6 +190,12 @@ class AdministrationMixin:
                     id="admin_reload_caches",
                 )
             )
+            items.append(
+                MenuItem(
+                    text=Localization.get(user.locale, "gamemanager-menu"),
+                    id="game_manager",
+                )
+            )
         # Only the server owner can change the server owner or manage developers
         if user.trust_level.value >= TrustLevel.SERVER_OWNER.value:
             items.append(
@@ -887,6 +893,10 @@ class AdministrationMixin:
                 text=Localization.get(user.locale, "virtual-bots-delete"),
                 id="delete",
             ),
+            MenuItem(
+                text=Localization.get(user.locale, "virtual-bots-delete-all"),
+                id="delete_all",
+            ),
             MenuItem(text=Localization.get(user.locale, "back"), id="back"),
         ]
         user.show_menu(
@@ -902,6 +912,33 @@ class AdministrationMixin:
         question = Localization.get(user.locale, "virtual-bots-clear-confirm")
         show_yes_no_menu(user, "virtual_bots_clear_confirm_menu", question)
         self._user_states[user.username] = {"menu": "virtual_bots_clear_confirm_menu"}
+
+    def _show_virtual_bots_delete_all_confirm_menu(self, user: NetworkUser) -> None:
+        """Show confirmation menu for permanently deleting all virtual bots."""
+        question = Localization.get(user.locale, "virtual-bots-delete-all-confirm")
+        show_yes_no_menu(user, "virtual_bots_delete_all_confirm_menu", question)
+        self._user_states[user.username] = {"menu": "virtual_bots_delete_all_confirm_menu"}
+
+    async def _delete_all_virtual_bots(self, owner: NetworkUser) -> None:
+        """Permanently delete every virtual bot (single-delete semantics)."""
+        manager = getattr(self, "_virtual_bots", None)
+        if not manager:
+            _speak_activity(owner, "virtual-bots-not-available")
+            self._show_virtual_bots_menu(owner)
+            return
+
+        deleted, tables_killed = manager.remove_all_bots()
+        if deleted > 0:
+            _speak_activity(
+                owner,
+                "virtual-bots-deleted-all",
+                bots=deleted,
+                tables=tables_killed,
+            )
+        else:
+            _speak_activity(owner, "virtual-bots-none-to-clear")
+
+        self._show_virtual_bots_menu(owner)
 
     def _show_add_bot_name_editbox(self, user: NetworkUser) -> None:
         """Show editbox for entering a new virtual bot name."""
@@ -1098,6 +1135,8 @@ class AdministrationMixin:
             self._show_unban_user_menu(user)
         elif selection_id == "virtual_bots":
             self._show_virtual_bots_menu(user)
+        elif selection_id == "game_manager":
+            self._show_game_manager_menu(user)
         elif selection_id == "server_status":
             self._show_server_status_menu(user)
         elif selection_id == "kick_user":
@@ -1832,6 +1871,8 @@ class AdministrationMixin:
             self._show_take_offline_bot_menu(user)
         elif selection_id == "clear":
             self._show_virtual_bots_clear_confirm_menu(user)
+        elif selection_id == "delete_all":
+            self._show_virtual_bots_delete_all_confirm_menu(user)
         elif selection_id == "status":
             await self._show_virtual_bots_status(user)
         elif selection_id == "guided":
@@ -1857,6 +1898,15 @@ class AdministrationMixin:
         """Handle virtual bots clear confirmation menu selection."""
         if selection_id == "yes":
             await self._clear_virtual_bots(user)
+        else:
+            self._show_virtual_bots_menu(user)
+
+    async def _handle_virtual_bots_delete_all_confirm_selection(
+        self, user: NetworkUser, selection_id: str
+    ) -> None:
+        """Handle virtual bots delete-all confirmation menu selection."""
+        if selection_id == "yes":
+            await self._delete_all_virtual_bots(user)
         else:
             self._show_virtual_bots_menu(user)
 

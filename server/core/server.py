@@ -32,6 +32,7 @@ from .config_paths import (
 from .state import ModeSnapshot, ServerLifecycleState, ServerMode
 from .tick import TickScheduler, load_server_config
 from .administration import AdministrationMixin
+from .community import CommunityMixin, GameManagerMixin
 from .documents.browsing import DocumentBrowsingMixin, _DOCUMENTS_DIR
 from .documents.transcriber_role import TranscriberRoleMixin
 from .virtual_bots import VirtualBotManager
@@ -110,7 +111,13 @@ def _ensure_var_server_dir() -> Path:
     return _VAR_SERVER_DIR
 
 
-class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
+class Server(
+    AdministrationMixin,
+    GameManagerMixin,
+    CommunityMixin,
+    DocumentBrowsingMixin,
+    TranscriberRoleMixin,
+):
     """
     Main PlayPalace v11 server.
 
@@ -1624,6 +1631,7 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 MenuItem(
                     text=Localization.get(user.locale, "documents-menu-title"), id="documents"
                 ),
+                MenuItem(text=Localization.get(user.locale, "community"), id="community"),
             ]
             # Add administration menu for admins
             if user.trust_level.value >= TrustLevel.ADMIN.value:
@@ -2376,6 +2384,46 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 self._handle_virtual_bots_clear_confirm_selection,
                 (user, selection_id),
             ),
+            "virtual_bots_delete_all_confirm_menu": (
+                self._handle_virtual_bots_delete_all_confirm_selection,
+                (user, selection_id),
+            ),
+            "game_manager_menu": (
+                self._handle_game_manager_selection,
+                (user, selection_id),
+            ),
+            "game_defaults_menu": (
+                self._handle_game_defaults_selection,
+                (user, selection_id, state),
+            ),
+            "game_defaults_choice_menu": (
+                self._handle_game_defaults_choice_selection,
+                (user, selection_id, state),
+            ),
+            "bot_requests_menu": (
+                self._handle_bot_requests_selection,
+                (user, selection_id),
+            ),
+            "bot_request_actions_menu": (
+                self._handle_bot_request_actions_selection,
+                (user, selection_id, state),
+            ),
+            "community_menu": (
+                self._handle_community_selection,
+                (user, selection_id),
+            ),
+            "feature_votes_menu": (
+                self._handle_feature_votes_selection,
+                (user, selection_id),
+            ),
+            "forum_threads_menu": (
+                self._handle_forum_threads_selection,
+                (user, selection_id),
+            ),
+            "forum_thread_menu": (
+                self._handle_forum_thread_selection,
+                (user, selection_id, state),
+            ),
             "edit_bot_menu": (self._handle_edit_bot_selection, (user, selection_id)),
             "edit_bot_actions_menu": (
                 self._handle_edit_bot_actions_selection,
@@ -2531,6 +2579,9 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
                 return  # No stats — user stays on main menu
         elif selection_id == "documents":
             self._show_documents_menu(user)
+        elif selection_id == "community":
+            if self._ensure_user_approved(user):
+                self._show_community_menu(user)
         elif selection_id == "options":
             self._show_options_menu(user)
         elif selection_id == "administration":
@@ -2912,6 +2963,7 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         game_class = get_game_class(game_type)
         if game_class:
             game = game_class()
+            self._apply_game_defaults(game_type, game)
             table.game = game
             game._table = table  # Enable game to call table.destroy()
             game.initialize_lobby(user.username, user)
@@ -4489,6 +4541,36 @@ class Server(AdministrationMixin, DocumentBrowsingMixin, TranscriberRoleMixin):
         if current_menu == "rename_bot_editbox":
             text = packet.get("text", "")
             await self._handle_rename_bot_editbox(user, text, state)
+            return
+
+        if current_menu == "feature_propose_editbox":
+            text = packet.get("text", "")
+            await self._handle_feature_propose_editbox(user, text)
+            return
+
+        if current_menu == "forum_title_editbox":
+            text = packet.get("text", "")
+            await self._handle_forum_title_editbox(user, text, state)
+            return
+
+        if current_menu == "forum_body_editbox":
+            text = packet.get("text", "")
+            await self._handle_forum_body_editbox(user, text, state)
+            return
+
+        if current_menu == "forum_reply_editbox":
+            text = packet.get("text", "")
+            await self._handle_forum_reply_editbox(user, text, state)
+            return
+
+        if current_menu == "bot_request_name_editbox":
+            text = packet.get("text", "")
+            await self._handle_bot_request_name_editbox(user, text, state)
+            return
+
+        if current_menu == "bot_request_desc_editbox":
+            text = packet.get("text", "")
+            await self._handle_bot_request_desc_editbox(user, text, state)
             return
 
         # Forward to game if user is in a table

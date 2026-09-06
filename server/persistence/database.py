@@ -1419,6 +1419,350 @@ class Database:
         cursor.execute("DELETE FROM virtual_bot_definitions WHERE name = ?", (name,))
         self._get_conn().commit()
 
+    # ==================== Game Defaults (Game Manager) ====================
+
+    def _ensure_game_defaults_table(self) -> None:
+        """Create game_defaults table if it doesn't exist."""
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS game_defaults (
+                game_type TEXT PRIMARY KEY,
+                options_json TEXT NOT NULL,
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+            """
+        )
+        self._get_conn().commit()
+
+    def save_game_defaults(self, game_type: str, options_json: str) -> None:
+        """Store server-wide default options for a game type (upsert)."""
+        self._ensure_game_defaults_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            INSERT INTO game_defaults (game_type, options_json, updated_at)
+            VALUES (?, ?, datetime('now'))
+            ON CONFLICT(game_type) DO UPDATE SET
+                options_json = excluded.options_json,
+                updated_at = excluded.updated_at
+            """,
+            (game_type, options_json),
+        )
+        self._get_conn().commit()
+
+    def load_game_defaults(self, game_type: str) -> str | None:
+        """Return stored default options JSON for a game type, or None."""
+        self._ensure_game_defaults_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            "SELECT options_json FROM game_defaults WHERE game_type = ?",
+            (game_type,),
+        )
+        row = cursor.fetchone()
+        return row[0] if row else None
+
+    def clear_game_defaults(self, game_type: str) -> None:
+        """Remove stored default options for a game type."""
+        self._ensure_game_defaults_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute("DELETE FROM game_defaults WHERE game_type = ?", (game_type,))
+        self._get_conn().commit()
+
+    # ==================== Community: Feature Requests ====================
+
+    def _ensure_feature_requests_tables(self) -> None:
+        """Create feature_requests and feature_votes tables if missing."""
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS feature_requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                text TEXT NOT NULL,
+                author TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS feature_votes (
+                request_id INTEGER NOT NULL REFERENCES feature_requests(id) ON DELETE CASCADE,
+                username TEXT NOT NULL,
+                PRIMARY KEY (request_id, username)
+            )
+            """
+        )
+        self._get_conn().commit()
+
+    def save_feature_request(self, text: str, author: str) -> int:
+        """Insert a feature request; returns its id."""
+        self._ensure_feature_requests_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            "INSERT INTO feature_requests (text, author) VALUES (?, ?)",
+            (text, author),
+        )
+        self._get_conn().commit()
+        return int(cursor.lastrowid)
+
+    def load_feature_requests(self) -> list[dict]:
+        """Load all feature requests with vote counts, most-voted first."""
+        self._ensure_feature_requests_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            SELECT f.id, f.text, f.author, f.created_at,
+                   (SELECT COUNT(*) FROM feature_votes v WHERE v.request_id = f.id) AS votes
+            FROM feature_requests f
+            ORDER BY votes DESC, f.id DESC
+            """
+        )
+        return [
+            {"id": r[0], "text": r[1], "author": r[2], "created_at": r[3], "votes": r[4]}
+            for r in cursor.fetchall()
+        ]
+
+    def add_feature_vote(self, request_id: int, username: str) -> bool:
+        """Add a vote; returns False if this user already voted on this request."""
+        self._ensure_feature_requests_tables()
+        cursor = self._get_conn().cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO feature_votes (request_id, username) VALUES (?, ?)",
+                (request_id, username),
+            )
+            self._get_conn().commit()
+        except Exception:
+            self._get_conn().rollback()
+            return False
+        return True
+
+    def get_feature_vote(self, request_id: int, username: str) -> bool:
+        """Return True if the user has voted on this request."""
+        self._ensure_feature_requests_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            "SELECT 1 FROM feature_votes WHERE request_id = ? AND username = ?",
+            (request_id, username),
+        )
+        return cursor.fetchone() is not None
+
+    def delete_feature_request(self, request_id: int) -> None:
+        """Remove a feature request and its votes (admin/mod action)."""
+        self._ensure_feature_requests_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute("DELETE FROM feature_votes WHERE request_id = ?", (request_id,))
+        cursor.execute("DELETE FROM feature_requests WHERE id = ?", (request_id,))
+        self._get_conn().commit()
+
+    # ==================== Community: Forum ====================
+
+    def _ensure_forum_tables(self) -> None:
+        """Create forum_threads and forum_posts tables if missing."""
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS forum_threads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                author TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                last_post_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS forum_posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                thread_id INTEGER NOT NULL REFERENCES forum_threads(id) ON DELETE CASCADE,
+                author TEXT NOT NULL,
+                body TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+            """
+        )
+        self._get_conn().commit()
+
+    def create_forum_thread(self, title: str, author: str, body: str) -> int:
+        """Create a thread with its first post; returns thread id."""
+        self._ensure_forum_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            "INSERT INTO forum_threads (title, author) VALUES (?, ?)",
+            (title, author),
+        )
+        thread_id = int(cursor.lastrowid)
+        cursor.execute(
+            "INSERT INTO forum_posts (thread_id, author, body) VALUES (?, ?, ?)",
+            (thread_id, author, body),
+        )
+        self._get_conn().commit()
+        return thread_id
+
+    def load_forum_threads(self) -> list[dict]:
+        """Load threads, most recently active first, with reply counts."""
+        self._ensure_forum_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            SELECT t.id, t.title, t.author, t.created_at, t.last_post_at,
+                   (SELECT COUNT(*) FROM forum_posts p WHERE p.thread_id = t.id) AS posts
+            FROM forum_threads t
+            ORDER BY t.last_post_at DESC, t.id DESC
+            """
+        )
+        return [
+            {
+                "id": r[0],
+                "title": r[1],
+                "author": r[2],
+                "created_at": r[3],
+                "last_post_at": r[4],
+                "posts": r[5],
+            }
+            for r in cursor.fetchall()
+        ]
+
+    def load_forum_posts(self, thread_id: int) -> list[dict] | None:
+        """Load a thread's posts in order; None if the thread doesn't exist."""
+        self._ensure_forum_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute("SELECT title FROM forum_threads WHERE id = ?", (thread_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+        cursor.execute(
+            "SELECT id, author, body, created_at FROM forum_posts"
+            " WHERE thread_id = ? ORDER BY id",
+            (thread_id,),
+        )
+        return [
+            {"id": r[0], "author": r[1], "body": r[2], "created_at": r[3]}
+            for r in cursor.fetchall()
+        ]
+
+    def add_forum_post(self, thread_id: int, author: str, body: str) -> bool:
+        """Append a post and bump the thread's activity; False if no thread."""
+        self._ensure_forum_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute("SELECT 1 FROM forum_threads WHERE id = ?", (thread_id,))
+        if not cursor.fetchone():
+            return False
+        cursor.execute(
+            "INSERT INTO forum_posts (thread_id, author, body) VALUES (?, ?, ?)",
+            (thread_id, author, body),
+        )
+        cursor.execute(
+            "UPDATE forum_threads SET last_post_at = datetime('now') WHERE id = ?",
+            (thread_id,),
+        )
+        self._get_conn().commit()
+        return True
+
+    def delete_forum_thread(self, thread_id: int) -> bool:
+        """Delete a thread and its posts; False if the thread doesn't exist."""
+        self._ensure_forum_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute("SELECT 1 FROM forum_threads WHERE id = ?", (thread_id,))
+        if not cursor.fetchone():
+            return False
+        cursor.execute("DELETE FROM forum_posts WHERE thread_id = ?", (thread_id,))
+        cursor.execute("DELETE FROM forum_threads WHERE id = ?", (thread_id,))
+        self._get_conn().commit()
+        return True
+
+    def delete_forum_post(self, post_id: int) -> bool:
+        """Delete a single post; False if it doesn't exist."""
+        self._ensure_forum_tables()
+        cursor = self._get_conn().cursor()
+        cursor.execute("SELECT 1 FROM forum_posts WHERE id = ?", (post_id,))
+        if not cursor.fetchone():
+            return False
+        cursor.execute("DELETE FROM forum_posts WHERE id = ?", (post_id,))
+        self._get_conn().commit()
+        return True
+
+    # ==================== Community: Bot Requests ====================
+
+    def _ensure_bot_requests_table(self) -> None:
+        """Create bot_requests table if missing."""
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS bot_requests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                requester TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+            """
+        )
+        self._get_conn().commit()
+
+    def save_bot_request(self, name: str, description: str, requester: str) -> int:
+        """Insert a bot request; returns its id."""
+        self._ensure_bot_requests_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            "INSERT INTO bot_requests (name, description, requester) VALUES (?, ?, ?)",
+            (name, description, requester),
+        )
+        self._get_conn().commit()
+        return int(cursor.lastrowid)
+
+    def load_bot_requests(self, status: str = "pending") -> list[dict]:
+        """Load bot requests with the given status, oldest first."""
+        self._ensure_bot_requests_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            "SELECT id, name, description, requester, created_at FROM bot_requests"
+            " WHERE status = ? ORDER BY id",
+            (status,),
+        )
+        return [
+            {"id": r[0], "name": r[1], "description": r[2], "requester": r[3], "created_at": r[4]}
+            for r in cursor.fetchall()
+        ]
+
+    def set_bot_request_status(self, request_id: int, status: str) -> bool:
+        """Update a bot request's status; False if the request doesn't exist."""
+        self._ensure_bot_requests_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute("SELECT 1 FROM bot_requests WHERE id = ?", (request_id,))
+        if not cursor.fetchone():
+            return False
+        cursor.execute("UPDATE bot_requests SET status = ? WHERE id = ?", (status, request_id))
+        self._get_conn().commit()
+        return True
+
+    def delete_bot_request(self, request_id: int) -> bool:
+        """Remove a bot request row entirely; False if it doesn't exist."""
+        self._ensure_bot_requests_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute("SELECT 1 FROM bot_requests WHERE id = ?", (request_id,))
+        if not cursor.fetchone():
+            return False
+        cursor.execute("DELETE FROM bot_requests WHERE id = ?", (request_id,))
+        self._get_conn().commit()
+        return True
+
+    def get_bot_request(self, request_id: int) -> dict | None:
+        """Return a single bot request row, or None."""
+        self._ensure_bot_requests_table()
+        cursor = self._get_conn().cursor()
+        cursor.execute(
+            "SELECT id, name, description, requester, status FROM bot_requests WHERE id = ?",
+            (request_id,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return {"id": row[0], "name": row[1], "description": row[2], "requester": row[3], "status": row[4]}
+
     # ==================== Virtual Bot Presence State ====================
 
     def _ensure_virtual_bot_presence_table(self) -> None:

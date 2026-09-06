@@ -444,8 +444,75 @@ virtual-bots-cleared = Cleared { $bots } virtual bots and destroyed { $tables } 
 }.
 virtual-bot-table-closed = Table closed by administrator.
 virtual-bots-none-to-clear = No virtual bots to clear.
+virtual-bots-delete-all = Delete All Bots (permanent)
+virtual-bots-delete-all-confirm = Permanently delete ALL virtual bots? This removes their saved definitions too — they will not come back on restart. Tables they are in will be destroyed.
+virtual-bots-deleted-all = Permanently deleted { $bots } virtual bots and destroyed { $tables } { $tables ->
+    [one] table
+   *[other] tables
+}.
 virtual-bots-status-report = Virtual Bots: { $total } total, { $online } online, { $offline } offline, { $in_game } in game.
 virtual-bots-guided-overview = Guided Tables
+
+# Game Manager (developers and above)
+gamemanager-menu = Game Manager
+gamemanager-monopoly-defaults = Monopoly table defaults
+gamemanager-bot-requests = Bot requests (community)
+gamemanager-defaults-status = Current defaults:
+gamemanager-defaults-none = (unset — game defaults apply)
+gamemanager-set-board = Set default board (US / UK)
+gamemanager-set-rent = Set default rent table (classic / simplified)
+gamemanager-toggle-jackpot = Toggle default Free Parking jackpot
+gamemanager-toggle-tax = Toggle default 10% income tax
+gamemanager-toggle-auction = Toggle default auction opening bid
+gamemanager-defaults-clear = Reset all Monopoly defaults
+gamemanager-defaults-saved = Default { $field } set to { $value }.
+gamemanager-defaults-cleared = Monopoly defaults cleared — game defaults apply again.
+gamemanager-bot-requests-none = No pending bot requests.
+gamemanager-bot-request-item = { $name } (requested by { $requester })
+gamemanager-bot-request-detail = Bot "{ $name }" requested by { $requester }. Description: { $description }
+gamemanager-bot-request-accept = Accept (create the bot now)
+gamemanager-bot-request-reject = Reject
+gamemanager-bot-request-delete = Delete request
+gamemanager-bot-request-accepted = Request accepted — bot "{ $name }" is now on the server.
+gamemanager-bot-request-rejected = Request for "{ $name }" rejected.
+gamemanager-bot-request-deleted = Request for "{ $name }" deleted.
+gamemanager-bot-request-gone = That request no longer exists.
+bot-request-accepted = Your bot request "{ $name }" was accepted — say hi to { $name }!
+bot-request-rejected = Your bot request "{ $name }" was not accepted this time.
+
+# Community (all players)
+community = Community
+community-feature-votes = Feature votes
+community-forum = Forum
+community-request-bot = Request a bot
+community-feature-item = [{ $votes } votes] { $text } — by { $author }
+community-feature-propose = Propose a feature
+community-feature-propose-prompt = Type the feature you would like to see, then press Enter.
+community-feature-voted = Your vote was counted.
+community-feature-already-voted = You already voted for this feature.
+community-feature-added = Feature proposal added.
+community-feature-empty = Nothing entered — proposal not saved.
+community-forum-thread-item = { $title } — by { $author }, { $posts } { $posts ->
+    [one] post
+   *[other] posts
+}
+community-forum-new-thread = Start a new thread
+community-forum-title-prompt = Type the thread title, then press Enter.
+community-forum-body-prompt = Type the first post, then press Enter.
+community-forum-reply-prompt = Type your reply, then press Enter.
+community-forum-post = { $index }. { $author }: { $body }
+community-forum-reply = Reply
+community-forum-delete-thread = Delete this thread (moderators)
+community-forum-thread-deleted = Thread deleted.
+community-forum-thread-created = Thread "{ $title }" created.
+community-forum-reply-posted = Reply posted.
+community-forum-empty-title = No title entered — thread not created.
+community-forum-empty-body = Nothing entered — not saved.
+community-forum-thread-gone = That thread no longer exists.
+community-request-bot-name-prompt = Type the name you would like for the bot, then press Enter.
+community-request-bot-desc-prompt = Describe the bot in one line, then press Enter.
+community-request-bot-submitted = Bot request for "{ $name }" submitted — a developer will review it.
+community-request-bot-invalid-name = Please enter a name of 1 to 40 characters.
 virtual-bots-groups-overview = Bot Groups
 virtual-bots-profiles-overview = Profiles
 virtual-bots-guided-header = Guided tables: { $count } rule(s). Allocation: { $allocation }, fallback: { $fallback }, default profile: { $default_profile }.

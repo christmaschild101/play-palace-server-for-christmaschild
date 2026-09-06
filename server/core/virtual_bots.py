@@ -1222,6 +1222,27 @@ class VirtualBotManager:
 
         return bot_count, len(tables_killed)
 
+    def remove_all_bots(self) -> tuple[int, int]:
+        """Permanently delete every virtual bot (single-delete semantics).
+
+        Unlike :meth:`clear_bots` (which only removes running instances and
+        keeps the roster), this removes each bot exactly like
+        :meth:`remove_bot`: killing its table, taking it offline, dropping it
+        from the roster/memberships/profiles, and deleting (or tombstoning)
+        its persisted definition so it stays gone across restarts.
+
+        Returns tuple of (bots_deleted, tables_killed).
+        """
+        names = list(self._config.names)
+        deleted = 0
+        tables_killed = 0
+        for name in names:
+            removed, killed = self.remove_bot(name)
+            if removed:
+                deleted += 1
+            tables_killed += killed
+        return deleted, tables_killed
+
     def _kill_bot_table(self, bot: VirtualBot) -> bool:
         """Close the table a bot is in, notifying members. Returns True if closed."""
         if not bot.table_id:

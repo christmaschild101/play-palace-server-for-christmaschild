@@ -202,6 +202,149 @@ join = ["{player} rolls in! grab a spot", "welcome {player}, the dice are hot"]
 gamestart = ["good luck {player} - may the dice be kind", "let's see {player} run the board"]
 gameend = ["gg {player}, the dice had it out for you", "well played {player}"]
 
+[virtual_bots.presence.game_pools.motostrike]
+join = [
+    "hey {player}, ready to eat some mud?",
+    "welcome {player} - hope your tires are pumped",
+    "{player}'s on the grid! helmets on",
+]
+gamestart = ["green light {player}, full throttle!", "may the best rider win, {player}", "watch your wheels {player}, I play dirty"]
+gameend = ["gg {player}, you left me in the dust", "great race {player} - rematch on the track?", "{player} crossed the line first, well ridden"]
+ingame = ["eat mud, {player}!", "who put that spike strip there? >:)", "police chase incoming hehe", "my bike's still purring, {player}"]
+postgame = ["gg, that was a wild ride", "my wheels are wrecked but what a race", "rematch later, I need a new chain"]
+
+[virtual_bots.presence.game_pools.monopoly]
+join = [
+    "hey {player}, hope you brought your bankroll",
+    "welcome {player}, Boardwalk's already taken",
+    "{player} joins - careful, I never sell cheap",
+]
+gamestart = ["good luck {player}, try not to land on my hotels", "roll well {player}, pass Go and collect", "let's see who goes bankrupt first, {player}"]
+gameend = ["gg {player}, the bank always wins... except today", "you own the board, {player}!", "gg {player}, that last rent hurt"]
+ingame = ["that's my third railroad, {player}", "rent's due {player} >:)", "I'd trade you jail for free, {player}", "do NOT build on the oranges, {player}", "landing on my hotel? that's gotta hurt, {player}"]
+postgame = ["gg, I'm off to count my rent money", "well played - bankruptcy never felt so fair", "rematch later? I want that Boardwalk back"]
+
+[virtual_bots.presence.game_pools.hearts]
+join = [
+    "hey {player}, keep your hearts to yourself",
+    "welcome {player}, watch out for the old lady",
+    "{player}'s here - table's full of trouble now",
+]
+gamestart = ["good luck {player}, dodge the Queen", "hearts are broken easily, {player} - be careful", "let's deal, {player} - low score wins"]
+gameend = ["gg {player}, you dodged every heart", "the Queen found you, {player} :)", "gg {player}, that moon shot was scary"]
+ingame = ["hearts are broken, {player}!", "who's got the Queen? not me...", "nice duck, {player}", "trying to shoot the moon again, {player}?"]
+postgame = ["gg, no hearts for me tonight", "well played - that Queen of Spades is evil", "rematch? I want revenge on that moon shot"]
+
+[virtual_bots.presence.game_pools.go_fish]
+join = [
+    "hey {player}, got any threes?",
+    "welcome {player}, the pond is stocked",
+    "{player}'s here - go fish accordingly",
+]
+gamestart = ["good luck {player}, may your books be plenty", "ready to fish, {player}?", "let's see {player} empty my hand"]
+gameend = ["gg {player}, you fished up a storm", "all books to {player}!", "gg {player}, the pond favors you"]
+ingame = ["got any queens, {player}?", "fishing... and I caught one!", "you're hoarding books, {player}", "the deck loves me today, {player}"]
+postgame = ["gg, the pond was generous", "well played - I never got my sevens", "rematch? I still smell fish"]
+
+[virtual_bots.presence.game_pools.mancala]
+join = [
+    "hey {player}, grab a side of the board",
+    "welcome {player}, my store is hungry",
+    "{player} sits - mind the stones",
+]
+gamestart = ["good luck {player}, may your store overflow", "sow fast {player}, I'm counting stones", "first move is yours, {player}"]
+gameend = ["gg {player}, your store runneth over", "you swept the board, {player}!", "gg {player}, stone for stone you won"]
+ingame = ["extra turn for me, {player}", "don't drop stones on my side, {player}", "that capture was rude, {player} :)", "counting... counting... gotcha, {player}"]
+postgame = ["gg, my store looks empty", "well played - stone by stone", "rematch? I'll guard my pits better"]
+
+[virtual_bots.presence.game_pools.ceelo]
+join = [
+    "hey {player}, the dice are hot tonight",
+    "welcome {player}, hope you like triples",
+    "{player}'s in - roll them bones",
+]
+gamestart = ["good luck {player}, no 1-2-3 please", "roll high {player}, 4-5-6 pays", "let's see {player} throw triples"]
+gameend = ["gg {player}, the dice loved you", "triples for {player}!", "gg {player}, I never even rolled a point"]
+ingame = ["come on triples...", "1-2-3?! really, dice?", "nice roll, {player}", "the bones are cold for me tonight, {player}"]
+postgame = ["gg, the dice giveth and taketh", "well played - luck of the roll", "rematch? the dice owe me one"]
+
+[virtual_bots.presence.game_pools.liarsdice]
+join = [
+    "hey {player}, hope you can bluff",
+    "welcome {player}, my poker face is ready",
+    "{player} sits - bring your best lies",
+]
+gamestart = ["good luck {player}, I never lie... much", "dice up {player}, bid smart", "let's see who bluffs first, {player}"]
+gameend = ["gg {player}, you called my every bluff", "your bids were fearless, {player}", "gg {player}, I lost my dice and my dignity"]
+ingame = ["liar, {player}!", "that bid is BOLD, {player}", "two sixes? sure, whatever you say", "I've got a feeling about your dice, {player}"]
+postgame = ["gg, honest dice next time", "well played - my bluffs were transparent", "rematch? I'll bring better lies"]
+
+[virtual_bots.presence.game_pools.reversi]
+join = [
+    "hey {player}, mind the corners",
+    "welcome {player}, let's flip some discs",
+    "{player}'s here - black or white?",
+]
+gamestart = ["good luck {player}, corners win games", "flip away {player}, I'll be waiting", "let's see {player} take the edges"]
+gameend = ["gg {player}, you owned the corners", "the board is yours, {player}!", "gg {player}, I got flipped every which way"]
+ingame = ["corner for me, {player}", "stop flipping my discs, {player}", "that edge move was sneaky", "you're caging me in, {player}!"]
+postgame = ["gg, I need to learn corner control", "well played - clean flips", "rematch? I want those corners back"]
+
+[virtual_bots.presence.game_pools.cantstop]
+join = [
+    "hey {player}, feeling lucky?",
+    "welcome {player}, the columns await",
+    "{player}'s in - how greedy are you feeling?",
+]
+gamestart = ["good luck {player}, know when to stop", "roll big {player}, but watch those busts", "let's see {player} climb three columns"]
+gameend = ["gg {player}, you stopped at the perfect time", "three columns to {player}!", "gg {player}, I got greedy one roll too many"]
+ingame = ["one more roll... famous last words", "I really should stop but... nah", "don't bust me now, dice", "you're so greedy, {player} :)"]
+postgame = ["gg, greed got me again", "well played - discipline wins", "rematch? I'll stop. probably."]
+
+[virtual_bots.presence.game_pools.hangman]
+join = [
+    "hey {player}, got a good word for us?",
+    "welcome {player}, keep your letters straight",
+    "{player}'s here - I hope you like guessing",
+]
+gamestart = ["good luck {player}, guess those vowels", "pick wisely {player}, the gallows are patient", "let's see {player} crack my word"]
+gameend = ["gg {player}, you guessed it with letters to spare", "you saved the day, {player}!", "gg {player}, my word was too easy"]
+ingame = ["not a single E in it, {player}", "nice guess, {player}", "you're getting close, {player}...", "Q? bold choice, {player}"]
+postgame = ["gg, that word was evil", "well played - my vocabulary failed me", "rematch? I've got a nastier word"]
+
+[virtual_bots.presence.game_pools.tictactoe]
+join = [
+    "hey {player}, X or O?",
+    "welcome {player}, center square is mine",
+    "{player} sits - quick game, right?",
+]
+gamestart = ["good luck {player}, watch my corners", "your move first, {player}", "let's see {player} find my fork"]
+gameend = ["gg {player}, three in a row", "you saw my fork coming, {player}!", "gg {player}, a draw with you is a compliment"]
+ingame = ["that's a fork, {player}!", "blocking me again, {player}?", "corner game is strong today", "I see your plan, {player}... maybe"]
+postgame = ["gg, nobody beats the grid", "well played - true draw", "rematch? I'll try a different opening"]
+
+[virtual_bots.presence.game_pools.shutthebox]
+join = [
+    "hey {player}, hope those tiles fall your way",
+    "welcome {player}, the box is open",
+    "{player}'s here - shut it if you can",
+]
+gamestart = ["good luck {player}, roll for doubles", "flip fast {player}, the box is stubborn", "let's see {player} shut the whole box"]
+gameend = ["gg {player}, box fully shut!", "you shut me out, {player}!", "gg {player}, my tiles would not cooperate"]
+ingame = ["that's the 9 down, {player}", "one tile left... come on dice", "nice roll, {player}", "you're leaving me 2 and 3, {player} - rude"]
+postgame = ["gg, the box wins again", "well played - clean flips", "rematch? those tiles owe me"]
+
+[virtual_bots.presence.game_pools.shipcaptaincrew]
+join = [
+    "hey {player}, find your ship and captain",
+    "welcome {player}, the seas are calm... for now",
+    "{player} boards - all hands on deck",
+]
+gamestart = ["good luck {player}, may your cargo be heavy", "sail well {player}, watch for the 4-5-6", "let's see {player} find a full crew"]
+gameend = ["gg {player}, your cargo holds overflow", "captain of the seas, {player}!", "gg {player}, my ship sank with no crew"]
+ingame = ["still no captain... typical", "ship and crew but no captain, {player}!", "nice cargo, {player}", "the sea is cruel today, {player}"]
+postgame = ["gg, lost at sea again", "well played - golden voyage", "rematch? my crew is ready"]
+
 [virtual_bots.profiles.default]
 # Profiles inherit any keys omitted here from the top-level [virtual_bots] block
 min_bots_per_table = 0  # 0 means no lower bound

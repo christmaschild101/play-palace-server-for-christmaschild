@@ -22,6 +22,9 @@ server/playpalace.db
 server/.coverage
 server/coverage-report.txt
 
+# REAPER waveform cache (generated when sounds are previewed in REAPER)
+*.reapeaks
+
 # Web client local deployment config
 clients/web/config.js
 

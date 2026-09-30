@@ -35,7 +35,12 @@ def _speak(user: NetworkUser, key: str, buffer: str = "misc", **kwargs: Any) -> 
 
 
 class GameManagerMixin:
-    """Developer menu for per-game server defaults and bot-request review."""
+    """Developer menu for per-game server defaults and bot-request review.
+
+    Expected attributes: ``_db``, ``_users``, ``_user_states``,
+    ``_virtual_bots``, plus ``_show_main_menu`` and ``_iter_approved_users``
+    provided by the other mixins in the Server composition.
+    """
 
     # -- Menu ----------------------------------------------------------------
 
@@ -402,6 +407,17 @@ class GameManagerMixin:
                 db.set_bot_request_status(req["id"], "accepted")
             _speak(user, "gamemanager-bot-request-accepted", name=name)
             self._notify_requester_if_online(req["requester"], "bot-request-accepted", name=name)
+            # Tell everyone in the activity feed who the new bot came from.
+            # (add_bot already broadcast the bot's own "user-online" presence;
+            # this line adds the community context.)
+            for _username, online_user in self._iter_approved_users():
+                _speak(
+                    online_user,
+                    "bot-request-accepted-activity",
+                    buffer="activity",
+                    name=name,
+                    requester=req["requester"],
+                )
         else:
             _speak(user, "virtual-bots-name-taken")
 

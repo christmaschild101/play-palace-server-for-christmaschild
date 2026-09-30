@@ -478,6 +478,7 @@ gamemanager-bot-request-rejected = Request for "{ $name }" rejected.
 gamemanager-bot-request-deleted = Request for "{ $name }" deleted.
 gamemanager-bot-request-gone = That request no longer exists.
 bot-request-accepted = Your bot request "{ $name }" was accepted — say hi to { $name }!
+bot-request-accepted-activity = A new bot joined the server — "{ $name }", added from { $requester }'s community request!
 bot-request-rejected = Your bot request "{ $name }" was not accepted this time.
 
 # Community (all players)

@@ -45,21 +45,24 @@ class FakeDB:
 
 
 class FakeUser:
-    def __init__(self):
-        self.approved = True
+    def __init__(self, approved=True):
+        self.approved = approved
         self.spoken = []
 
     def speak_l(self, key, buffer="misc", **kwargs):
         self.spoken.append((key, buffer, kwargs))
 
 
-def _make_mixin(manager, db):
+def _make_mixin(manager, db, users=None):
     mixin = GameManagerMixin()
     mixin._virtual_bots = manager
     mixin._db = db
-    mixin._users = {"carol": FakeUser()}
-    # Provided by AdministrationMixin in the real composition; stub it here.
+    mixin._users = users if users is not None else {"carol": FakeUser()}
+    # Provided by the other mixins in the real Server composition; stub them here.
     mixin._validate_bot_name = lambda name, exclude=None: None
+    mixin._iter_approved_users = lambda: (
+        (name, u) for name, u in mixin._users.items() if u.approved
+    )
     return mixin
 
 
@@ -113,3 +116,42 @@ def test_accept_without_manager_is_a_noop():
     mixin._users = {}
 
     asyncio.run(mixin._accept_bot_request(FakeUser(), _req()))  # must not raise
+
+
+def _activity_lines(user):
+    return [s for s in user.spoken if s[0] == "bot-request-accepted-activity"]
+
+
+def test_accept_broadcasts_activity_to_approved_users():
+    """Everyone online sees who the new bot came from in the activity feed."""
+    carol, dave, dev = FakeUser(), FakeUser(), FakeUser(approved=False)
+    mixin = _make_mixin(
+        FakeManager(),
+        FakeDB(),
+        users={"carol": carol, "dave": dave, "dev": dev},
+    )
+
+    asyncio.run(mixin._accept_bot_request(FakeUser(), _req()))
+
+    for user in (carol, dave):
+        lines = _activity_lines(user)
+        assert lines == [
+            ("bot-request-accepted-activity", "activity", {"name": "Speedy", "requester": "carol"})
+        ]
+    # The approving developer is unapproved=False here only as a fixture:
+    # the broadcast iterates _iter_approved_users, so they get none from it.
+    assert _activity_lines(dev) == []
+
+
+def test_accept_name_taken_does_not_broadcast_activity():
+    carol, dave = FakeUser(), FakeUser()
+    mixin = _make_mixin(
+        FakeManager(add_result=False),
+        FakeDB(),
+        users={"carol": carol, "dave": dave},
+    )
+
+    asyncio.run(mixin._accept_bot_request(FakeUser(), _req()))
+
+    assert _activity_lines(carol) == []
+    assert _activity_lines(dave) == []

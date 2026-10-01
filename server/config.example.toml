@@ -345,6 +345,17 @@ gameend = ["gg {player}, your cargo holds overflow", "captain of the seas, {play
 ingame = ["still no captain... typical", "ship and crew but no captain, {player}!", "nice cargo, {player}", "the sea is cruel today, {player}"]
 postgame = ["gg, lost at sea again", "well played - golden voyage", "rematch? my crew is ready"]
 
+[virtual_bots.presence.game_pools.aircraftextreme]
+join = [
+    "hey {player}, ready for takeoff?",
+    "welcome {player}, watch out for the storm cell",
+    "{player}'s on the runway - tower says you're clear",
+]
+gamestart = ["good luck {player}, may your engine run strong", "wheels up, {player} - first lap's free", "stay clear of that storm, {player}"]
+gameend = ["gg {player}, you flew a clean race", "safe landing, {player}!", "gg {player}, that last lap was fearless"]
+ingame = ["thunder on my left wing, {player}!", "barrel roll - you missed me, {player}", "in the clouds, good luck hitting me {player}", "my engine's dead... climbing to restart", "eating flak over the storm, {player} - send help"]
+postgame = ["gg, what a sortie", "well played - my wings are barely on", "rematch? I owe you one for that cannon run"]
+
 [virtual_bots.profiles.default]
 # Profiles inherit any keys omitted here from the top-level [virtual_bots] block
 min_bots_per_table = 0  # 0 means no lower bound
@@ -399,6 +410,14 @@ profile = "mixer"
 # table = "scopa_lounge"
 # game = "scopa"
 # bot_groups = ["mixers"]
+# min_bots = 1
+# max_bots = 4
+# priority = 25
+#
+# [[virtual_bots.guided_tables]]
+# table = "aircraft_hangar"
+# game = "aircraftextreme"
+# bot_groups = ["hosts", "mixers"]
 # min_bots = 1
 # max_bots = 4
 # priority = 25

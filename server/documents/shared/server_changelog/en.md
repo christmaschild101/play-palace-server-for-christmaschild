@@ -2,6 +2,10 @@
 
 This document records changes to the PlayPalace server. New entries are added at the top under the date the change ships.
 
+## 2026-09-30
+
+- New board game: **Aircraft Extreme** (2–4 pilots). Fly from your corner runway across a 6x6 storm-filled sky, bank laps by touching the opposite corner, and dogfight along the way. Two actions per turn: flying costs 1 engine power, cannons hit at 2 squares (orthogonal or diagonal), and barrel rolls, climbs, and cloud dives cover the classic aerial moves. Thunderstorms strike planes that stray near the storm block. First pilot to fly the set number of laps home wins — or be the last plane still flying. Shot-down pilots respawn on their runway (three downs and you're out). Option-configurable: laps to win, storm damage, plane health, and respawn health. Ships with laps leaderboards and full screen-reader navigation using the sky grid.
+
 ## 2026-09-05
 
 - In Monopoly, when a player begins a two-way trade with another player (the moment they pick who they're trading with), the whole table is now told "**{player} has started a trade with {target}**" so nobody mistakes a silent trade draft for the player going idle. Re-picking the same target without clearing the draft doesn't repeat the notice, and if the player cancels the draft after choosing a target, the table hears that they **stopped working on a trade**.

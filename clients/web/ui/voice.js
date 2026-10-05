@@ -26,6 +26,22 @@ export function createVoicePanel({
   initialSettings = null,
 }) {
   let deviceOptionsLoaded = false;
+  // The voice panel sits in the always-visible header, but the login dialog is
+  // modal and swallows clicks while disconnected. Track the connection so the
+  // controls are honestly disabled rather than looking clickable and inert.
+  let connected = false;
+
+  const CONTROLS = () => [
+    elements.voiceJoinButton,
+    elements.voiceMute,
+    elements.voiceInputDevice,
+    elements.voiceOutputDevice,
+    elements.voiceMode,
+    elements.voiceGain,
+    elements.voiceActivity,
+    elements.voiceActivityHang,
+    elements.voiceVolume,
+  ];
 
   function settings() {
     return {
@@ -64,8 +80,26 @@ export function createVoicePanel({
       elements.voiceTalkButton.hidden = !pushToTalk;
     }
     if (elements.voiceActivityHang) {
-      elements.voiceActivityHang.disabled = pushToTalk;
+      // Hang only matters for voice activation, and neither applies while
+      // disconnected.
+      elements.voiceActivityHang.disabled = pushToTalk || !connected;
     }
+  }
+
+  /** Enable or disable every voice control for the connection state. */
+  function setEnabled(enabled) {
+    connected = Boolean(enabled);
+    for (const control of CONTROLS()) {
+      if (control) {
+        control.disabled = !connected;
+      }
+    }
+    if (!connected) {
+      // Never leave the mic held open across a disconnect.
+      voiceManager.setPushToTalk(false);
+    }
+    applyModeToUi();
+    refresh();
   }
 
   function describeState(state) {
@@ -119,7 +153,7 @@ export function createVoicePanel({
       elements.voiceStatus.classList.toggle("error", Boolean(state.error));
     }
     if (elements.voiceTalkButton) {
-      elements.voiceTalkButton.disabled = !state.joined;
+      elements.voiceTalkButton.disabled = !connected || !state.joined;
     }
   }
 
@@ -359,5 +393,6 @@ export function createVoicePanel({
     refreshDevices,
     settings,
     applySettingsToUi,
+    setEnabled,
   };
 }

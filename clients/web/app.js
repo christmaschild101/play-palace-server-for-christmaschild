@@ -465,6 +465,7 @@ function setConnectedUi(connected) {
   elements.gameShell.hidden = !connected;
   elements.disconnectBtn.disabled = !connected;
   elements.openLoginBtn.disabled = connected;
+  voicePanel?.setEnabled(connected);
   updateActionsButtonVisibility();
 }
 

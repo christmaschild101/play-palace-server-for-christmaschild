@@ -64,6 +64,29 @@ class ActionSetCreationMixin:
         )
         action_set.add(
             Action(
+                id="toggle_table_private",
+                label=Localization.get(locale, "make-table-private"),
+                handler="_action_toggle_table_private",
+                is_enabled="_is_toggle_table_private_enabled",
+                is_hidden="_is_toggle_table_private_hidden",
+                get_label="_get_toggle_table_private_label",
+            )
+        )
+        action_set.add(
+            Action(
+                id="set_table_password",
+                label=Localization.get(locale, "set-table-password"),
+                handler="_action_set_table_password",
+                is_enabled="_is_set_table_password_enabled",
+                is_hidden="_is_set_table_password_hidden",
+                input_request=EditboxInput(
+                    prompt="enter-table-password",
+                    default="",
+                ),
+            )
+        )
+        action_set.add(
+            Action(
                 id="toggle_spectator",
                 label=Localization.get(locale, "spectate"),
                 handler="_action_toggle_spectator",

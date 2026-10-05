@@ -234,6 +234,28 @@ class Table(DataClassJSONMixin):
             return False
         return hmac.compare_digest(self.password, candidate)
 
+    def set_visibility(self, private: bool) -> None:
+        """Show this table in the open-tables list, or hide it."""
+        self.visibility = TABLE_VISIBILITY_PRIVATE if private else TABLE_VISIBILITY_PUBLIC
+
+    def toggle_visibility(self) -> bool:
+        """Flip between public and private. Returns the new private state."""
+        self.set_visibility(not self.is_private)
+        return self.is_private
+
+    def set_password(self, password: str | None) -> bool:
+        """
+        Set or clear the join password.
+
+        A blank or whitespace-only password clears it, so one call covers both
+        setting and removing. Returns True when the stored value changed.
+        """
+        cleaned = (password or "").strip() or None
+        if cleaned == self.password:
+            return False
+        self.password = cleaned
+        return True
+
     def destroy(self) -> None:
         """Destroy this table. Called by Game.destroy()."""
         if self._manager:

@@ -250,3 +250,50 @@ class ActionVisibilityMixin:
     def _is_predict_outcomes_hidden(self, player: "Player") -> Visibility:
         """Predict outcomes is always hidden (keybind only)."""
         return Visibility.HIDDEN
+
+    # -- Table privacy (private tables / join passwords) --------------------
+    #
+    # These act on the table rather than the game, so they are only offered
+    # while the table is still in its lobby and only to the host. Hiding them
+    # (rather than disabling them) keeps non-hosts from seeing controls they
+    # could never use.
+
+    def _is_table_host(self, player: "Player") -> bool:
+        """Whether *player* hosts a table that can still be reconfigured."""
+        return getattr(self, "_table", None) is not None and player.name == self.host
+
+    def _is_toggle_table_private_enabled(self, player: "Player") -> str | None:
+        """Check if the private/public toggle is enabled."""
+        if self.status != "waiting":
+            return "action-game-in-progress"
+        if not self._is_table_host(player):
+            return "action-not-host"
+        return None
+
+    def _is_toggle_table_private_hidden(self, player: "Player") -> Visibility:
+        """Only offered to the host, and only before the game starts."""
+        if self.status != "waiting" or not self._is_table_host(player):
+            return Visibility.HIDDEN
+        return Visibility.VISIBLE
+
+    def _get_toggle_table_private_label(self, player: "Player", action_id: str) -> str:
+        """Label reflects what pressing it will do, not its current state."""
+        user = self.get_user(player)
+        locale = user.locale if user else "en"
+        table = getattr(self, "_table", None)
+        key = "make-table-public" if (table and table.is_private) else "make-table-private"
+        return Localization.get(locale, key)
+
+    def _is_set_table_password_enabled(self, player: "Player") -> str | None:
+        """Check if setting a join password is enabled."""
+        if self.status != "waiting":
+            return "action-game-in-progress"
+        if not self._is_table_host(player):
+            return "action-not-host"
+        return None
+
+    def _is_set_table_password_hidden(self, player: "Player") -> Visibility:
+        """Only offered to the host, and only before the game starts."""
+        if self.status != "waiting" or not self._is_table_host(player):
+            return Visibility.HIDDEN
+        return Visibility.VISIBLE

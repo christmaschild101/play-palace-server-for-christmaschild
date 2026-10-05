@@ -269,6 +269,43 @@ class LobbyActionsMixin:
         elif user:
             user.speak_l("no-actions-available")
 
+    def _action_toggle_table_private(self, player: "Player", action_id: str) -> None:
+        """Show or hide this table from the open-tables list (host only)."""
+        table = getattr(self, "_table", None)
+        if table is None:
+            return
+        user = self.get_user(player)
+        if user is None:
+            return
+
+        now_private = table.toggle_visibility()
+        user.speak_l("table-made-private" if now_private else "table-made-public")
+        self.broadcast_sound("menuselect.ogg")
+        # The label depends on the current state, so the menu must be rebuilt.
+        self.rebuild_all_menus()
+
+    def _action_set_table_password(
+            self, player: "Player", password: str, action_id: str
+        ) -> None:
+        """
+        Set or clear this table's join password (host only).
+
+        Submitting a blank password removes the requirement, which is why the
+        prompt says so explicitly.
+        """
+        table = getattr(self, "_table", None)
+        if table is None:
+            return
+        user = self.get_user(player)
+        if user is None:
+            return
+
+        changed = table.set_password(password)
+        user.speak_l("table-password-set" if table.has_password else "table-password-removed")
+        if changed:
+            self.broadcast_sound("menuselect.ogg")
+        self.rebuild_all_menus()
+
     def _action_save_table(self, player: "Player", action_id: str) -> None:
         """Save the current table state (host only). This destroys the table."""
         if self._table:

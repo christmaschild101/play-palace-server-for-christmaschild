@@ -42,6 +42,7 @@ from ..network.websocket_server import WebSocketServer, ClientConnection
 from ..persistence.database import Database
 from ..auth.auth import AuthManager, AuthResult
 from .tables.manager import TableManager
+from .tables.table import TABLE_VISIBILITY_PRIVATE, TABLE_VISIBILITY_PUBLIC
 from .users.network_user import NetworkUser
 from .users.base import MenuItem, EscapeBehavior, TrustLevel
 from .users.preferences import DiceKeepingStyle, MainSound, PREF_CATEGORIES, PrefMeta, UserPreferences
@@ -1151,6 +1152,16 @@ class Server(
                 await self._handle_list_online(client)
             elif packet_type == "list_online_with_games":
                 await self._handle_list_online_with_games(client)
+            elif packet_type == "set_table_visibility_cmd":
+                self._handle_set_table_visibility(user, packet.get("state"))
+            elif packet_type == "check_table_visibility_cmd":
+                self._handle_check_table_visibility(user)
+            elif packet_type == "set_table_pw_cmd":
+                self._handle_set_table_password(user, packet.get("password", ""))
+            elif packet_type == "remove_table_pw_cmd":
+                self._handle_remove_table_password(user)
+            elif packet_type == "check_table_pw_cmd":
+                self._handle_check_table_password(user)
 
     async def _finalize_login(
         self,
@@ -1716,7 +1727,7 @@ class Server(
 
     def _show_tables_menu(self, user: NetworkUser, game_type: str) -> None:
         """Show available tables for a game."""
-        tables = self._tables.get_waiting_tables(game_type)
+        tables = self._tables.get_waiting_tables(game_type, user.username)
         game_class = get_game_class(game_type)
         game_name = (
             Localization.get(user.locale, game_class.get_name_key()) if game_class else game_type
@@ -1768,7 +1779,7 @@ class Server(
 
         Returns True if the menu was shown, False if there was nothing to show.
         """
-        tables = self._tables.get_waiting_tables()
+        tables = self._tables.get_waiting_tables(username=user.username)
         if not tables:
             user.speak_l("no-active-tables")
             return False
@@ -3057,6 +3068,115 @@ class Server(
         else:
             self._show_tables_menu(user, pending.get("game_type", ""))
 
+    def _handle_set_table_visibility(self, user: NetworkUser, state: bool | None) -> None:
+        """
+        Make the caller's table private or public again.
+
+        Only the host may change this; otherwise any member could hide a table
+        out from under everyone else.
+        """
+        table = self._tables.find_user_table(user.username)
+        if table is None:
+            user.speak_l("table-not-exists")
+            return
+        if table.host != user.username:
+            user.speak_l("table-not-host")
+            return
+
+        make_private = (not table.is_private) if state is None else bool(state)
+        table.visibility = TABLE_VISIBILITY_PRIVATE if make_private else TABLE_VISIBILITY_PUBLIC
+        user.speak_l("table-made-private" if make_private else "table-made-public")
+
+    def _handle_check_table_visibility(self, user: NetworkUser) -> None:
+        """Tell the user whether the table they are sitting at is private."""
+        table = self._tables.find_user_table(user.username)
+        if table is None:
+            user.speak_l("table-not-exists")
+            return
+        user.speak_l("table-made-private" if table.is_private else "table-made-public")
+
+    def _handle_set_table_password(self, user: NetworkUser, password: str) -> None:
+        """
+        Set the join password on the caller's table.
+
+        Only the host may set it. An empty password is treated as "remove it",
+        so a single command covers both cases.
+        """
+        table = self._tables.find_user_table(user.username)
+        if table is None:
+            user.speak_l("table-not-exists")
+            return
+        if table.host != user.username:
+            user.speak_l("table-not-host")
+            return
+
+        cleaned = (password or "").strip()
+        if cleaned:
+            table.password = cleaned
+            user.speak_l("table-password-set")
+        else:
+            table.password = None
+            user.speak_l("table-password-removed")
+
+    def _handle_remove_table_password(self, user: NetworkUser) -> None:
+        """Clear the join password on the caller's table."""
+        table = self._tables.find_user_table(user.username)
+        if table is None:
+            user.speak_l("table-not-exists")
+            return
+        if table.host != user.username:
+            user.speak_l("table-not-host")
+            return
+        table.password = None
+        user.speak_l("table-password-removed")
+
+    def _handle_check_table_password(self, user: NetworkUser) -> None:
+        """Ask for the table password when the caller's pending table needs one."""
+        table = self._tables.find_user_table(user.username)
+        if table is None:
+            user.speak_l("table-not-exists")
+            return
+        allowed, reason = table.can_join(user.username)
+        if allowed:
+            return
+        if reason == "password":
+            self._prompt_table_password(user, table, table.game_type)
+
+    def _prompt_table_password(
+        self, user: NetworkUser, table: "Table", game_type: str
+    ) -> None:
+        """Ask a user for a table's join password before letting them in."""
+        self._user_states[user.username] = {
+            "menu": "table_password_editbox",
+            "table_id": table.table_id,
+            "game_type": game_type,
+        }
+        user.show_editbox(
+            "table_password",
+            Localization.get(user.locale, "table-password-prompt", host=table.host),
+            read_only=False,
+        )
+
+    async def _handle_table_password_editbox(
+        self, user: NetworkUser, text: str, state: dict
+    ) -> None:
+        """Check a submitted table password and join when it is correct."""
+        table_id = state.get("table_id", "")
+        game_type = state.get("game_type", "")
+        table = self._tables.get_table(table_id)
+        if table is None:
+            user.speak_l("table-not-exists")
+            self._show_tables_menu(user, game_type)
+            return
+
+        if not table.password_matches(text or ""):
+            user.speak_l("table-wrong-password")
+            self._prompt_table_password(user, table, game_type)
+            return
+
+        self._user_states.pop(user.username, None)
+        self._auto_join_table(user, table, game_type)
+
     def _auto_join_table(self, user: NetworkUser, table: "Table", game_type: str) -> None:
         """Automatically join a table as player or spectator.
 
@@ -3065,11 +3185,22 @@ class Server(
             - Game has room for more players (less than max_players).
         Otherwise joins as spectator.
 
+        A private table is refused outright, and a password-protected table
+        asks for the password first, so neither can be walked straight into.
+
         Args:
             user: User joining the table.
             table: Table to join.
             game_type: Game type identifier.
         """
+        allowed, reason = table.can_join(user.username)
+        if not allowed:
+            if reason == "private":
+                user.speak_l("table-is-private")
+                return
+            self._prompt_table_password(user, table, game_type)
+            return
+
         game = table.game
         if not game:
             user.speak_l("table-not-exists")
@@ -4497,6 +4628,11 @@ class Server(
         current_menu = state.get("menu")
 
         if await self._handle_document_editbox(user, current_menu, packet, state):
+            return
+
+        if current_menu == "table_password_editbox":
+            text = packet.get("text", "")
+            await self._handle_table_password_editbox(user, text, state)
             return
 
         if current_menu == "decline_reason_editbox":

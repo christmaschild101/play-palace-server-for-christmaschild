@@ -167,7 +167,9 @@ class Database:
                 host TEXT NOT NULL,
                 members_json TEXT NOT NULL,
                 game_json TEXT,
-                status TEXT DEFAULT 'waiting'
+                status TEXT DEFAULT 'waiting',
+                visibility TEXT DEFAULT 'public',
+                password TEXT
             )
         """)
 
@@ -296,6 +298,16 @@ class Database:
             cursor.execute(
                 "ALTER TABLE game_result_players ADD COLUMN is_virtual_bot INTEGER DEFAULT 0"
             )
+            self._get_conn().commit()
+
+        # Private / password-protected tables. Existing tables stay public.
+        cursor.execute("PRAGMA table_info(tables)")
+        table_columns = [row[1] for row in cursor.fetchall()]
+        if "visibility" not in table_columns:
+            cursor.execute("ALTER TABLE tables ADD COLUMN visibility TEXT DEFAULT 'public'")
+            self._get_conn().commit()
+        if "password" not in table_columns:
+            cursor.execute("ALTER TABLE tables ADD COLUMN password TEXT")
             self._get_conn().commit()
 
         try:
@@ -841,9 +853,10 @@ class Database:
 
         cursor.execute(
             """
-            INSERT OR REPLACE INTO tables (table_id, game_type, host, members_json, game_json, status)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """,
+            INSERT OR REPLACE INTO tables
+                (table_id, game_type, host, members_json, game_json, status, visibility, password)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
             (
                 table.table_id,
                 table.game_type,
@@ -851,6 +864,8 @@ class Database:
                 members_json,
                 table.game_json,
                 table.status,
+                table.visibility,
+                table.password,
             ),
         )
         self._get_conn().commit()
@@ -879,6 +894,8 @@ class Database:
             members=members,
             game_json=row["game_json"],
             status=row["status"],
+            visibility=row["visibility"] or "public",
+            password=row["password"] or None,
         )
 
     def load_all_tables(self) -> list[Table]:

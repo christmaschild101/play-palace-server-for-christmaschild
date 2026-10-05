@@ -90,6 +90,10 @@ class DummyTable:
     def add_member(self, username, user, as_spectator=False):
         self.members.append(SimpleNamespace(username=username, is_spectator=as_spectator))
 
+    def can_join(self, username, password=None):
+        """Mirrors Table.can_join: these test tables are open to everyone."""
+        return True, ""
+
 
 class DummyDB:
     def __init__(self, saved=None):

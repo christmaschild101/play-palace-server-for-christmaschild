@@ -7,6 +7,11 @@ from mashumaro.mixins.json import DataClassJSONMixin
 
 from server.game_utils.game_status import GameStatus
 
+# Table visibility values. A public table appears in the tables list; a private
+# one does not, and can only be joined by members or holders of its password.
+TABLE_VISIBILITY_PUBLIC = "public"
+TABLE_VISIBILITY_PRIVATE = "private"
+
 if TYPE_CHECKING:
     from server.games.base import Game
     from server.core.users.base import User
@@ -42,6 +47,12 @@ class Table(DataClassJSONMixin):
     members: list[TableMember] = field(default_factory=list)
     game_json: str | None = None  # Serialized game state
     status: str = GameStatus.WAITING
+    # A "private" table is hidden from the tables list and can only be joined
+    # by someone who already holds its password (or is already a member).
+    visibility: str = TABLE_VISIBILITY_PUBLIC
+    # Join password. Stored as given so it can be handed back to members who
+    # have already proved they know it; never sent to a client that has not.
+    password: str | None = None
 
     # Not serialized
     _game: "Game | None" = field(default=None, repr=False)
@@ -171,6 +182,57 @@ class Table(DataClassJSONMixin):
     def can_start(self, min_players: int) -> bool:
         """Check if the game can start."""
         return self.player_count >= min_players
+
+    @property
+    def is_private(self) -> bool:
+        """Whether this table is hidden from the tables list."""
+        return self.visibility == TABLE_VISIBILITY_PRIVATE
+
+    @property
+    def has_password(self) -> bool:
+        """Whether joining this table requires a password."""
+        return bool(self.password)
+
+    def is_member(self, username: str) -> bool:
+        """Whether *username* is already seated at this table."""
+        return any(member.username == username for member in self.members)
+
+    def is_visible_to(self, username: str) -> bool:
+        """
+        Whether this table should be listed for *username*.
+
+        Public tables are listed for everyone. A private or password-protected
+        table is listed only for the host and people already seated at it,
+        so the list never reveals tables others cannot join.
+        """
+        if not self.is_private and not self.has_password:
+            return True
+        return self.host == username or self.is_member(username)
+
+    def can_join(self, username: str, password: str | None = None) -> tuple[bool, str]:
+        """
+        Check whether *username* may join, and why not.
+
+        Returns ``(allowed, reason)`` where *reason* is one of ``""``,
+        ``"private"`` or ``"password"``. The host and existing members are
+        always allowed, so a table never locks out the people already in it.
+        """
+        if self.host == username or self.is_member(username):
+            return True, ""
+        if self.is_private:
+            return False, "private"
+        if self.has_password:
+            if password is None or not self.password_matches(password):
+                return False, "password"
+        return True, ""
+
+    def password_matches(self, candidate: str) -> bool:
+        """Whether *candidate* is this table's password."""
+        import hmac
+
+        if not self.password:
+            return False
+        return hmac.compare_digest(self.password, candidate)
 
     def destroy(self) -> None:
         """Destroy this table. Called by Game.destroy()."""

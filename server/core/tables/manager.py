@@ -63,12 +63,23 @@ class TableManager:
         """Get all tables of a specific game type."""
         return [t for t in self._tables.values() if t.game_type == game_type]
 
-    def get_waiting_tables(self, game_type: str | None = None) -> list[Table]:
-        """Get all tables in waiting status."""
+    def get_waiting_tables(
+        self, game_type: str | None = None, username: str | None = None
+    ) -> list[Table]:
+        """
+        Get all tables in waiting status.
+
+        When *username* is given, tables that user could not join are left
+        out entirely, so a private or password-protected table is never
+        advertised to someone who cannot get in.
+        """
         tables = self._tables.values()
         if game_type:
             tables = [t for t in tables if t.game_type == game_type]
-        return [t for t in tables if t.status == "waiting"]
+        waiting = [t for t in tables if t.status == "waiting"]
+        if username is not None:
+            waiting = [t for t in waiting if t.is_visible_to(username)]
+        return waiting
 
     def find_user_table(self, username: str) -> Table | None:
         """Find the table a user is currently in."""

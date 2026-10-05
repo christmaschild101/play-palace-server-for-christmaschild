@@ -1,5 +1,6 @@
 """Tests for WebSocket server helpers and client handling."""
 
+import asyncio
 import json
 
 import pytest
@@ -116,3 +117,81 @@ async def test_websocket_server_passes_max_size(monkeypatch):
     await ws_server.start()
     assert recorded_kwargs.get("max_size") == 2048
     await ws_server.stop()
+
+
+@pytest.mark.asyncio
+async def test_broadcast_encodes_the_packet_only_once(monkeypatch):
+    """A broadcast must serialize once, not once per recipient."""
+    calls = []
+    real_encode = websocket_server.encode_packet
+
+    def counting_encode(packet):
+        calls.append(packet.get("type"))
+        return real_encode(packet)
+
+    monkeypatch.setattr(websocket_server, "encode_packet", counting_encode)
+
+    server = WebSocketServer()
+    clients = []
+    for index in range(5):
+        client = ClientConnection(DummyWebSocket(), f"addr{index}:1")
+        client.authenticated = True
+        client.username = f"user{index}"
+        clients.append(client)
+        server.clients[client.address] = client
+
+    packet = {"type": "speak", "text": "one encode, many listeners"}
+    await server.broadcast(packet)
+
+    assert calls == ["speak"], f"expected one encode for 5 clients, got {calls}"
+    for client in clients:
+        assert json.loads(client.websocket.sent[-1])["text"] == packet["text"]
+
+
+@pytest.mark.asyncio
+async def test_broadcast_does_not_wait_for_a_slow_client():
+    """One stalled client must not hold up delivery to everyone else."""
+    release = asyncio.Event()
+    delivered = asyncio.Event()
+
+    class SlowWebSocket(DummyWebSocket):
+        async def send(self, data):
+            await release.wait()
+            await super().send(data)
+
+    class FastWebSocket(DummyWebSocket):
+        async def send(self, data):
+            await super().send(data)
+            delivered.set()
+
+    server = WebSocketServer()
+    slow = ClientConnection(SlowWebSocket(), "slow:1")
+    slow.authenticated = True
+    slow.username = "slowpoke"
+
+    fast = ClientConnection(FastWebSocket(), "fast:1")
+    fast.authenticated = True
+    fast.username = "swift"
+
+    server.clients[slow.address] = slow
+    server.clients[fast.address] = fast
+
+    task = asyncio.create_task(server.broadcast({"type": "speak", "text": "hi"}))
+
+    await asyncio.wait_for(delivered.wait(), timeout=1.0)
+    assert not task.done(), "broadcast should still be waiting on the slow client"
+    assert slow.websocket.sent == [], "slow client should still be waiting"
+
+    release.set()
+    await task
+    assert json.loads(slow.websocket.sent[-1])["text"] == "hi"
+
+
+@pytest.mark.asyncio
+async def test_send_to_connections_rejects_invalid_packet_once():
+    """An invalid packet is refused without writing to anybody."""
+    server = WebSocketServer()
+    client = ClientConnection(DummyWebSocket(), "a:1")
+    await server.send_to_connections([client], {"type": "not_a_real_packet"})
+
+    assert client.websocket.sent == []

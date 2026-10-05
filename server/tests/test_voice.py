@@ -2,6 +2,7 @@
 
 import asyncio
 import base64
+import json
 
 import pytest
 
@@ -19,9 +20,15 @@ class FakeConnection:
 
     def __init__(self):
         self.packets = []
+        self.encoded = []
 
     async def send(self, packet):
         self.packets.append(packet)
+
+    async def send_encoded(self, text):
+        """Mirrors ClientConnection.send_encoded: relay already-serialized text."""
+        self.encoded.append(text)
+        self.packets.append(json.loads(text))
 
     def types(self):
         return [p["type"] for p in self.packets]
@@ -346,3 +353,37 @@ def test_remove_unknown_user_is_a_noop(channel):
 
 def test_server_uses_voice_mixin():
     assert issubclass(Server, VoiceChannelMixin)
+
+def test_audio_relay_encodes_once_and_sends_identical_text(channel, monkeypatch):
+    """Every listener must get the same bytes, produced by a single encode."""
+    import server.core.voice as voice_module
+
+    encodes = []
+    real_encode = voice_module.encode_packet
+
+    def counting_encode(packet):
+        encodes.append(packet.get("type"))
+        return real_encode(packet)
+
+    monkeypatch.setattr(voice_module, "encode_packet", counting_encode)
+
+    listeners = [_add(channel, name, table_id="t1") for name in ("bob", "carol", "dave")]
+    speaker = _add(channel, "alice", table_id="t1")
+    for user in [speaker, *listeners]:
+        _run(channel._handle_voice_join(user, {"type": "voice_join"}))
+
+    encodes.clear()
+    for listener in listeners:
+        listener.connection.encoded.clear()
+    _run(channel._handle_voice_audio(speaker, {"type": "voice_audio", "data": _frame()}))
+
+    assert encodes == ["voice_audio"], f"expected one encode for 3 peers, got {encodes}"
+
+    relayed = [listener.connection.encoded for listener in listeners]
+    assert all(len(frames) == 1 for frames in relayed), relayed
+    assert len({frames[0] for frames in relayed}) == 1, "peers received different bytes"
+
+    payload = json.loads(relayed[0][0])
+    assert payload["type"] == "voice_audio"
+    assert payload["sender"] == "alice"
+    assert speaker.connection.find("voice_audio") == []

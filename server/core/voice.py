@@ -15,10 +15,13 @@ so a client cannot claim to be in a room it is not in.
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import binascii
 import logging
 import time
+
+from server.network.websocket_server import encode_packet
 
 
 LOG = logging.getLogger("playpalace.voice")
@@ -64,6 +67,42 @@ class VoiceChannelMixin:
     def _init_voice(self) -> None:
         """Create the voice state container. Called during Server.__init__."""
         self._voice_members: dict[str, VoiceMember] = {}
+
+    async def _send_to_room(
+        self, room: str, packet: dict, *, exclude: str | None = None
+    ) -> None:
+        """
+        Relay one packet to everyone in a voice room.
+
+        Audio arrives 50 times a second, so the packet is validated and
+        serialized once here and the encoded text is written concurrently to
+        every listener, rather than re-encoding the identical frame once per
+        peer and waiting on each send in turn.
+        """
+        text = encode_packet(packet)
+        if text is None:
+            return
+
+        connections = []
+        for peer_name in self._voice_peers_in(room, exclude=exclude):
+            peer = self._users.get(peer_name)
+            if peer is not None and peer.connection is not None:
+                connections.append(peer.connection)
+        if not connections:
+            return
+
+        results = await asyncio.gather(
+            *(connection.send_encoded(text) for connection in connections),
+            return_exceptions=True,
+        )
+        for connection, result in zip(connections, results):
+            if isinstance(result, Exception):
+                LOG.debug(
+                    "Dropped %s to voice peer %s: %s",
+                    packet.get("type", "?"),
+                    connection.username or connection.address,
+                    result,
+                )
 
     # -- Rooms ---------------------------------------------------------------
 
@@ -181,11 +220,7 @@ class VoiceChannelMixin:
             "seq": seq if isinstance(seq, int) and seq >= 0 else 0,
         }
 
-        for peer_name in self._voice_peers_in(member.room, exclude=username):
-            peer = self._users.get(peer_name)
-            if peer is None:
-                continue
-            await peer.connection.send(relay)
+        await self._send_to_room(member.room, relay, exclude=username)
 
     def _voice_decoded_length(self, payload: str) -> int | None:
         """Return the decoded byte length of a base64 PCM frame, or None if invalid."""
@@ -260,10 +295,8 @@ class VoiceChannelMixin:
         self, room: str, action: str, username: str, *, exclude: str | None = None
     ) -> None:
         """Tell everyone in a room that a peer joined or left."""
-        for peer_name in self._voice_peers_in(room, exclude=exclude):
-            peer = self._users.get(peer_name)
-            if peer is None:
-                continue
-            await peer.connection.send(
-                {"type": "voice_peer", "action": action, "username": username, "room": room}
-            )
+        await self._send_to_room(
+            room,
+            {"type": "voice_peer", "action": action, "username": username, "room": room},
+            exclude=exclude,
+        )

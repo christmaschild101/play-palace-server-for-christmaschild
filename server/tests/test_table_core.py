@@ -164,3 +164,67 @@ def test_save_game_result_notifies_server():
     table.save_game_result({"winner": "alice"})
 
     assert received == [{"winner": "alice"}]
+
+
+class TickingGame:
+    """A game that records how many times it was ticked."""
+
+    def __init__(self, status="playing", scheduled_sounds=None):
+        self.ticks = 0
+        self.status = status
+        self.scheduled_sounds = scheduled_sounds if scheduled_sounds is not None else []
+        self._estimate_running = False
+
+    def on_tick(self):
+        self.ticks += 1
+
+
+def _table_with_game(game):
+    table = Table(table_id="t1", game_type="poker", host="host")
+    table._game = game
+    return table
+
+
+def test_finished_game_with_no_pending_work_is_not_ticked():
+    game = TickingGame(status="finished")
+    table = _table_with_game(game)
+
+    table.on_tick()
+
+    assert game.ticks == 0
+
+
+def test_finished_game_still_drains_its_queued_sounds():
+    """Skipping the tick must not cut off an end-of-game sound."""
+    game = TickingGame(status="finished", scheduled_sounds=[[1, "gameover.ogg", 100, 0, 100]])
+    table = _table_with_game(game)
+
+    table.on_tick()
+
+    assert game.ticks == 1
+
+
+def test_finished_game_still_finishes_a_running_duration_estimate():
+    game = TickingGame(status="finished")
+    game._estimate_running = True
+    table = _table_with_game(game)
+
+    table.on_tick()
+
+    assert game.ticks == 1
+
+
+def test_unfinished_games_are_always_ticked():
+    for status in ("waiting", "playing"):
+        game = TickingGame(status=status)
+        table = _table_with_game(game)
+
+        table.on_tick()
+
+        assert game.ticks == 1, f"{status} game should still be ticked"
+
+
+def test_table_with_no_game_is_ticked_safely():
+    table = Table(table_id="t1", game_type="poker", host="host")
+
+    table.on_tick()  # must not raise

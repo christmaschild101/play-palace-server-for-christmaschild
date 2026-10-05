@@ -1,5 +1,6 @@
 """WebSocket server for client connections."""
 
+import asyncio
 import errno
 import json
 import logging
@@ -7,7 +8,7 @@ import ssl
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Coroutine
+from typing import Callable, Coroutine, Iterable
 
 import websockets
 from pydantic import ValidationError
@@ -16,6 +17,31 @@ from websockets.asyncio.server import serve, ServerConnection
 from .packet_models import SERVER_TO_CLIENT_PACKET_ADAPTER
 
 PACKET_LOGGER = logging.getLogger("playpalace.packets")
+
+
+def encode_packet(packet: dict) -> str | None:
+    """
+    Validate and serialize a packet exactly once.
+
+    Broadcasting the same packet to many clients used to re-run pydantic
+    validation, model dumping and JSON encoding for every single recipient.
+    Encoding once and sending the resulting text keeps a broadcast's cost
+    proportional to the payload instead of to the number of listeners.
+
+    Returns the serialized packet, or None when it fails validation.
+    """
+    try:
+        packet_model = SERVER_TO_CLIENT_PACKET_ADAPTER.validate_python(packet)
+        payload = packet_model.model_dump(exclude_none=True)
+    except ValidationError as exc:
+        PACKET_LOGGER.warning(
+            "Refusing to send invalid packet (type=%s): %s",
+            packet.get("type", "?"),
+            exc,
+        )
+        return None
+
+    return json.dumps(payload)
 
 
 @dataclass
@@ -32,26 +58,23 @@ class ClientConnection:
 
     async def send(self, packet: dict) -> None:
         """Send a packet to this client."""
-        try:
-            packet_model = SERVER_TO_CLIENT_PACKET_ADAPTER.validate_python(packet)
-            payload = packet_model.model_dump(exclude_none=True)
-        except ValidationError as exc:
-            identifier = self.username or self.address
-            PACKET_LOGGER.warning(
-                "Refusing to send invalid packet (type=%s) to %s: %s",
-                packet.get("type", "?"),
-                identifier,
-                exc,
-            )
+        text = encode_packet(packet)
+        if text is None:
             return
+        await self.send_encoded(text)
 
+    async def send_encoded(self, text: str) -> None:
+        """
+        Write an already-encoded packet to this client.
+
+        The caller is responsible for having encoded it via encode_packet.
+        """
         try:
-            await self.websocket.send(json.dumps(payload))
+            await self.websocket.send(text)
         except websockets.exceptions.ConnectionClosed:
             identifier = self.username or self.address
             PACKET_LOGGER.debug(
-                "Dropped packet type=%s to disconnected client %s",
-                payload.get("type", "?"),
+                "Dropped packet to disconnected client %s",
                 identifier,
             )
 
@@ -196,11 +219,49 @@ class WebSocketServer:
             if self._on_disconnect:
                 await self._on_disconnect(client)
 
+    async def send_to_connections(
+        self, connections: Iterable[ClientConnection], packet: dict
+    ) -> None:
+        """
+        Send one packet to many connections, encoding and writing it only once.
+
+        The packet is validated and serialized a single time, then written
+        concurrently so one slow or stalled client cannot hold up everyone
+        else. ``broadcast`` waits for every recipient, so a second broadcast
+        still cannot overtake the first on any given connection.
+        """
+        text = encode_packet(packet)
+        if text is None:
+            return
+
+        recipients = list(connections)
+        if not recipients:
+            return
+
+        results = await asyncio.gather(
+            *(client.send_encoded(text) for client in recipients),
+            return_exceptions=True,
+        )
+        for client, result in zip(recipients, results):
+            if isinstance(result, Exception):
+                identifier = client.username or client.address
+                PACKET_LOGGER.debug(
+                    "Dropped packet type=%s to client %s: %s",
+                    packet.get("type", "?"),
+                    identifier,
+                    result,
+                )
+
     async def broadcast(self, packet: dict, exclude: ClientConnection | None = None) -> None:
         """Broadcast a packet to all authenticated clients."""
-        for client in self._clients.values():
-            if client.authenticated and client != exclude:
-                await client.send(packet)
+        await self.send_to_connections(
+            (
+                client
+                for client in self._clients.values()
+                if client.authenticated and client != exclude
+            ),
+            packet,
+        )
 
     def register_username(self, client: ClientConnection) -> None:
         """Register a client in the username index for O(1) lookup."""

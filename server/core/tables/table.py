@@ -127,9 +127,32 @@ class Table(DataClassJSONMixin):
             user.play_sound(name, volume)
 
     def on_tick(self) -> None:
-        """Called every tick. Forwards to game."""
-        if self._game:
-            self._game.on_tick()
+        """Called every tick. Forwards to game when it still has work to do."""
+        game = self._game
+        if game is not None and self._game_needs_tick(game):
+            game.on_tick()
+
+    @staticmethod
+    def _game_needs_tick(game) -> bool:
+        """
+        Whether a game is still worth ticking.
+
+        A finished game keeps sitting at its table until everyone leaves, and
+        the tick loop runs twenty times a second, so ticking one forever is
+        pure waste. This deliberately only skips games that have *finished*:
+        games that are merely waiting for a human move are still ticked, because
+        55 of the games override on_tick with turn timers and bot logic.
+
+        Queued sounds are still allowed to drain, so an end-of-game jingle is
+        never cut off by the tick being skipped.
+        """
+        if getattr(game, "status", None) != "finished":
+            return True
+        if getattr(game, "scheduled_sounds", None):
+            return True
+        if getattr(game, "_estimate_running", False):
+            return True
+        return False
 
     def handle_event(self, username: str, event: dict) -> None:
         """Handle an event from a member."""

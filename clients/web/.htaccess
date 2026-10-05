@@ -1,9 +1,19 @@
 <IfModule mod_headers.c>
   # During active web-client iteration, prevent stale asset caches
   # (especially iOS home-screen web app containers).
-  <FilesMatch "\.(html?|js|mjs|json|css|map|ogg|mp3|wav|png|jpe?g|gif|svg|ico|webp)$">
+  <FilesMatch "\.(html?|js|mjs|json|css|map|png|jpe?g|gif|svg|ico|webp)$">
     Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
     Header set Pragma "no-cache"
     Header set Expires "0"
+  </FilesMatch>
+
+  # Sound files are named after the effect they play and are never edited in
+  # place, so they can be cached indefinitely. Previously these matched the
+  # no-store rule above, which meant the browser re-downloaded the file from
+  # the network on *every play* - a chatty table pulled megabytes of repeated
+  # OGG data that was already on disk. Keyed by name, so a renamed file is
+  # still fetched fresh.
+  <FilesMatch "\.(ogg|mp3|wav)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
 </IfModule>

@@ -27,6 +27,9 @@
 ## Audio
 - Default sound base URL is `./sounds`.
 - Keep music/effects/ambience handling consistent with the desktop client where practical.
+- **`.htaccess` caches `.ogg`/`.mp3`/`.wav` for a year (`immutable`) but keeps code assets `no-store`.** Sounds used to match the `no-store` rule, so the browser re-downloaded the file on *every play*; measured in Chromium, six plays of a 10KB effect pulled 65KB over the network instead of 11KB. Sound files are named after the effect and never edited in place, so a renamed file is still fetched fresh. Do not widen the `no-store` rule to cover sounds.
+- `audio.js` keeps a bounded LRU cache of decoded `AudioBuffer`s (`MAX_CACHED_BUFFERS`, `MAX_CACHED_BYTES`). A sound plays through a media element on a cache miss and from memory once decoded. The cache is warmed in the background on first play, so the play path stays synchronous and the existing autoplay-retry behaviour is unchanged. Cross-origin URLs are never cached (no CORS, and Web Audio would silence them) and fall back to the element path; any fetch or decode failure falls back too.
+- Music and ambience deliberately stay on the media-element path - they are long, loop, and would blow the decode cache budget.
 
 ## Voice Chat
 - `voice.js` mirrors `clients/desktop/voice_manager.py`: the same wire format (16kHz mono s16le, 20ms frames), the same transmit gating, and the same packets. Keep the two in step so browser and desktop players stay interoperable.
@@ -38,4 +41,5 @@
 ## Tests
 - Run with `node --test "tests/*.test.js"` from this folder (Node 18+; no dependencies to install).
 - `tests/voice_worklet.test.js` evaluates the worklet source against stub globals, so processor-only bugs stay covered outside a browser.
+- `tests/audio.test.js` covers the decode cache with injected `fetch`, `Audio` and `AudioContext`. The fake `window.location` must include `origin`, not just `href`: the engine compares `URL#origin` against `location.origin`, and a missing `origin` makes every sound look cross-origin.
 - Keep new behaviour covered here; there is no other test harness for this client.

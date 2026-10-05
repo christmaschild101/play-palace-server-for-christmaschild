@@ -56,6 +56,18 @@ export function createAudioEngine(options = {}) {
   const activeEffects = new Map();
   let muted = false;
 
+  // Decoded PCM is cached so a sound that repeats (typing ticks, chat
+  // notifications, dice) plays from memory after the first time instead of
+  // building a fresh media element and re-decoding the file on every play.
+  // The cache is deliberately bounded: the sounds directory is far larger
+  // than a sensible resident set, so the least recently played entries are
+  // dropped once the limits below are exceeded.
+  const MAX_CACHED_BUFFERS = 24;
+  const MAX_CACHED_BYTES = 32 * 1024 * 1024;
+  const bufferCache = new Map();
+  const bufferPending = new Map();
+  let cachedBytes = 0;
+
   if (context) {
     effectsGain = context.createGain();
     musicGain = context.createGain();
@@ -126,13 +138,90 @@ export function createAudioEngine(options = {}) {
       // Fallback to direct element playback if node creation fails.
       return null;
     }
+  }function disconnectNodes(nodes) {
+    if (!nodes) return;
+    try {
+      nodes.source.disconnect();
+    } catch { /* already disconnected */ }
+    if (nodes.panner) {
+      try {
+        nodes.panner.disconnect();
+      } catch { /* already disconnected */ }
+    }
   }
 
-  function disconnectNodes(nodes) {
-    if (!nodes) return;
-    try { nodes.source.disconnect(); } catch { /* already disconnected */ }
-    if (nodes.panner) {
-      try { nodes.panner.disconnect(); } catch { /* already disconnected */ }
+  function bufferSize(buffer) {
+    return buffer.length * buffer.numberOfChannels * 4;
+  }
+
+  function evictBuffers() {
+    while (
+      bufferCache.size > MAX_CACHED_BUFFERS ||
+      cachedBytes > MAX_CACHED_BYTES
+    ) {
+      const oldest = bufferCache.keys().next();
+      if (oldest.done) return;
+      const evicted = bufferCache.get(oldest.value);
+      bufferCache.delete(oldest.value);
+      cachedBytes -= bufferSize(evicted);
+    }
+  }
+
+  function warmBuffer(url) {
+    // Fire-and-forget preload so the next play of this sound is instant.
+    if (!context || isCrossOriginUrl(url)) return;
+    if (bufferCache.has(url) || bufferPending.has(url)) return;
+
+    const pending = fetch(url)
+      .then((response) => (response.ok ? response.arrayBuffer() : null))
+      .then((raw) => (raw ? context.decodeAudioData(raw) : null))
+      .then((buffer) => {
+        if (buffer) {
+          bufferCache.set(url, buffer);
+          cachedBytes += bufferSize(buffer);
+          evictBuffers();
+        }
+        return buffer;
+      })
+      .catch(() => null)
+      .finally(() => bufferPending.delete(url));
+
+    bufferPending.set(url, pending);
+  }
+
+  function playCachedBuffer(url, volume, panValue, playbackRate) {
+    // Play decoded PCM directly. Returns false so the caller can fall back to
+    // the media-element path on a cache miss or if Web Audio refuses.
+    if (!context || !effectsGain) return false;
+    if (isCrossOriginUrl(url)) return false;
+    const buffer = bufferCache.get(url);
+    if (!buffer) return false;
+
+    try {
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = Math.max(0.5, Math.min(2, playbackRate));
+
+      const gain = context.createGain();
+      gain.gain.value = muted ? 0 : Math.max(0, Math.min(1, volume));
+
+      let panner = null;
+      if (typeof context.createStereoPanner === "function") {
+        panner = context.createStereoPanner();
+        panner.pan.value = Math.max(-1, Math.min(1, panValue));
+        source.connect(gain);
+        gain.connect(panner);
+        panner.connect(effectsGain);
+      } else {
+        source.connect(gain);
+        gain.connect(effectsGain);
+      }
+
+      source.addEventListener("ended", () => disconnectNodes({ source, panner }));
+      source.start();
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -140,6 +229,15 @@ export function createAudioEngine(options = {}) {
     const name = packet.name || packet.sound || "";
     const url = toSoundUrl(name, soundBaseUrl);
     if (!url) {
+      return;
+    }
+
+    const volume = (packet.volume ?? 100) / 100;
+    const pitch = (packet.pitch ?? 100) / 100;
+    const pan = (packet.pan ?? 0) / 100;
+
+    warmBuffer(url);
+    if (playCachedBuffer(url, volume, pan, pitch)) {
       return;
     }
 

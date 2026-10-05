@@ -122,7 +122,7 @@ class Server(
     VoiceChannelMixin,
 ):
     """
-    Main PlayPalace v11 server.
+    Main PlayPalace v12 server.
 
     Coordinates all components: network, auth, tables, games, and persistence.
     """

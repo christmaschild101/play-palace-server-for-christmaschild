@@ -1,1 +1,1 @@
-"""PlayPalace v11 Server."""
+"""PlayPalace v12 Server."""

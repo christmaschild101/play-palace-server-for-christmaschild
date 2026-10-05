@@ -1,5 +1,5 @@
 """
-Integration tests for PlayPalace v11.
+Integration tests for PlayPalace v12.
 
 Tests larger chunks of server code working together.
 """

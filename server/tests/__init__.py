@@ -1,1 +1,1 @@
-"""Test suite for PlayPalace v11."""
+"""Test suite for PlayPalace v12."""

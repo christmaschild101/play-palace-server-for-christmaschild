@@ -1,7 +1,18 @@
 """Client Options Profile dialog for Play Palace v9 client."""
 
+import os
+import sys
+
 import wx
 from .enhance_wx import audio_events
+
+# Add parent directory to path so voice_manager can be imported.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from voice_manager import (  # noqa: E402
+    DEFAULT_VOICE_ACTIVITY_HANG_MS,
+    MODE_PUSH_TO_TALK,
+    MODE_VOICE_ACTIVITY,
+)
 
 
 class ClientOptionsDialog(wx.Dialog, audio_events.SoundBindingsMixin):
@@ -240,6 +251,95 @@ class ClientOptionsDialog(wx.Dialog, audio_events.SoundBindingsMixin):
             )
             sizer.Add(ambience_override_label, 0, wx.LEFT | wx.BOTTOM, 10)
 
+        # Voice chat devices
+        voice_heading = wx.StaticText(panel, label="&Voice Chat")
+        sizer.Add(voice_heading, 0, wx.ALL, 10)
+
+        # Input (microphone) device.
+        input_label = wx.StaticText(panel, label="&Microphone (input device):")
+        sizer.Add(input_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.voice_input_choice = wx.Choice(panel, choices=self._input_device_choices())
+        self.voice_input_choice.SetName("Microphone input device")
+        sizer.Add(
+            self.voice_input_choice, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10
+        )
+
+        # Output (speaker) device.
+        output_label = wx.StaticText(panel, label="S&peakers (output device):")
+        sizer.Add(output_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.voice_output_choice = wx.Choice(panel, choices=self._output_device_choices())
+        self.voice_output_choice.SetName("Audio output device")
+        sizer.Add(
+            self.voice_output_choice, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10
+        )
+
+        # Voice chat volume.
+        voice_volume_label = wx.StaticText(panel, label="Voice Volume (spin button):")
+        sizer.Add(voice_volume_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.voice_volume_spin = wx.SpinCtrl(
+            panel,
+            value=str(self._audio_option("voice_volume", 100)),
+            min=0,
+            max=200,
+            initial=self._audio_option("voice_volume", 100),
+        )
+        self.voice_volume_spin.SetName("Voice chat volume")
+        sizer.Add(
+            self.voice_volume_spin, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10
+        )
+
+        # Mic gain.
+        mic_gain_label = wx.StaticText(panel, label="Microphone &Gain (spin button):")
+        sizer.Add(mic_gain_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.voice_mic_gain_spin = wx.SpinCtrl(
+            panel,
+            value=str(self._audio_option("voice_mic_gain", 100)),
+            min=0,
+            max=200,
+            initial=self._audio_option("voice_mic_gain", 100),
+        )
+        self.voice_mic_gain_spin.SetName("Microphone gain")
+        sizer.Add(
+            self.voice_mic_gain_spin, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10
+        )
+
+        # Transmit mode.
+        voice_mode_label = wx.StaticText(panel, label="Transmit &mode:")
+        sizer.Add(voice_mode_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.voice_mode_dialog_choice = wx.Choice(
+            panel, choices=["Voice activation", "Push to talk"]
+        )
+        self.voice_mode_dialog_choice.SetName("Microphone transmit mode")
+        self.voice_mode_dialog_choice.SetSelection(
+            1 if self._audio_option("voice_mode", MODE_VOICE_ACTIVITY) == MODE_PUSH_TO_TALK else 0
+        )
+        sizer.Add(
+            self.voice_mode_dialog_choice, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10
+        )
+
+        # Voice activation sensitivity.
+        vad_label = wx.StaticText(
+            panel, label="Voice Activation Sensitivity (spin button):"
+        )
+        sizer.Add(vad_label, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM, 10)
+
+        self.voice_activity_spin = wx.SpinCtrl(
+            panel,
+            value=str(self._audio_option("voice_activity_threshold", 15)),
+            min=0,
+            max=100,
+            initial=self._audio_option("voice_activity_threshold", 15),
+        )
+        self.voice_activity_spin.SetName("Voice activation sensitivity")
+        sizer.Add(
+            self.voice_activity_spin, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 10
+        )
+
         # Info text
         info_text = wx.StaticText(
             panel,
@@ -249,6 +349,63 @@ class ClientOptionsDialog(wx.Dialog, audio_events.SoundBindingsMixin):
 
         panel.SetSizer(sizer)
         return panel
+
+    def _collect_voice_settings(self) -> dict:
+        """Read the voice controls into an options dict."""
+        return {
+            "voice_input_device": self._selected_voice_input_device(),
+            "voice_output_device": self._selected_voice_output_device(),
+            "voice_volume": self.voice_volume_spin.GetValue(),
+            "voice_mic_gain": self.voice_mic_gain_spin.GetValue(),
+            "voice_activity_threshold": self.voice_activity_spin.GetValue(),
+            "voice_activity_hang_ms": self._audio_option(
+                "voice_activity_hang_ms", DEFAULT_VOICE_ACTIVITY_HANG_MS
+            ),
+            "voice_mode": (
+                MODE_PUSH_TO_TALK
+                if self.voice_mode_dialog_choice.GetSelection() == 1
+                else MODE_VOICE_ACTIVITY
+            ),
+        }
+
+    def _audio_option(self, key: str, fallback):
+        """Read an audio option from the current options dict."""
+        return self.options.get("audio", {}).get(key, fallback)
+
+    def _input_device_choices(self) -> list:
+        """List available microphones for the device dropdown."""
+        try:
+            from voice_manager import VoiceManager
+
+            devices = VoiceManager.list_input_devices()
+        except Exception:
+            devices = ["Default"]
+        return devices or ["Default"]
+
+    def _output_device_choices(self) -> list:
+        """List available speakers for the device dropdown."""
+        try:
+            from voice_manager import VoiceManager
+
+            devices = list(VoiceManager.list_output_devices())
+        except Exception:
+            devices = []
+        # An empty string means "follow the system default", which is what the
+        # rest of the client's audio uses.
+        choices = ["(same as PlayPalace sounds)"] + devices
+        return choices
+
+    def _selected_voice_input_device(self) -> str:
+        """Return the chosen microphone name."""
+        name = self.voice_input_choice.GetStringSelection()
+        return name or "Default"
+
+    def _selected_voice_output_device(self) -> str:
+        """Return the chosen speaker name, or empty for the system default."""
+        index = self.voice_output_choice.GetSelection()
+        if index <= 0:
+            return ""
+        return self.voice_output_choice.GetStringSelection()
 
     def _create_social_panel(self, parent):
         """Create the social options panel."""
@@ -439,6 +596,28 @@ class ClientOptionsDialog(wx.Dialog, audio_events.SoundBindingsMixin):
             self.music_spin.SetValue(data_source["audio"]["music_volume"])
             self.ambience_spin.SetValue(data_source["audio"]["ambience_volume"])
 
+            # Voice settings
+            audio = data_source.get("audio", {})
+            self.voice_volume_spin.SetValue(audio.get("voice_volume", 100))
+            self.voice_mic_gain_spin.SetValue(audio.get("voice_mic_gain", 100))
+            self.voice_activity_spin.SetValue(audio.get("voice_activity_threshold", 15))
+            self.voice_mode_dialog_choice.SetSelection(
+                1 if audio.get("voice_mode", MODE_VOICE_ACTIVITY) == MODE_PUSH_TO_TALK else 0
+            )
+
+            input_device = audio.get("voice_input_device", "Default")
+            if input_device in self.voice_input_choice.GetStrings():
+                self.voice_input_choice.SetStringSelection(input_device)
+            else:
+                self.voice_input_choice.SetSelection(0)
+
+            output_device = audio.get("voice_output_device", "")
+            output_choices = self.voice_output_choice.GetStrings()
+            if output_device and output_device in output_choices:
+                self.voice_output_choice.SetStringSelection(output_device)
+            else:
+                self.voice_output_choice.SetSelection(0)
+
             # Apply volume changes immediately
             if self.sound_manager:
                 self.sound_manager.set_music_volume(data_source["audio"]["music_volume"] / 100.0)
@@ -589,6 +768,12 @@ class ClientOptionsDialog(wx.Dialog, audio_events.SoundBindingsMixin):
             self.config_manager.set_client_option(
                 "audio/ambience_volume", ambience_volume, self.server_id, create_mode=True
             )
+
+            # Save voice settings
+            for key, value in self._collect_voice_settings().items():
+                self.config_manager.set_client_option(
+                    f"audio/{key}", value, self.server_id, create_mode=True
+                )
 
             # Save social settings
             mute_global = self.mute_global_check.GetValue()

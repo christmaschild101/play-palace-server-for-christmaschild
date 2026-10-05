@@ -557,10 +557,18 @@ class NetworkManager:
         Args:
             packet: Dictionary received from server
         """
-        if not self._validate_incoming_packet(packet):
+        packet_type = packet.get("type")
+
+        # Voice audio arrives ~50x/second and goes straight to playback; it must
+        # not be logged or routed through the menu/history handlers.
+        if packet_type == "voice_audio":
+            manager = getattr(self.main_window, "voice_manager", None)
+            if manager is not None:
+                manager.handle_voice_audio(packet)
             return
 
-        packet_type = packet.get("type")
+        if not self._validate_incoming_packet(packet):
+            return
 
         if packet_type in {"authorize_success", "refresh_session_success"}:
             self._handle_authorize_success(packet, packet_type)
@@ -620,4 +628,6 @@ _PACKET_DISPATCH = {
     "pong": lambda window, pkt: window.on_server_pong(pkt),
     "chat": lambda window, pkt: window.on_receive_chat(pkt),
     "server_status": lambda window, pkt: window.on_server_status(pkt),
+    "voice_status": lambda window, pkt: window.on_server_voice_status(pkt),
+    "voice_peer": lambda window, pkt: window.on_server_voice_peer(pkt),
 }

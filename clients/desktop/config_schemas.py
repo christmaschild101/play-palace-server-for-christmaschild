@@ -16,6 +16,15 @@ class AudioOptions(BaseModel):
 
     music_volume: int = 20
     ambience_volume: int = 20
+    # Voice chat. ``voice_output_device`` is empty when it should follow the
+    # device PlayPalace's own sounds are using.
+    voice_input_device: str = "Default"
+    voice_output_device: str = ""
+    voice_volume: int = 100
+    voice_mic_gain: int = 100
+    voice_activity_threshold: int = 15
+    voice_activity_hang_ms: int = 500
+    voice_mode: str = "voice_activity"
 
 
 class SocialOptions(BaseModel):

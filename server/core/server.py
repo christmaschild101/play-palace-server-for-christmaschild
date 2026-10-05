@@ -33,6 +33,7 @@ from .state import ModeSnapshot, ServerLifecycleState, ServerMode
 from .tick import TickScheduler, load_server_config
 from .administration import AdministrationMixin
 from .community import CommunityMixin, GameManagerMixin
+from .voice import VoiceChannelMixin
 from .documents.browsing import DocumentBrowsingMixin, _DOCUMENTS_DIR
 from .documents.transcriber_role import TranscriberRoleMixin
 from .virtual_bots import VirtualBotManager
@@ -117,6 +118,7 @@ class Server(
     CommunityMixin,
     DocumentBrowsingMixin,
     TranscriberRoleMixin,
+    VoiceChannelMixin,
 ):
     """
     Main PlayPalace v11 server.
@@ -169,6 +171,7 @@ class Server(
 
         self._users: dict[str, NetworkUser] = {}
         self._user_states: dict[str, dict] = {}
+        self._init_voice()
 
         self._contribution_mode = "auto_commit"
         self._documents = DocumentManager(_DOCUMENTS_DIR)
@@ -1001,7 +1004,9 @@ class Server(
                 offline_sound = self._presence_sound_for(user, offline=True)
                 self._broadcast_presence_l("user-offline", username, offline_sound)
 
-            # Clean up user state
+            # Leave voice before dropping the user so peers are told, then
+            # clean up user state.
+            await self.remove_user_from_voice(username, announce_self=False)
             self._users.pop(username, None)
             self._user_states.pop(username, None)
 
@@ -1136,6 +1141,12 @@ class Server(
                 await self._handle_editbox(client, packet)
             elif packet_type == "chat":
                 await self._handle_chat(client, packet)
+            elif packet_type == "voice_join":
+                await self._handle_voice_join(user, packet)
+            elif packet_type == "voice_leave":
+                await self._handle_voice_leave(user, packet)
+            elif packet_type == "voice_audio":
+                await self._handle_voice_audio(user, packet)
             elif packet_type == "list_online":
                 await self._handle_list_online(client)
             elif packet_type == "list_online_with_games":

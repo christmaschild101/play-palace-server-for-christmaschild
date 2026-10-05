@@ -831,3 +831,23 @@ scheduled-actions-summary-when = Run in { $minutes } minute(s).
 scheduled-actions-summary-repeat = Repeat every { $minutes } minute(s).
 scheduled-actions-created = Scheduled action created.
 scheduled-actions-deleted = Scheduled action deleted.
+
+
+# ===== Voice chat =====
+voice-chat-title = Voice Chat
+voice-join = Join Voice Chat
+voice-unjoin = Unjoin Voice Chat
+voice-joined-table = You joined voice chat at your table.
+voice-joined-lobby = You joined voice chat in the lobby.
+voice-left-voice-chat = You left voice chat.
+voice-user-joined = { $user } joined voice chat.
+voice-user-left = { $user } left voice chat.
+voice-room-table = Table voice
+voice-room-lobby = Lobby voice
+voice-voice-chat-unavailable = Voice chat is unavailable right now.
+voice-mic-error = Microphone unavailable: { $error }
+voice-speaker-error = Audio output unavailable: { $error }
+voice-transmitting = Microphone live.
+voice-muted = Microphone muted.
+voice-hearing-none = Nobody else is in this voice room yet.
+voice-hearing = { $count } other(s) in this voice room.

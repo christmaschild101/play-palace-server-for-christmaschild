@@ -18,6 +18,13 @@ from sound_manager import SoundManager
 from network_manager import NetworkManager
 from buffer_system import BufferSystem
 from config_manager import set_item_in_dict
+from voice_manager import (
+    DEFAULT_VOICE_ACTIVITY_HANG_MS,
+    DEFAULT_VOICE_ACTIVITY_THRESHOLD,
+    MODE_PUSH_TO_TALK,
+    MODE_VOICE_ACTIVITY,
+    VoiceManager,
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -159,6 +166,15 @@ class MainWindow(wx.Frame):
                 if not self.buffer_system.is_muted(buffer_name):
                     self.buffer_system.toggle_mute(buffer_name)
 
+        # Initialize voice chat before the UI so the panel can bind to it.
+        self.ID_PUSH_TO_TALK = wx.NewIdRef()
+        self.voice_manager = VoiceManager(
+            network=self.network,
+            on_state_change=self.on_voice_state_change,
+        )
+        if self.client_options:
+            self.voice_manager.apply_settings(self.client_options)
+
         # Initialize UI components
         self._create_ui()
         self._setup_accelerators()
@@ -238,6 +254,7 @@ class MainWindow(wx.Frame):
         left_sizer = wx.BoxSizer(wx.VERTICAL)
         left_sizer.Add(self.menu_label, 0, wx.ALL, 4)
         left_sizer.Add(self.menu_list, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 4)
+        left_sizer.Add(self._create_voice_panel(panel), 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM, 4)
 
         right_sizer = wx.BoxSizer(wx.VERTICAL)
         right_sizer.Add(self.history_label, 0, wx.ALL, 4)
@@ -249,6 +266,83 @@ class MainWindow(wx.Frame):
         sizer.Add(left_sizer, 0, wx.EXPAND | wx.ALL, 4)
         sizer.Add(right_sizer, 1, wx.EXPAND | wx.ALL, 4)
         panel.SetSizer(sizer)
+
+    def _create_voice_panel(self, parent):
+        """Create the voice chat controls (join button, gain, activation)."""
+        self.voice_panel = wx.BoxSizer(wx.VERTICAL)
+
+        # Join/Unjoin. The label flips once the server confirms membership.
+        self.voice_join_button = wx.Button(parent, label="Join Voice")
+        self.voice_join_button.SetName("Join voice chat")
+        self.voice_join_button.Bind(wx.EVT_BUTTON, self.on_voice_join_toggle)
+        self.voice_join_button.Bind(wx.EVT_KEY_DOWN, self.on_voice_key_down)
+        self.voice_join_button.Bind(wx.EVT_KEY_UP, self.on_voice_key_up)
+        self.voice_panel.Add(self.voice_join_button, 0, wx.EXPAND | wx.ALL, 2)
+
+        # Mic gain.
+        gain_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        gain_label = wx.StaticText(parent, label="Mic Gain")
+        gain_label.SetName("Microphone gain")
+        gain_sizer.Add(gain_label, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 4)
+
+        self.voice_gain_slider = wx.Slider(
+            parent,
+            value=self.voice_manager.mic_gain,
+            minValue=0,
+            maxValue=200,
+            style=wx.SL_HORIZONTAL | wx.SL_AUTOTICKS,
+        )
+        self.voice_gain_slider.SetName("Microphone gain")
+        self.voice_gain_slider.SetToolTip(
+            "Microphone gain percent. Higher values amplify a quiet microphone."
+        )
+        self.voice_gain_slider.Bind(wx.EVT_SLIDER, self.on_voice_gain_change)
+        gain_sizer.Add(self.voice_gain_slider, 1, wx.EXPAND)
+        self.voice_panel.Add(gain_sizer, 0, wx.EXPAND | wx.ALL, 2)
+
+        # Voice activation: sensitivity and how long the mic stays open.
+        vad_label = wx.StaticText(parent, label="Voice Activation")
+        vad_label.SetName("Voice activation sensitivity")
+        self.voice_panel.Add(vad_label, 0, wx.LEFT | wx.RIGHT, 2)
+
+        self.voice_activity_slider = wx.Slider(
+            parent,
+            value=self.voice_manager.detector.threshold,
+            minValue=0,
+            maxValue=100,
+            style=wx.SL_HORIZONTAL | wx.SL_AUTOTICKS,
+        )
+        self.voice_activity_slider.SetName("Voice activation sensitivity")
+        self.voice_activity_slider.SetToolTip(
+            "How loud you must speak before the microphone opens. Lower is more sensitive."
+        )
+        self.voice_activity_slider.Bind(wx.EVT_SLIDER, self.on_voice_activity_change)
+        self.voice_panel.Add(self.voice_activity_slider, 0, wx.EXPAND | wx.ALL, 2)
+
+        # Transmit mode and mute.
+        controls_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.voice_mode_choice = wx.Choice(
+            parent,
+            choices=["Voice activation", "Push to talk"],
+        )
+        self.voice_mode_choice.SetName("Microphone transmit mode")
+        self.voice_mode_choice.SetSelection(0)
+        self.voice_mode_choice.Bind(wx.EVT_CHOICE, self.on_voice_mode_change)
+        controls_sizer.Add(self.voice_mode_choice, 1, wx.RIGHT, 4)
+
+        self.voice_mute_button = wx.ToggleButton(parent, label="Mute")
+        self.voice_mute_button.SetName("Mute microphone")
+        self.voice_mute_button.Bind(wx.EVT_TOGGLEBUTTON, self.on_voice_mute_toggle)
+        controls_sizer.Add(self.voice_mute_button, 0)
+        self.voice_panel.Add(controls_sizer, 0, wx.EXPAND | wx.ALL, 2)
+
+        # Status line so the change is discoverable without sight of the mic.
+        self.voice_status_label = wx.StaticText(parent, label="Not in voice chat.")
+        self.voice_status_label.SetName("Voice chat status")
+        self.voice_panel.Add(self.voice_status_label, 0, wx.ALL, 2)
+
+        self._apply_voice_mode_to_ui()
+        return self.voice_panel
 
     def _setup_accelerators(self):
         """Setup keyboard accelerators."""
@@ -361,11 +455,162 @@ class MainWindow(wx.Frame):
             dlg.Destroy()
             if result != wx.ID_YES:
                 return
+        # Release the microphone before the window goes away.
+        if hasattr(self, "voice_manager"):
+            self.voice_manager.shutdown()
         event.Skip()
 
     def on_focus_menu(self, event):
         """Handle Alt+M shortcut to focus menu list."""
         self.menu_list.SetFocus()
+
+    # -- Voice chat ---------------------------------------------------------
+
+    def on_voice_join_toggle(self, event):
+        """Join or leave voice chat."""
+        if not self.connected:
+            self.add_history("Voice chat is unavailable right now.", "misc")
+            return
+
+        if self.voice_manager.joined:
+            self.voice_manager.unjoin()
+            self.add_history("You left voice chat.", "misc")
+        else:
+            self.voice_manager.join()
+            self.add_history(
+                "Joined voice chat."
+                if self.voice_manager.mode == MODE_VOICE_ACTIVITY
+                else "Joined voice chat. Hold Space on the voice panel to talk.",
+                "misc",
+            )
+        self._refresh_voice_ui()
+
+    def on_voice_gain_change(self, event):
+        """Apply the microphone gain slider."""
+        gain = self.voice_gain_slider.GetValue()
+        self.voice_manager.mic_gain = gain
+        self.voice_manager.apply_settings(
+            {"audio": dict(self._voice_audio_options(), voice_mic_gain=gain)}
+        )
+        self.modify_option_value("audio/voice_mic_gain", gain)
+        self.voice_status_label.SetLabel(f"Mic gain {gain}%.")
+
+    def on_voice_activity_change(self, event):
+        """Apply the voice activation sensitivity slider."""
+        threshold = self.voice_activity_slider.GetValue()
+        self.voice_manager.detector.threshold = threshold
+        self.voice_manager.apply_settings(
+            {"audio": dict(self._voice_audio_options(), voice_activity_threshold=threshold)}
+        )
+        self.modify_option_value("audio/voice_activity_threshold", threshold)
+        self.voice_status_label.SetLabel(f"Voice activation {threshold}.")
+
+    def on_voice_mode_change(self, event):
+        """Switch between voice activation and push to talk."""
+        selection = self.voice_mode_choice.GetSelection()
+        mode = MODE_PUSH_TO_TALK if selection == 1 else MODE_VOICE_ACTIVITY
+        self.voice_manager.mode = mode
+        self.voice_manager.apply_settings({"audio": dict(self._voice_audio_options(), voice_mode=mode)})
+        self.modify_option_value("audio/voice_mode", mode)
+        self._apply_voice_mode_to_ui()
+        self._refresh_voice_ui()
+
+    def on_voice_mute_toggle(self, event):
+        """Mute or unmute the microphone."""
+        muted = self.voice_mute_button.GetValue()
+        self.voice_manager.set_muted(muted)
+        self.add_history("Microphone muted." if muted else "Microphone live.", "misc")
+        self._refresh_voice_ui()
+
+    def on_voice_key_down(self, event):
+        """Hold push-to-talk while Space is held on the voice panel."""
+        if event.GetKeyCode() != wx.WXK_SPACE:
+            event.Skip()
+            return
+        self.voice_manager.set_push_to_talk(True)
+        event.Skip()
+
+    def on_voice_key_up(self, event):
+        """Release push-to-talk when Space is let go."""
+        if event.GetKeyCode() != wx.WXK_SPACE:
+            event.Skip()
+            return
+        self.voice_manager.set_push_to_talk(False)
+        event.Skip()
+
+    def on_voice_state_change(self, manager):
+        """Refresh the voice controls when the manager's state changes."""
+        if not hasattr(self, "voice_status_label"):
+            return
+        self._refresh_voice_ui()
+
+    def on_server_voice_status(self, packet):
+        """Handle the server's voice status packet."""
+        self.voice_manager.handle_voice_status(packet)
+        self._refresh_voice_ui()
+
+    def on_server_voice_peer(self, packet):
+        """Handle a voice peer joining or leaving."""
+        self.voice_manager.handle_voice_peer(packet)
+        username = packet.get("username", "")
+        if packet.get("action") == "joined":
+            self.add_history(f"{username} joined voice chat.", "misc")
+        elif packet.get("action") == "left":
+            self.add_history(f"{username} left voice chat.", "misc")
+        self._refresh_voice_ui()
+
+    def _voice_audio_options(self) -> dict:
+        """Return the current voice settings as an audio options dict."""
+        return {
+            "voice_mic_gain": self.voice_manager.mic_gain,
+            "voice_volume": self.voice_manager.voice_volume,
+            "voice_mode": self.voice_manager.mode,
+            "voice_activity_threshold": self.voice_manager.detector.threshold,
+            "voice_activity_hang_ms": self.voice_manager.detector.hang_ms,
+            "voice_input_device": self.voice_manager.input_device,
+            "voice_output_device": self.voice_manager.output_device,
+        }
+
+    def _apply_voice_mode_to_ui(self) -> None:
+        """Keep the mode choice in sync with the manager and the focus target."""
+        selection = 1 if self.voice_manager.mode == MODE_PUSH_TO_TALK else 0
+        if hasattr(self, "voice_mode_choice") and self.voice_mode_choice.GetSelection() != selection:
+            self.voice_mode_choice.SetSelection(selection)
+        if hasattr(self, "voice_join_button"):
+            # The button hosts the push-to-talk key, so it must take focus for
+            # hold-to-talk to work at all.
+            self.voice_join_button.SetFocus() if selection == 1 else None
+
+    def _refresh_voice_ui(self) -> None:
+        """Update the voice panel to match the manager state."""
+        if not hasattr(self, "voice_status_label"):
+            return
+
+        manager = self.voice_manager
+        self.voice_join_button.SetLabel("Unjoin Voice" if manager.joined else "Join Voice")
+        self.voice_join_button.SetName(
+            "Unjoin voice chat" if manager.joined else "Join voice chat"
+        )
+        self.voice_mute_button.SetValue(manager.muted)
+
+        if not manager.joined:
+            self.voice_status_label.SetLabel("Not in voice chat.")
+        elif manager.transmitting:
+            self.voice_status_label.SetLabel("Microphone live.")
+        elif manager.muted:
+            self.voice_status_label.SetLabel("Microphone muted.")
+        elif manager.mode == MODE_PUSH_TO_TALK:
+            self.voice_status_label.SetLabel(
+                "Hold Space on the voice panel to talk."
+            )
+        else:
+            self.voice_status_label.SetLabel("Microphone opens when you speak.")
+
+        if manager.peers:
+            peers = ", ".join(manager.peers)
+            self.voice_status_label.SetLabel(
+                self.voice_status_label.GetLabel() + f" Hearing: {peers}"
+            )
 
     def on_menu_focus(self, event):
         """Handle menu list gaining focus - enable buffer navigation."""
@@ -1247,6 +1492,10 @@ class MainWindow(wx.Frame):
     def on_connection_lost(self):
         """Handle connection loss."""
         self.connected = False
+        # The voice room dies with the connection; drop local voice state too.
+        if hasattr(self, "voice_manager") and self.voice_manager.joined:
+            self.voice_manager.unjoin()
+            self._refresh_voice_ui()
         # Don't show error if we're expecting to reconnect or returning to login
         if not self.expecting_reconnect and not self.returning_to_login:
             self._show_connection_error("Connection lost!")

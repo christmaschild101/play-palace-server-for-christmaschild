@@ -172,7 +172,19 @@ class ConfigManager:
         """Get default profiles structure (shareable)."""
         return {
             "client_options_defaults": {
-                "audio": {"music_volume": 20, "ambience_volume": 20},
+                "audio": {
+                    "music_volume": 20,
+                    "ambience_volume": 20,
+                    # Voice chat devices and levels. An empty output device
+                    # means "use whatever PlayPalace sounds are using".
+                    "voice_input_device": "Default",
+                    "voice_output_device": "",
+                    "voice_volume": 100,
+                    "voice_mic_gain": 100,
+                    "voice_activity_threshold": 15,
+                    "voice_activity_hang_ms": 500,
+                    "voice_mode": "voice_activity",
+                },
                 "social": {
                     "mute_global_chat": False,
                     "mute_table_chat": False,

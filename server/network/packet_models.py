@@ -179,6 +179,41 @@ class CheckTablePasswordCommandPacket(BasePacket):
     type: Literal["check_table_pw_cmd"] = "check_table_pw_cmd"
 
 
+# ---------------------------------------------------------------------------
+# Voice chat
+#
+# Voice audio rides the existing websocket as base64-encoded little-endian
+# signed 16-bit mono PCM. One packet carries exactly VOICE_FRAME_MS
+# milliseconds of audio, so VOICE_FRAME_BYTES is the expected decoded size of
+# every payload and VOICE_MAX_AUDIO_B64 bounds how much a client may send.
+# ---------------------------------------------------------------------------
+
+VOICE_SAMPLE_RATE = 16000
+VOICE_CHANNELS = 1
+VOICE_SAMPLE_WIDTH = 2
+VOICE_FRAME_MS = 20
+VOICE_FRAME_BYTES = (
+    VOICE_SAMPLE_RATE * VOICE_CHANNELS * VOICE_SAMPLE_WIDTH * VOICE_FRAME_MS // 1000
+)
+# Base64 grows by 4/3, plus padding slack for frames the client resamples.
+VOICE_MAX_AUDIO_B64 = 4096
+
+
+class VoiceJoinPacket(BasePacket):
+    type: Literal["voice_join"] = "voice_join"
+    muted: bool = False
+
+
+class VoiceLeavePacket(BasePacket):
+    type: Literal["voice_leave"] = "voice_leave"
+
+
+class VoiceAudioPacket(BasePacket):
+    type: Literal["voice_audio"] = "voice_audio"
+    data: str = Field(min_length=1, max_length=VOICE_MAX_AUDIO_B64)
+    seq: int = Field(default=0, ge=0)
+
+
 ClientToServerPacket = Annotated[
     Union[
         AuthorizePacket,
@@ -203,6 +238,9 @@ ClientToServerPacket = Annotated[
         SetTablePasswordCommandPacket,
         RemoveTablePasswordCommandPacket,
         CheckTablePasswordCommandPacket,
+        VoiceJoinPacket,
+        VoiceLeavePacket,
+        VoiceAudioPacket,
     ],
     Field(discriminator="type"),
 ]
@@ -411,6 +449,34 @@ class OpenServerOptionsPacket(BasePacket):
     options: dict[str, Any] = Field(default_factory=dict)
 
 
+class VoiceStatusPacket(BasePacket):
+    """Tells a client its own voice state plus who else it can hear."""
+
+    type: Literal["voice_status"] = "voice_status"
+    joined: bool = False
+    room: str | None = None
+    peers: list[str] = Field(default_factory=list)
+    muted: bool = False
+
+
+class VoicePeerPacket(BasePacket):
+    """Announces that a peer joined or left the caller's voice room."""
+
+    type: Literal["voice_peer"] = "voice_peer"
+    action: Literal["joined", "left"]
+    username: str
+    room: str
+
+
+class VoiceAudioRelayPacket(BasePacket):
+    """Relayed audio frame from another participant in the same room."""
+
+    type: Literal["voice_audio"] = "voice_audio"
+    sender: str
+    data: str = Field(min_length=1, max_length=VOICE_MAX_AUDIO_B64)
+    seq: int = Field(default=0, ge=0)
+
+
 ServerToClientPacket = Annotated[
     Union[
         AuthorizeSuccessPacket,
@@ -439,6 +505,9 @@ ServerToClientPacket = Annotated[
         GetPlaylistDurationPacket,
         OpenClientOptionsPacket,
         OpenServerOptionsPacket,
+        VoiceStatusPacket,
+        VoicePeerPacket,
+        VoiceAudioRelayPacket,
     ],
     Field(discriminator="type"),
 ]
@@ -451,4 +520,10 @@ __all__ = [
     "ClientToServerPacket",
     "SERVER_TO_CLIENT_PACKET_ADAPTER",
     "ServerToClientPacket",
+    "VOICE_CHANNELS",
+    "VOICE_FRAME_BYTES",
+    "VOICE_FRAME_MS",
+    "VOICE_MAX_AUDIO_B64",
+    "VOICE_SAMPLE_RATE",
+    "VOICE_SAMPLE_WIDTH",
 ]

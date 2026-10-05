@@ -221,14 +221,16 @@ class AircraftExtremeGame(GridGameMixin, Game):
         if self.intro_wait_ticks > 0:
             self.intro_wait_ticks -= 1
             return
-        # Bot safety net: a bot out of actions must never strand the turn
-        # (e.g. if an action path ever skips end-of-action processing).
+        # Bot safety net: a bot that cannot act must never strand the turn.
+        # This covers a bot out of actions and, critically, a downed bot: a
+        # downed pilot cannot take any flight action (see _flight_action_allowed)
+        # and only _prepare_turn can respawn them, so the turn must advance.
         current = self.current_player
         if (
             isinstance(current, AircraftExtremePlayer)
             and current.is_bot
-            and not current.downed
-            and current.actions_left <= 0
+            and self.status == GameStatus.PLAYING
+            and (current.downed or current.actions_left <= 0)
         ):
             self._advance_turn()
             return
@@ -286,6 +288,11 @@ class AircraftExtremeGame(GridGameMixin, Game):
             if p.id == pid:
                 return p
         return None
+
+    def _refuse_action(self, player: AircraftExtremePlayer) -> None:
+        """Consume an action that was refused, so the turn always advances."""
+        player.actions_left = max(0, player.actions_left - 1)
+        self._end_action(player)
 
     def _end_action(self, player: AircraftExtremePlayer) -> None:
         """Common end-of-action processing."""
@@ -503,11 +510,13 @@ class AircraftExtremeGame(GridGameMixin, Game):
             user = self.get_user(player)
             if user:
                 user.speak_l(blocked)
+            self._refuse_action(player)
             return
         if player.power <= 0:
             user = self.get_user(player)
             if user:
                 user.speak_l("aircraftextreme-reason-no-power")
+            self._refuse_action(player)
             return
 
         player.power -= 1
@@ -576,6 +585,9 @@ class AircraftExtremeGame(GridGameMixin, Game):
             user = self.get_user(player)
             if user:
                 user.speak_l("aircraftextreme-fire-own-base")
+            # Refusals must still consume the action and end the turn, or a bot
+            # that keeps trying to fire from its own base loops forever.
+            self._refuse_action(player)
             return
 
         target = self._nearest_target(player)
@@ -583,6 +595,7 @@ class AircraftExtremeGame(GridGameMixin, Game):
             user = self.get_user(player)
             if user:
                 user.speak_l("aircraftextreme-fire-no-target")
+            self._refuse_action(player)
             return
 
         player.actions_left -= 1

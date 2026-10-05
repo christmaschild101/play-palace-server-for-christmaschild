@@ -132,7 +132,8 @@ class TestAircraftExtremeUnit:
         game._prepare_turn(alice)
         game.execute_action(alice, "fly_south")
         assert alice.power == 0
-        assert alice.actions_left == ACTIONS_PER_TURN  # blocked, no action used
+        # The move is refused, but the action is spent so the turn still moves on.
+        assert alice.actions_left == ACTIONS_PER_TURN - 1
 
     def test_climb_recharges_engine(self):
         game = _make_game("Alice", "Bob")
@@ -180,7 +181,8 @@ class TestAircraftExtremeUnit:
             game.execute_action(alice, "fire")
         assert bob.health == game.options.start_health - CANNON_DAMAGE
 
-    def test_fire_out_of_range_is_a_noop(self):
+    def test_fire_out_of_range_consumes_the_action(self):
+        """A refused shot still burns the action so the turn cannot stall."""
         game = _make_game("Alice", "Bob")
         alice, bob = game.players
         alice.row, alice.col = 0, 0
@@ -189,15 +191,15 @@ class TestAircraftExtremeUnit:
         game._prepare_turn(alice)
         game.execute_action(alice, "fire")
         assert bob.health == game.options.start_health
-        assert alice.actions_left == ACTIONS_PER_TURN
+        assert alice.actions_left == ACTIONS_PER_TURN - 1
 
-    def test_fire_at_own_base_is_blocked(self):
+    def test_fire_at_own_base_consumes_the_action(self):
         game = _make_game("Alice", "Bob")
         alice = game.players[0]
         game.turn_index = game.turn_player_ids.index(alice.id)
         game._prepare_turn(alice)
         game.execute_action(alice, "fire")
-        assert alice.actions_left == ACTIONS_PER_TURN
+        assert alice.actions_left == ACTIONS_PER_TURN - 1
 
     def test_target_on_own_runway_is_safe(self):
         game = _make_game("Alice", "Bob")
@@ -459,3 +461,43 @@ class TestAircraftExtremePersistence:
         assert loaded.storm_damage == 2
         assert loaded.start_health == 8
         assert loaded.respawn_health == 4
+
+
+class TestAircraftExtremeBotLiveness:
+    """Bot games must always reach a result, never stall."""
+
+    def test_downed_bot_turn_does_not_strand_the_game(self):
+        """A downed bot must let the turn advance so it can respawn.
+
+        A downed pilot cannot take any flight action, and only _prepare_turn
+        respawns them. If the turn does not advance, the game hangs forever.
+        """
+        game = _make_game("Bot1", "Bot2", bots=True)
+        victim = game.players[0]
+        victim.downed = True
+        victim.health = 0
+
+        for _ in range(2000):
+            if game.status == "finished":
+                break
+            game.on_tick()
+
+        assert game.status == "finished", "downed bot stranded the turn"
+
+    def test_bot_games_finish_across_seeds(self):
+        """Seeded bot games must finish for both table sizes."""
+        stalled = []
+        for seed in range(25):
+            random.seed(seed)
+            names = ("Bot1", "Bot2") if seed % 2 else ("Bot1", "Bot2", "Bot3", "Bot4")
+            game = _make_game(*names, bots=True)
+            finished = False
+            for _ in range(20000):
+                if game.status == "finished":
+                    finished = True
+                    break
+                game.on_tick()
+            if not finished:
+                stalled.append(seed)
+
+        assert not stalled, f"bot games stalled for seeds {stalled}"

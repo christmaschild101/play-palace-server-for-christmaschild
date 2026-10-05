@@ -2,6 +2,10 @@
 
 This document records changes to the PlayPalace server. New entries are added at the top under the date the change ships.
 
+## 2026-10-04
+
+- Fixed two hangs in **Aircraft Extreme** that could leave a table stuck forever. A downed bot could no longer take any action, and the turn-advance safety net deliberately skipped downed bots, so a bot shot down mid-turn could never respawn and the game froze. Separately, a refused action (firing with no target in range, firing from your own runway, or flying with a dead engine or into a blocked square) spoke its reason but neither spent the action nor advanced the turn, so a bot that kept trying the same impossible move looped indefinitely. Refused actions now consume the action and end the turn, so bot games always reach a result.
+
 ## 2026-09-30
 
 - New board game: **Aircraft Extreme** (2–4 pilots). Fly from your corner runway across a 6x6 storm-filled sky, bank laps by touching the opposite corner, and dogfight along the way. Two actions per turn: flying costs 1 engine power, cannons hit at 2 squares (orthogonal or diagonal), and barrel rolls, climbs, and cloud dives cover the classic aerial moves. Thunderstorms strike planes that stray near the storm block. First pilot to fly the set number of laps home wins — or be the last plane still flying. Shot-down pilots respawn on their runway (three downs and you're out). Option-configurable: laps to win, storm damage, plane health, and respawn health. Ships with laps leaderboards and full screen-reader navigation using the sky grid.

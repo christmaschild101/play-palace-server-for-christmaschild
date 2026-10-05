@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from . import slash_commands
 from sound_manager import SoundManager
+from version import CLIENT_VERSION
 from network_manager import NetworkManager
 from buffer_system import BufferSystem
 from config_manager import set_item_in_dict
@@ -84,7 +85,7 @@ class MainWindow(wx.Frame):
 
         super().__init__(
             parent=None,
-            title="PlayPalace 11",
+            title=f"PlayPalace {CLIENT_VERSION}",
             size=self.ui_cfg.window_size,
         )
 
@@ -1721,7 +1722,10 @@ class MainWindow(wx.Frame):
     def on_authorize_success(self, packet):
         """Handle authorization success from server."""
         self.connected = True
-        version = packet.get("version", "unknown")
+        # Report this client's own version, not whatever the server says it is.
+        # An older server still reports its own number, and showing that here
+        # made this client look out of date when it was not.
+        version = CLIENT_VERSION
         username = packet.get("username") or self.credentials.get("username", "Guest")
         server_url = self.credentials.get("server_url", "")
         refresh_token = packet.get("refresh_token")
@@ -1738,12 +1742,12 @@ class MainWindow(wx.Frame):
 
         if server_url:
             self.add_history(
-                f"Connected to {server_url} as {username} (server {version})",
+                f"Connected to {server_url} as {username} (client {version})",
                 "activity",
             )
         else:
             self.add_history(
-                f"Connected as {username} (server {version})",
+                f"Connected as {username} (client {version})",
                 "activity",
             )
 

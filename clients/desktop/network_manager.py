@@ -18,6 +18,7 @@ from jsonschema import ValidationError as SchemaValidationError
 from websockets.asyncio.client import connect
 
 from certificate_prompt import CertificatePromptDialog, CertificateInfo
+from version import version_dict
 from packet_validator import validate_incoming, validate_outgoing
 
 LOG = logging.getLogger(__name__)
@@ -217,9 +218,8 @@ class NetworkManager:
         packet = {
             "type": "authorize",
             "username": username,
-            "major": 12,
-            "minor": 0,
-            "patch": 0,
+            # From version.py, so the client never reports a version it is not.
+            **version_dict(),
             "client_type": "Desktop",
             "platform": f"{platform_mod.system()} {platform_mod.release()} {platform_mod.machine()}",
         }

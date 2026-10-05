@@ -1,3 +1,4 @@
+import { versionDict, PLAYPALACE_VERSION } from "./client-version.js";
 import { createStore } from "./store.js";
 import { createA11y } from "./a11y.js";
 import { createAudioEngine } from "./audio.js";
@@ -207,6 +208,7 @@ function saveStoredVoiceSettings(settings) {
 }
 
 const elements = {
+  clientTitle: document.getElementById("client-title"),
   loginDialog: document.getElementById("login-dialog"),
   gameShell: document.getElementById("game-shell"),
   connectForm: document.getElementById("connect-form"),
@@ -280,6 +282,10 @@ const a11y = createA11y({
   politeEl: elements.politeLive,
   assertiveEl: elements.assertiveLive,
 });
+// The page heading names this client's own version, not the server's.
+if (elements.clientTitle) {
+  elements.clientTitle.textContent = `PlayPalace V${PLAYPALACE_VERSION} Web`;
+}
 const audio = createAudioEngine({
   soundBaseUrl: WEB_CLIENT_CONFIG.soundBaseUrl || "./sounds",
 });
@@ -568,9 +574,7 @@ function buildAuthorizePacketFromSession(username, sessionToken) {
     type: "authorize",
     username: normalizeUsername(username),
     session_token: sessionToken,
-    major: 12,
-    minor: 0,
-    patch: 0,
+    ...versionDict(),
     client_type: "Web",
     platform: getPlatformString(),
   };
@@ -1687,9 +1691,7 @@ async function bootstrap() {
         type: "authorize",
         username,
         password,
-        major: 12,
-        minor: 0,
-        patch: 0,
+        ...versionDict(),
         client_type: "Web",
         platform: getPlatformString(),
       },

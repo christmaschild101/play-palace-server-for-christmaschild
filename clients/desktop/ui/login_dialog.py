@@ -8,6 +8,8 @@ import wx
 import sys
 from pathlib import Path
 
+from version import CLIENT_VERSION
+
 # Add parent directory to path to import config_manager
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config_manager import ConfigManager
@@ -49,7 +51,7 @@ class LoginDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Title
-        title = wx.StaticText(self.panel, label="PlayPalace 11.")
+        title = wx.StaticText(self.panel, label=f"PlayPalace {CLIENT_VERSION}.")
         title_font = title.GetFont()
         title_font.PointSize += 4
         title_font = title_font.Bold()

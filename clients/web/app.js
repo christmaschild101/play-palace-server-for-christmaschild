@@ -8,6 +8,8 @@ import { installKeybinds } from "./keybinds.js";
 import { createDocumentEditor } from "./ui/document_editor.js";
 import { createMarkdownViewer } from "./ui/markdown_viewer.js";
 import { createNetworkClient, loadPacketValidator } from "./network.js";
+import { createVoiceManager } from "./voice.js";
+import { createVoicePanel } from "./ui/voice.js";
 
 const REMEMBERED_USERNAME_KEY = "playpalace.web.remembered_username";
 const AUTH_USERNAME_KEY = "playpalace.web.auth.username";
@@ -18,6 +20,7 @@ const REFRESH_EXPIRES_AT_KEY = "playpalace.web.auth.refresh_expires_at";
 const MUSIC_VOLUME_KEY = "playpalace.web.music_volume";
 const AMBIENCE_VOLUME_KEY = "playpalace.web.ambience_volume";
 const AUDIO_MUTED_KEY = "playpalace.web.audio_muted";
+const VOICE_SETTINGS_KEY = "playpalace.web.voice_settings";
 const DEFAULT_MUSIC_VOLUME = 20;
 const DEFAULT_AMBIENCE_VOLUME = 100;
 const SESSION_REFRESH_LEEWAY_SECONDS = 60;
@@ -184,6 +187,24 @@ function loadStoredEpochSeconds(key) {
   return Math.floor(parsed);
 }
 
+function loadStoredVoiceSettings() {
+  try {
+    const raw = localStorage.getItem(VOICE_SETTINGS_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveStoredVoiceSettings(settings) {
+  try {
+    localStorage.setItem(VOICE_SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    // Ignore persistence failures.
+  }
+}
+
 const elements = {
   loginDialog: document.getElementById("login-dialog"),
   gameShell: document.getElementById("game-shell"),
@@ -201,6 +222,23 @@ const elements = {
   ambienceVolume: document.getElementById("ambience-volume"),
   ambienceVolumeValue: document.getElementById("ambience-volume-value"),
   audioMute: document.getElementById("audio-mute"),
+
+  voiceJoinButton: document.getElementById("voice-join-button"),
+  voiceMute: document.getElementById("voice-mute"),
+  voiceTalkButton: document.getElementById("voice-talk-button"),
+  voiceInputDevice: document.getElementById("voice-input-device"),
+  voiceOutputDevice: document.getElementById("voice-output-device"),
+  voiceMode: document.getElementById("voice-mode"),
+  voiceGain: document.getElementById("voice-gain"),
+  voiceGainValue: document.getElementById("voice-gain-value"),
+  voiceActivity: document.getElementById("voice-activity"),
+  voiceActivityValue: document.getElementById("voice-activity-value"),
+  voiceActivityHang: document.getElementById("voice-activity-hang"),
+  voiceActivityHangValue: document.getElementById("voice-activity-hang-value"),
+  voiceVolume: document.getElementById("voice-volume"),
+  voiceVolumeValue: document.getElementById("voice-volume-value"),
+  voiceDeviceNote: document.getElementById("voice-device-note"),
+  voiceStatus: document.getElementById("voice-status"),
 
   menuList: document.getElementById("menu-list"),
   inlineInput: document.getElementById("inline-input"),
@@ -247,6 +285,30 @@ const audio = createAudioEngine({
 audio.setMusicVolumePercent(loadStoredPercent(MUSIC_VOLUME_KEY, DEFAULT_MUSIC_VOLUME));
 audio.setAmbienceVolumePercent(loadStoredPercent(AMBIENCE_VOLUME_KEY, DEFAULT_AMBIENCE_VOLUME));
 audio.setMuted(loadStoredBool(AUDIO_MUTED_KEY, false));
+
+// Voice chat is a relay, never a recording: frames go straight to the server
+// and on to the rest of the room, and nothing is kept locally.
+// ``voicePanel`` is assigned before any settings are applied, because applying
+// settings notifies the panel straight away.
+let voicePanel = null;
+const voiceManager = createVoiceManager({
+  sendPacket: (packet) => network?.send(packet),
+  isConnected: () => Boolean(network?.isConnected()),
+  onStateChange: () => voicePanel?.refresh(),
+  onError: (message) => {
+    historyView.addEntry(message, { buffer: "activity", announce: true, assertive: true });
+  },
+});
+
+const savedVoiceSettings = loadStoredVoiceSettings();
+voicePanel = createVoicePanel({
+  elements,
+  voiceManager,
+  a11y,
+  onSettingsChange: saveStoredVoiceSettings,
+  initialSettings: savedVoiceSettings,
+});
+voiceManager.applySettings(savedVoiceSettings);
 
 const historyView = createHistoryView({
   store,
@@ -590,6 +652,9 @@ function scheduleSessionRefresh() {
 
 function resetDisconnectedUi() {
   audio.stopAll();
+  // The server drops voice membership when the socket closes, so release the
+  // microphone rather than leaving an indicator lit for a channel nobody is in.
+  voiceManager.unjoin();
   closeInlineInput({ returnFocus: false });
   closeActionsDialog();
   setConnectedUi(false);
@@ -1383,6 +1448,20 @@ function handlePacket(packet) {
         isError: packet.show_message || packet.return_to_login,
         clearAuth: packet.return_to_login && packet.reconnect === false,
       });
+      break;
+    }
+    case "voice_status": {
+      voiceManager.handleVoiceStatus(packet);
+      break;
+    }
+    case "voice_peer": {
+      voiceManager.handleVoicePeer(packet);
+      break;
+    }
+    case "voice_audio": {
+      // Audio is the highest-frequency packet in the protocol; it is routed
+      // straight to the player without touching the store, a11y, or history.
+      voiceManager.handleVoiceAudio(packet);
       break;
     }
     case "update_options_lists": {

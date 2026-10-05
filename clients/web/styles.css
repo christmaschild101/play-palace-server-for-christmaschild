@@ -116,6 +116,36 @@ main {
   width: 160px;
 }
 
+.voice-controls {
+  margin-top: 8px;
+}
+
+.voice-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.voice-controls input[type="range"] {
+  width: 120px;
+}
+
+.voice-controls select {
+  max-width: 220px;
+}
+
+#voice-talk-button.active {
+  background: var(--button-primary);
+  color: var(--button-primary-text);
+  border-color: var(--button-primary);
+}
+
+.voice-device-note,
+.voice-status {
+  margin: 6px 0 0;
+  font-size: 0.9em;
+}
+
 input,
 select,
 button,
@@ -383,6 +413,16 @@ dialog::backdrop {
 
   .volume-controls input[type="range"] {
     width: 120px;
+  }
+
+  .voice-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .voice-controls select {
+    max-width: 100%;
+    width: 100%;
   }
 
   .history {

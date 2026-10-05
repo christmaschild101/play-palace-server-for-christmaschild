@@ -27,3 +27,15 @@
 ## Audio
 - Default sound base URL is `./sounds`.
 - Keep music/effects/ambience handling consistent with the desktop client where practical.
+
+## Voice Chat
+- `voice.js` mirrors `clients/desktop/voice_manager.py`: the same wire format (16kHz mono s16le, 20ms frames), the same transmit gating, and the same packets. Keep the two in step so browser and desktop players stay interoperable.
+- `voice-worklet.js` holds the AudioWorklet processors. It is loaded by URL at runtime and is deliberately dependency-free so it can also be evaluated directly in tests.
+- Every Web Audio object is created lazily and reachable through injectable options, so the logic is testable in Node without audio hardware.
+- Browsers only expose real device labels after permission is granted; unlabeled devices get placeholder names and the panel explains why.
+- `AudioContext.setSinkId` is not implemented everywhere. Report support honestly rather than offering a control that silently does nothing, and never pass the literal string `"default"` as a sink id - browsers reject it.
+
+## Tests
+- Run with `node --test "tests/*.test.js"` from this folder (Node 18+; no dependencies to install).
+- `tests/voice_worklet.test.js` evaluates the worklet source against stub globals, so processor-only bugs stay covered outside a browser.
+- Keep new behaviour covered here; there is no other test harness for this client.

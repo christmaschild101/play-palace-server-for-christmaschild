@@ -730,6 +730,65 @@
         ],
         "title": "SlashCommandPacket",
         "type": "object"
+      },
+      "VoiceAudioPacket": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Data",
+            "type": "string"
+          },
+          "seq": {
+            "default": 0,
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "type": {
+            "const": "voice_audio",
+            "default": "voice_audio",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "VoiceAudioPacket",
+        "type": "object"
+      },
+      "VoiceJoinPacket": {
+        "additionalProperties": false,
+        "properties": {
+          "muted": {
+            "default": false,
+            "title": "Muted",
+            "type": "boolean"
+          },
+          "type": {
+            "const": "voice_join",
+            "default": "voice_join",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "VoiceJoinPacket",
+        "type": "object"
+      },
+      "VoiceLeavePacket": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "voice_leave",
+            "default": "voice_leave",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "VoiceLeavePacket",
+        "type": "object"
       }
     },
     "discriminator": {
@@ -755,7 +814,10 @@
         "remove_table_pw_cmd": "#/$defs/RemoveTablePasswordCommandPacket",
         "set_table_pw_cmd": "#/$defs/SetTablePasswordCommandPacket",
         "set_table_visibility_cmd": "#/$defs/SetTableVisibilityCommandPacket",
-        "slash_command": "#/$defs/SlashCommandPacket"
+        "slash_command": "#/$defs/SlashCommandPacket",
+        "voice_audio": "#/$defs/VoiceAudioPacket",
+        "voice_join": "#/$defs/VoiceJoinPacket",
+        "voice_leave": "#/$defs/VoiceLeavePacket"
       },
       "propertyName": "type"
     },
@@ -825,6 +887,15 @@
       },
       {
         "$ref": "#/$defs/CheckTablePasswordCommandPacket"
+      },
+      {
+        "$ref": "#/$defs/VoiceJoinPacket"
+      },
+      {
+        "$ref": "#/$defs/VoiceLeavePacket"
+      },
+      {
+        "$ref": "#/$defs/VoiceAudioPacket"
       }
     ]
   },
@@ -1931,6 +2002,118 @@
         ],
         "title": "UpdateOptionsListsPacket",
         "type": "object"
+      },
+      "VoiceAudioRelayPacket": {
+        "additionalProperties": false,
+        "description": "Relayed audio frame from another participant in the same room.",
+        "properties": {
+          "data": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Data",
+            "type": "string"
+          },
+          "sender": {
+            "title": "Sender",
+            "type": "string"
+          },
+          "seq": {
+            "default": 0,
+            "minimum": 0,
+            "title": "Seq",
+            "type": "integer"
+          },
+          "type": {
+            "const": "voice_audio",
+            "default": "voice_audio",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sender",
+          "data"
+        ],
+        "title": "VoiceAudioRelayPacket",
+        "type": "object"
+      },
+      "VoicePeerPacket": {
+        "additionalProperties": false,
+        "description": "Announces that a peer joined or left the caller's voice room.",
+        "properties": {
+          "action": {
+            "enum": [
+              "joined",
+              "left"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "room": {
+            "title": "Room",
+            "type": "string"
+          },
+          "type": {
+            "const": "voice_peer",
+            "default": "voice_peer",
+            "title": "Type",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "username",
+          "room"
+        ],
+        "title": "VoicePeerPacket",
+        "type": "object"
+      },
+      "VoiceStatusPacket": {
+        "additionalProperties": false,
+        "description": "Tells a client its own voice state plus who else it can hear.",
+        "properties": {
+          "joined": {
+            "default": false,
+            "title": "Joined",
+            "type": "boolean"
+          },
+          "muted": {
+            "default": false,
+            "title": "Muted",
+            "type": "boolean"
+          },
+          "peers": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Peers",
+            "type": "array"
+          },
+          "room": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Room"
+          },
+          "type": {
+            "const": "voice_status",
+            "default": "voice_status",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "VoiceStatusPacket",
+        "type": "object"
       }
     },
     "discriminator": {
@@ -1960,7 +2143,10 @@
         "stop_ambience": "#/$defs/StopAmbiencePacket",
         "stop_music": "#/$defs/StopMusicPacket",
         "table_create": "#/$defs/TableCreatePacket",
-        "update_options_lists": "#/$defs/UpdateOptionsListsPacket"
+        "update_options_lists": "#/$defs/UpdateOptionsListsPacket",
+        "voice_audio": "#/$defs/VoiceAudioRelayPacket",
+        "voice_peer": "#/$defs/VoicePeerPacket",
+        "voice_status": "#/$defs/VoiceStatusPacket"
       },
       "propertyName": "type"
     },
@@ -2042,6 +2228,15 @@
       },
       {
         "$ref": "#/$defs/OpenServerOptionsPacket"
+      },
+      {
+        "$ref": "#/$defs/VoiceStatusPacket"
+      },
+      {
+        "$ref": "#/$defs/VoicePeerPacket"
+      },
+      {
+        "$ref": "#/$defs/VoiceAudioRelayPacket"
       }
     ]
   }

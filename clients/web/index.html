@@ -32,6 +32,68 @@
             <span id="ambience-volume-value" class="status">100%</span>
           </label>
         </div>
+        <div class="row voice-controls">
+          <button id="voice-join-button" type="button" aria-pressed="false">Join voice</button>
+          <label for="voice-mute">
+            <input id="voice-mute" type="checkbox" />
+            Mute mic
+          </label>
+          <button id="voice-talk-button" type="button" class="secondary" aria-pressed="false" hidden>
+            Hold to talk
+          </button>
+        </div>
+        <div class="row voice-controls">
+          <label for="voice-input-device">
+            Microphone
+            <select id="voice-input-device" aria-label="Microphone"></select>
+          </label>
+          <label for="voice-output-device">
+            Speaker
+            <select id="voice-output-device" aria-label="Voice output speaker"></select>
+          </label>
+          <label for="voice-mode">
+            Transmit
+            <select id="voice-mode" aria-label="Microphone transmit mode">
+              <option value="voice_activity">Voice activation</option>
+              <option value="push_to_talk">Push to talk</option>
+            </select>
+          </label>
+        </div>
+        <div class="row voice-controls">
+          <label for="voice-gain">
+            Mic gain
+            <input id="voice-gain" type="range" min="0" max="200" step="5" value="100" />
+            <span id="voice-gain-value" class="status">100%</span>
+          </label>
+          <label for="voice-activity">
+            Sensitivity
+            <input id="voice-activity" type="range" min="0" max="100" step="1" value="15" />
+            <span id="voice-activity-value" class="status">15</span>
+          </label>
+          <label for="voice-activity-hang">
+            Hold open
+            <input
+              id="voice-activity-hang"
+              type="range"
+              min="0"
+              max="2000"
+              step="100"
+              value="500"
+            />
+            <span id="voice-activity-hang-value" class="status">500ms</span>
+          </label>
+          <label for="voice-volume">
+            Voice volume
+            <input id="voice-volume" type="range" min="0" max="200" step="10" value="100" />
+            <span id="voice-volume-value" class="status">100%</span>
+          </label>
+        </div>
+        <p id="voice-device-note" class="status voice-device-note" hidden>
+          Device names appear after the microphone permission is granted.
+        </p>
+        <p id="voice-status" class="status voice-status" role="text" aria-live="polite">
+          Not in voice chat.
+        </p>
       </section>
 
       <section id="game-shell" class="grid" hidden>

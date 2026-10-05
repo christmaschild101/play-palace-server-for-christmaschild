@@ -285,6 +285,7 @@ export function createAudioEngine(options = {}) {
       return;
     }
     const looping = packet.looping ?? true;
+    const onEnded = typeof packet.onEnded === "function" ? packet.onEnded : null;
 
     // Match desktop behavior: don't restart music if the same track is already active.
     if (currentMusic && currentMusicName === name && currentMusicLooping === looping) {
@@ -305,6 +306,11 @@ export function createAudioEngine(options = {}) {
     audio.preload = "auto";
     audio.loop = looping;
     audio.volume = 1.0;
+
+    // Playlists chain tracks by listening for the end of the current one.
+    if (onEnded) {
+      audio.addEventListener("ended", () => onEnded(audio));
+    }
 
     try {
       const nodes = connectElement(audio, musicGain, 0, url);

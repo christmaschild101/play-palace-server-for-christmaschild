@@ -1,6 +1,7 @@
 import { createStore } from "./store.js";
 import { createA11y } from "./a11y.js";
 import { createAudioEngine } from "./audio.js";
+import { createPlaylistManager } from "./playlist.js";
 import { createHistoryView } from "./ui/history.js";
 import { createMenuView } from "./ui/menus.js";
 import { createChat } from "./ui/chat.js";
@@ -280,6 +281,14 @@ const a11y = createA11y({
   assertiveEl: elements.assertiveLive,
 });
 const audio = createAudioEngine({
+  soundBaseUrl: WEB_CLIENT_CONFIG.soundBaseUrl || "./sounds",
+});
+// Playlists are sequenced entirely on the client: the server sends the
+// playlist packets and this manager does the actual track ordering, matching
+// the desktop client's behaviour so both players behave the same way.
+const playlists = createPlaylistManager({
+  audio,
+  createAudioElement: () => new Audio(),
   soundBaseUrl: WEB_CLIENT_CONFIG.soundBaseUrl || "./sounds",
 });
 audio.setMusicVolumePercent(loadStoredPercent(MUSIC_VOLUME_KEY, DEFAULT_MUSIC_VOLUME));
@@ -653,6 +662,8 @@ function scheduleSessionRefresh() {
 
 function resetDisconnectedUi() {
   audio.stopAll();
+  // Any playlist belongs to the session that was just lost.
+  playlists.removeAllPlaylists();
   // The server drops voice membership when the socket closes, so release the
   // microphone rather than leaving an indicator lit for a channel nobody is in.
   voiceManager.unjoin();
@@ -1388,6 +1399,41 @@ function handlePacket(packet) {
     }
     case "play_sound": {
       audio.playSound(packet);
+      break;
+    }
+    case "add_playlist": {
+      playlists.addPlaylist(packet);
+      break;
+    }
+    case "start_playlist": {
+      playlists.startPlaylist(packet.playlist_id);
+      break;
+    }
+    case "remove_playlist": {
+      playlists.removePlaylist(packet.playlist_id);
+      break;
+    }
+    case "get_playlist_duration": {
+      // The server asks how long a playlist lasts; answer with the matching
+      // figure. Durations come from the browser's own metadata, so an
+      // unmeasurable playlist answers 0 rather than guessing.
+      playlists
+        .getPlaylistDuration(packet.playlist_id, packet.duration_type)
+        .then((result) => {
+          if (!packet.request_id) return;
+          const durationType = packet.duration_type || "total";
+          const seconds = result ? Math.round(result[durationType] ?? 0) : 0;
+          network?.send({
+            type: "playlist_duration_response",
+            request_id: packet.request_id,
+            playlist_id: packet.playlist_id,
+            duration_type: durationType,
+            duration: Math.max(0, seconds),
+          });
+        })
+        .catch(() => {
+          // A missing or unmeasurable playlist is not worth interrupting play.
+        });
       break;
     }
     case "play_music": {

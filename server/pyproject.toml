@@ -1,6 +1,6 @@
 [project]
 name = "playpalace-server"
-version = "11.0.0"
+version = "12.0.0"
 description = "PlayPalace v11 Game Server"
 readme = "README.md"
 requires-python = ">=3.13"

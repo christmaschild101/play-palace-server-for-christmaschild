@@ -1,4 +1,4 @@
-"""Entry point for running the PlayPalace v11 server with uv run main.py."""
+"""Entry point for running the PlayPalace v12 server with uv run main.py."""
 
 import argparse
 import asyncio
@@ -20,7 +20,7 @@ from server.core.server import run_server  # noqa: E402
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="PlayPalace v11 Server",
+        description="PlayPalace v12 Server",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

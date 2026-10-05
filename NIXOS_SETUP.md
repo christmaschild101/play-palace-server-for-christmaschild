@@ -75,8 +75,8 @@ Then restart the client.
 ## Built Packages
 
 Pre-built wheels are available in:
-- `server/dist/playpalace_server-11.0.0-py3-none-any.whl` (637 KB)
-- `clients/desktop/dist/playpalace_client-11.0.0-py3-none-any.whl` (53 MB)
+- `server/dist/playpalace_server-12.0.0-py3-none-any.whl` (637 KB)
+- `clients/desktop/dist/playpalace_client-12.0.0-py3-none-any.whl` (53 MB)
 
 ## Development
 

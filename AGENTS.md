@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `server/` is the v11 game server (modern Python). Core modules live in `server/core/` (including `server/core/users/`, `server/core/tables/`, and `server/core/ui/`), game implementations in `server/games/`, shared game helpers in `server/game_utils/`, auth in `server/auth/`, persistence in `server/persistence/`, and localization in `server/messages/`.
+- `server/` is the v12 game server (modern Python). Core modules live in `server/core/` (including `server/core/users/`, `server/core/tables/`, and `server/core/ui/`), game implementations in `server/games/`, shared game helpers in `server/game_utils/`, auth in `server/auth/`, persistence in `server/persistence/`, and localization in `server/messages/`.
 - `server/tests/` contains pytest test suites (unit, integration, and play tests).
 - `clients/desktop/` hosts the wxPython desktop client (UI code under `clients/desktop/ui/`); `clients/web/` contains the browser client assets.
 - `packaging/` centralizes container definitions and platform installers (Linux, Windows, etc.).

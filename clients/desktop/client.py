@@ -1,5 +1,5 @@
 """
-Play Palace v11 Client
+Play Palace v12 Client
 
 A wxPython-based client for Play Palace with websocket support.
 Features:

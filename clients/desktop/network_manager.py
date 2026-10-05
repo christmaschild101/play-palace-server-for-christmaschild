@@ -217,7 +217,7 @@ class NetworkManager:
         packet = {
             "type": "authorize",
             "username": username,
-            "major": 11,
+            "major": 12,
             "minor": 0,
             "patch": 0,
             "client_type": "Desktop",

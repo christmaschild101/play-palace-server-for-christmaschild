@@ -22,8 +22,8 @@ Client starts in silent mode (no sound effects). All features work normally.
 ## What Was Built
 
 ### Distribution Packages
-- `server/dist/playpalace_server-11.0.0-py3-none-any.whl` (637 KB)
-- `clients/desktop/dist/playpalace_client-11.0.0-py3-none-any.whl` (53 MB)
+- `server/dist/playpalace_server-12.0.0-py3-none-any.whl` (637 KB)
+- `clients/desktop/dist/playpalace_client-12.0.0-py3-none-any.whl` (53 MB)
 
 ### Nix Environment
 - `flake.nix` / `flake.lock` - pinned dev environment
@@ -87,7 +87,7 @@ All launcher scripts now live under `./scripts/`:
 ## Success Indicators
 
 When everything works:
-- Server: `Starting PlayPalace v11 server on ws://0.0.0.0:8000`
+- Server: `Starting PlayPalace v12 server on ws://0.0.0.0:8000`
 - Client: `Warning: Could not initialize audio output... Running in silent mode`
 - Client shows login window and connects to server
 

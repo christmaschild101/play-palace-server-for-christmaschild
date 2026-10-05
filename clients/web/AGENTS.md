@@ -1,7 +1,7 @@
 # Web Client Notes
 
 ## Scope
-- This folder contains the browser client for PlayPalace v11.
+- This folder contains the browser client for PlayPalace v12.
 - Keep changes focused and aligned with server packet behavior.
 
 ## Versioning

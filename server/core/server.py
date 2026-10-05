@@ -53,7 +53,7 @@ from .documents.manager import DocumentManager
 from ..network.packet_models import CLIENT_TO_SERVER_PACKET_ADAPTER
 
 
-VERSION = "11.0.0"
+VERSION = "12.0.0"
 BOOTSTRAP_WARNING_ENV = "PLAYPALACE_SUPPRESS_BOOTSTRAP_WARNING"
 PACKET_LOGGER = logging.getLogger("playpalace.packets")
 LOG = logging.getLogger("playpalace.server")

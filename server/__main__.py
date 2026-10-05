@@ -1,4 +1,4 @@
-"""Entry point for running the PlayPalace v11 server."""
+"""Entry point for running the PlayPalace v12 server."""
 
 import argparse
 import asyncio
@@ -9,7 +9,7 @@ from .core.server import run_server
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
-        description="PlayPalace v11 Server",
+        description="PlayPalace v12 Server",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -56,7 +56,7 @@ Examples:
         parser.error("Both --ssl-cert and --ssl-key must be provided together")
 
     protocol = "wss" if args.ssl_cert else "ws"
-    print(f"Starting PlayPalace v11 server on {protocol}://{args.host}:{args.port}")
+    print(f"Starting PlayPalace v12 server on {protocol}://{args.host}:{args.port}")
 
     asyncio.run(
         run_server(

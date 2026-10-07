@@ -2,6 +2,10 @@
 
 This document records changes to the PlayPalace server. New entries are added at the top under the date the change ships.
 
+## 2026-10-07
+
+- **Version numbers are now written as "12.0" instead of "12.0.0".** The third part was always zero and said nothing, so the trailing ".0" was dropped everywhere: the server, both clients, their packaging metadata, and the release artifacts are all named 12.0 now. The authorize packets still carry all three parts as before - a missing part is read as zero - so nothing about connecting changed and old and new clients still interoperate. This also fixed the server's lock file, which had been left saying 11.0.0 when version 12 was bumped.
+
 ## 2026-10-05
 
 - **Both clients now report their own version, from one place.** The version a client shows was written down separately in several spots - the desktop login window said "PlayPalace 11.", the window title said "PlayPalace 11", the connection banner reported whatever version the **server** claimed to be, and the authorize packets carried their own hardcoded numbers. Bumping to version 12 therefore left the login window still announcing 11, and connecting to a server that had not been updated yet made an up-to-date client look out of date because the banner was quoting the server. There is now a single version per client: the desktop client reads it from a new `version.py`, the web client from a new `client-version.js`, and the window title, the login window, the page heading, the connection banner and the packets the client sends all come from that one value. The banner now reports this client's version, so it stays correct against any server. Tests assert the version agrees with the packaging metadata, so the two cannot quietly drift apart again.

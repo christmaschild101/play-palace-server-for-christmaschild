@@ -21,7 +21,7 @@ import {
 const appSource = readFileSync(new URL("../app.js", import.meta.url), "utf8");
 
 test("the client reports twelve", () => {
-  assert.equal(PLAYPALACE_VERSION, "12.0.0");
+  assert.equal(PLAYPALACE_VERSION, "12.0");
 });
 
 test("the numeric parts agree with the string", () => {

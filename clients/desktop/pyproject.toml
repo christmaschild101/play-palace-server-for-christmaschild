@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "playpalace-client"
-version = "12.0.0"
+version = "12.0"
 description = "PlayPalace v12 Game Client"
 requires-python = ">=3.13"
 dependencies = [

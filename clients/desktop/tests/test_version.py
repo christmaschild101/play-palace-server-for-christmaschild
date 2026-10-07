@@ -28,7 +28,7 @@ def _pyproject_version() -> str:
 
 
 def test_the_client_reports_twelve():
-    assert CLIENT_VERSION == "12.0.0"
+    assert CLIENT_VERSION == "12.0"
 
 
 def test_version_matches_pyproject():

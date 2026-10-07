@@ -9,10 +9,18 @@ that still reports its own version as 11.
 only other place the version is written down, so the two cannot drift apart.
 """
 
-CLIENT_VERSION = "12.0.0"
+CLIENT_VERSION = "12.0"
 
 #: Numeric parts, sent to the server in the authorize packet.
-CLIENT_VERSION_PARTS = tuple(int(part) for part in CLIENT_VERSION.split("."))
+#:
+#: The version is written with as many parts as mean something, so "12.0" has
+#: only two; missing parts are zero. The packet always carries all three.
+_RAW_PARTS = tuple(int(part) for part in CLIENT_VERSION.split("."))
+CLIENT_VERSION_PARTS = (
+    _RAW_PARTS[0],
+    _RAW_PARTS[1] if len(_RAW_PARTS) > 1 else 0,
+    _RAW_PARTS[2] if len(_RAW_PARTS) > 2 else 0,
+)
 CLIENT_VERSION_MAJOR, CLIENT_VERSION_MINOR, CLIENT_VERSION_PATCH = CLIENT_VERSION_PARTS
 
 

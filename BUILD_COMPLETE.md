@@ -22,8 +22,8 @@ Client starts in silent mode (no sound effects). All features work normally.
 ## What Was Built
 
 ### Distribution Packages
-- `server/dist/playpalace_server-12.0.0-py3-none-any.whl` (637 KB)
-- `clients/desktop/dist/playpalace_client-12.0.0-py3-none-any.whl` (53 MB)
+- `server/dist/playpalace_server-12.0-py3-none-any.whl` (637 KB)
+- `clients/desktop/dist/playpalace_client-12.0-py3-none-any.whl` (53 MB)
 
 ### Nix Environment
 - `flake.nix` / `flake.lock` - pinned dev environment
